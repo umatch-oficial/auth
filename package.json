@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "_mocha test --bail"
+    "test": "node ./node_modules/.bin/_mocha test/unit/serializer --bail"
   },
   "keywords": [
     "adonis",
@@ -18,16 +18,29 @@
   "author": "adonisjs",
   "license": "MIT",
   "devDependencies": {
+    "adonis-fold": "^3.0.0",
     "chai": "^3.5.0",
+    "co-mocha": "^1.1.2",
     "coveralls": "^2.11.8",
     "cz-conventional-changelog": "^1.1.5",
     "istanbul": "^0.4.2",
     "mocha": "^2.4.5",
+    "sinon-es6": "0.0.3",
     "standard": "^6.0.7"
   },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "peerDependencies": {
+    "adonis-fold": "^3.0.0"
+  },
+  "dependencies": {
+    "adonis-fold": "^2.0.1",
+    "cat-log": "^1.0.0",
+    "harmony-reflect": "^1.4.2",
+    "lodash": "^4.6.1",
+    "node-exceptions": "^1.0.1"
   }
 }
