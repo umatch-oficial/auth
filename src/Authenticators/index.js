@@ -10,5 +10,6 @@
 */
 
 module.exports = {
-  session: require('./Session')
+  session: require('./Session'),
+  basic: require('./BasicAuth')
 }

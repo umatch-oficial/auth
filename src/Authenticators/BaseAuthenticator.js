@@ -41,7 +41,7 @@ class BaseAuthenticator {
     }
     const requestUser = yield this._getRequestUser()
     this.user = requestUser
-    return requestUser ? true : false
+    return !!requestUser
   }
 
   /**
