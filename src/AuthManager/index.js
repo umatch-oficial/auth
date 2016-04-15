@@ -41,11 +41,11 @@ class AuthManager {
     name = this._makeAuthenticatorName(name)
     const config = this.config.get(name)
     if (!config) {
-      throw new NE.DomainException(`Cannot find authenticator for ${name}.`)
+      throw new NE.DomainException(`Cannot find config for ${name}.`)
     }
     const serializer = this._getSerializer(config.serializer)
     logger.verbose('making instance of %s authenticator', name)
-    return this._makeAuthenticator(config.scheme, serializer, config.options)
+    return this._makeAuthenticator(config.scheme, serializer, config)
   }
 
   /**

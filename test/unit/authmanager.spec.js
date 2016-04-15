@@ -63,4 +63,66 @@ describe('AuthManager', function () {
     const newAuth = auth.authenticator('session') // this is cheating
     expect(newAuth.foo).to.equal(undefined)
   })
+
+  it('should throw an error when unable to locate config for an authenticator', function () {
+    const request = {}
+    const auth = new AuthManager(Config, request)
+    const fn = function () {
+      return auth._getAuthenticator('foo')
+    }
+    expect(fn).to.throw('DomainException', /Cannot find config for foo/)
+  })
+
+  it('should return authenticator instance usin _getAuthenticator method', function () {
+    const request = {}
+    const auth = new AuthManager(Config, request)
+    const sessionAuth = auth._getAuthenticator('session')
+    expect(sessionAuth instanceof SessionAuthenticator).to.equal(true)
+  })
+
+  it('should return default authenticator when name is default', function () {
+    const request = {}
+    const auth = new AuthManager(Config, request)
+    const authenticator = auth._makeAuthenticatorName('default')
+    expect(authenticator).to.equal('auth.session')
+  })
+
+  it('should prefix authenticator to the passed name', function () {
+    const request = {}
+    const auth = new AuthManager(Config, request)
+    const authenticator = auth._makeAuthenticatorName('api')
+    expect(authenticator).to.equal('auth.api')
+  })
+
+  it('should throw an error when unable to locate serializer', function () {
+    const request = {}
+    const auth = new AuthManager(Config, request)
+    const fn = function () {
+      return auth._getSerializer('foo')
+    }
+    expect(fn).to.throw('DomainException', /Cannot find foo serializer/)
+  })
+
+  it('should return serializer instance usin _getSerializer method', function () {
+    const request = {}
+    const auth = new AuthManager(Config, request)
+    const lucid = auth._getSerializer('Lucid')
+    expect(lucid instanceof LucidSerializer).to.equal(true)
+  })
+
+  it('should throw error when unable to authenticator instance of a given scheme', function () {
+    const request = {}
+    const auth = new AuthManager(Config, request)
+    const fn = function () {
+      return auth._makeAuthenticator('foo')
+    }
+    expect(fn).to.throw('DomainException', /Cannot find authenticator for foo scheme/)
+  })
+
+  it('should return authenticator instance using _makeAuthenticator', function () {
+    const request = {}
+    const auth = new AuthManager(Config, request)
+    const sessionAuth = auth._makeAuthenticator('session')
+    expect(sessionAuth instanceof SessionAuthenticator).to.equal(true)
+  })
 })
