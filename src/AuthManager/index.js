@@ -12,7 +12,7 @@
 const proxyHandler = require('./proxyHandler')
 const Authenticators = require('../Authenticators')
 const Serializers = require('../Serializers')
-const CatLog= require('cat-log')
+const CatLog = require('cat-log')
 const logger = new CatLog('adonis:auth')
 const NE = require('node-exceptions')
 const Ioc = require('adonis-fold').Ioc
