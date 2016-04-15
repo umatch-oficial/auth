@@ -13,16 +13,10 @@
  * class inside another class.
 */
 
-const CE = require('../../Exceptions')
+const BaseAuthenticator = require('../BaseAuthenticator')
+const NE = require('node-exceptions')
 
-class SessionAuthenticator {
-
-  constructor (request, serializer, options) {
-    this.request = request
-    this.serializer = serializer
-    this.options = options
-    this.user = null // this property is set once per request
-  }
+class SessionAuthenticator extends BaseAuthenticator {
 
   /**
    * returns key to be used for saving session value.
@@ -35,49 +29,19 @@ class SessionAuthenticator {
   }
 
   /**
-   * checks whether a user is logged in or not. It
-   * is performed by excuting following steps in
-   * sequence.
-   * 1. return true - If user exists on the instance
-   * 2. Check for session value
-   * 		a) return false - If session does not exists
-   * 		b) Go to step 3
-   * 3. find the user using the serializer and passing id
-   * 		a) return false - If user does not exist
-   * 		b) Go to step 4
-   * 4. set user object on instance and return true
-   *
-   * @return {Boolean}
-   */
-  * check () {
-    if (this.user) {
-      return true
-    }
-    const userSession = yield this.request.session.get(this.sessionKey)
-    if (!userSession) {
-      return false
-    }
-    const user = yield this.serializer.findById(userSession, this.options)
-    if (!user) {
-      return false
-    }
-    this.user = user
-    return true
-  }
-
-  /**
-   * returns the logged in user by calling check method
+   * tries to resolve the user for the current request or
+   * returns null
    *
    * @return {Object}
    *
-   * @public
+   * @private
    */
-  * getUser () {
-    const isLoggedIn = yield this.check()
-    if (!isLoggedIn) {
+  * _getRequestUser () {
+    const userSession = yield this.request.session.get(this.sessionKey)
+    if (!userSession) {
       return null
     }
-    return this.user
+    return yield this.serializer.findById(userSession, this.options)
   }
 
   /**
@@ -96,7 +60,7 @@ class SessionAuthenticator {
     const primaryKey = this.serializer.primaryKey(this.options)
     const primaryValue = user[primaryKey]
     if (!primaryValue) {
-      throw new CE.InvalidArgumentException(`Value for ${primaryKey} is null for given user.`)
+      throw new NE.InvalidArgumentException(`Value for ${primaryKey} is null for given user.`)
     }
     yield this.request.session.put(this.sessionKey, primaryValue)
     this.user = user
@@ -132,30 +96,6 @@ class SessionAuthenticator {
       return false
     }
     return yield this.login(user)
-  }
-
-  /**
-   * validates a user with uid and password.
-   *
-   * @param  {String} uid
-   * @param  {String} password
-   * @param  {Object} [constraints]
-   * @param  {Boolean} [returnUser]
-   * @return {Boolean|Object}
-   *
-   * @throws UserNotFoundException when unable to locate user
-   * @throws PasswordMisMatchException when password does not match
-   */
-  * validate (uid, password, constraints, returnUser) {
-    const user = yield this.serializer.findByCredentials(uid, constraints, this.options)
-    if (!user) {
-      throw new CE.UserNotFoundException(`Unable to find user with ${uid} ${this.options.uid}`)
-    }
-    const isValid = yield this.serializer.validateCredentials(user, password, this.options)
-    if (!isValid) {
-      throw new CE.PasswordMisMatchException('Password does not match')
-    }
-    return returnUser ? user : true
   }
 
   /**
