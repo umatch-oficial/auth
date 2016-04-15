@@ -133,7 +133,7 @@ describe('Serializers', function () {
 
     it('should try to verify the user password', function * () {
       sinon.spy(Hash, 'verify')
-      yield this.lucid.validateCredentials(new DummyModel(), {password: 'foo'}, configOptions)
+      yield this.lucid.validateCredentials(new DummyModel(), 'foo', configOptions)
       expect(Hash.verify.calledOnce).to.equal(true)
       expect(Hash.verify.calledWith('foo', 'bar')).to.equal(true)
     })

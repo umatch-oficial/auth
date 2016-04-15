@@ -32,6 +32,18 @@ class LucidSerializer {
   }
 
   /**
+   * returns primaryKey to be used for saving sessions
+   *
+   * @param  {Object} options
+   * @return {String}
+   *
+   * @public
+   */
+  primaryKey (options) {
+    return this._getModel(options.model).primaryKey
+  }
+
+  /**
    * returns the model from the Ioc container if parameter
    * is a string, otherwise returns the actual binding.
    *
@@ -138,18 +150,17 @@ class LucidSerializer {
    * the password. It makes use of Hash provider.
    *
    * @param  {Object} user
-   * @param  {Object} credentials
+   * @param  {String} password
    * @param  {Object} options
    * @return {Boolean}
    *
    * @public
    */
-  * validateCredentials (user, credentials, options) {
+  * validateCredentials (user, password, options) {
     if (!user || !user[options.password]) {
       return false
     }
     const actualPassword = user[options.password]
-    const password = credentials[options.password]
     try {
       return yield this.hash.verify(password, actualPassword)
     } catch (e) {
