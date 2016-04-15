@@ -20,10 +20,10 @@ require('harmony-reflect')
 
 class AuthManager {
 
-  constructor (name, config, request, response) {
+  constructor (config, request, name) {
+    name = name || 'default'
     this.config = config
     this.request = request
-    this.response = response
     this.authenticatorInstance = this._getAuthenticator(name)
     return new Proxy(this, proxyHandler)
   }
@@ -96,8 +96,7 @@ class AuthManager {
    */
   _makeAuthenticator (scheme, serializer, options) {
     if (Authenticators[scheme]) {
-      const schemeInstance = Ioc.make(Authenticators[scheme])
-      schemeInstance.injections(serializer, this.request, this.response, options)
+      const schemeInstance = new Authenticators[scheme](this.request, serializer, options)
       return schemeInstance
     }
     throw new NE.DomainException(`Cannot find authenticator for ${scheme} scheme.`)
@@ -113,7 +112,7 @@ class AuthManager {
    * @public
    */
   authenticator (name) {
-    return new AuthManager(name, this.config, this.request, this.response)
+    return new AuthManager(this.config, this.request, name)
   }
 }
 
