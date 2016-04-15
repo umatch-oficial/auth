@@ -7,8 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run standard && node ./node_modules/.bin/_mocha test/unit/serializer --bail",
-    "standard": "standard src/**/*.js src/**/**/*.js test/**/*.js test/**/**/*.js providers/*.js"
+    "test": "npm run standard && node ./node_modules/.bin/_mocha test/unit test/unit/serializer --bail",
+    "standard": "standard src/**/*.js src/**/**/*.js test/**/*.js test/**/**/*.js providers/*.js util/*.js"
   },
   "keywords": [
     "adonis",
