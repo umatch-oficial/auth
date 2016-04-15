@@ -13,7 +13,7 @@
 */
 
 const Ioc = require('adonis-fold').Ioc
-const NE = require('node-exceptions')
+const util = require('../../../lib/util')
 const _ = require('lodash')
 
 class LucidSerializer {
@@ -84,6 +84,56 @@ class LucidSerializer {
   }
 
   /**
+   * finds a token using token model and it's related user.
+   * It is important to set a belongsTo relation with the
+   * user model.
+   *
+   * @param  {String} token
+   * @param  {Object} options
+   * @return {Object}
+   *
+   * @public
+   */
+  * findByToken (token, options) {
+    const model = this._getModel(options.model)
+    return yield model.query().where('token', token).with('user').first()
+  }
+
+  /**
+   * validates a token by making user a user for the corresponding
+   * token exists and the token has not been expired.
+   *
+   * @param  {Object} token   - token model resolved from the database
+   * @param  {Object} options
+   * @return {Boolean}
+   *
+   * @public
+   */
+  * validateToken (token, options) {
+    /**
+     * return false when token or the user related to token
+     * does not exists.
+     */
+    if (!token || !token.get || !token.get('user')) {
+      return false
+    }
+
+    /**
+     * return the user when token life is set to forever
+     */
+    if (token.forever) {
+      return true
+    }
+
+    /**
+     * check whether the expiry date is over the current
+     * date/time
+     */
+    const expiry = token.toJSON().expiry
+    return util.dateDiff(new Date(), new Date(expiry)) > 0
+  }
+
+  /**
    * validates user crendentials using the model instance and
    * the password. It makes use of Hash provider.
    *
@@ -92,14 +142,11 @@ class LucidSerializer {
    * @param  {Object} options
    * @return {Boolean}
    *
-   * @throws Error when unable to verify user password.
-   *
    * @public
    */
   * validateCredentials (user, credentials, options) {
-    const model = this._getModel(options.model)
-    if (user instanceof model === false) {
-      throw new NE.InvalidArgumentException('validateCredentials requires an instance of valid Lucid model')
+    if (!user || !user[options.password]) {
+      return false
     }
     const actualPassword = user[options.password]
     const password = credentials[options.password]

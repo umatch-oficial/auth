@@ -9,6 +9,7 @@
  * file that was distributed with this source code.
 */
 
+/* global it, describe, context, before */
 const chai = require('chai')
 const sinon = require('sinon-es6')
 const expect = chai.expect
@@ -37,6 +38,19 @@ class DummyModel {
   static * first () {}
 }
 
+class TokenModel {
+  static query () {
+    return this
+  }
+  static where () {
+    return this
+  }
+  static with () {
+    return this
+  }
+  static * first () {}
+}
+
 const configOptions = {
   serializer: 'Lucid',
   model: DummyModel,
@@ -46,7 +60,6 @@ const configOptions = {
 }
 
 describe('Serializers', function () {
-
   context('Lucid', function () {
     before(function () {
       this.lucid = new LucidSerializer(Hash)
@@ -108,13 +121,14 @@ describe('Serializers', function () {
       DummyModel.first.restore()
     })
 
-    it('should throw an error when user object passed to validateCredentials is not an instance model', function * () {
-      try {
-        yield this.lucid.validateCredentials('foo', {}, configOptions)
-      } catch (e) {
-        expect(e.name).to.equal('InvalidArgumentException')
-        expect(e.message).to.match(/validateCredentials requires an instance of valid Lucid model/)
-      }
+    it('should return false when user is null', function * () {
+      const isValid = yield this.lucid.validateCredentials(null, {}, configOptions)
+      expect(isValid).to.equal(false)
+    })
+
+    it('should return false when user does not have password property', function * () {
+      const isValid = yield this.lucid.validateCredentials('foo', {}, configOptions)
+      expect(isValid).to.equal(false)
     })
 
     it('should try to verify the user password', function * () {
@@ -122,6 +136,91 @@ describe('Serializers', function () {
       yield this.lucid.validateCredentials(new DummyModel(), {password: 'foo'}, configOptions)
       expect(Hash.verify.calledOnce).to.equal(true)
       expect(Hash.verify.calledWith('foo', 'bar')).to.equal(true)
+    })
+
+    it('should find a user by it\'s token', function * () {
+      const newOptions = {
+        model: TokenModel
+      }
+      sinon.spy(TokenModel, 'query')
+      sinon.spy(TokenModel, 'where')
+      sinon.spy(TokenModel, 'with')
+      sinon.spy(TokenModel, 'first')
+      yield this.lucid.findByToken('my-token', newOptions)
+      expect(TokenModel.query.calledOnce).to.equal(true)
+      expect(TokenModel.where.calledOnce).to.equal(true)
+      expect(TokenModel.with.calledOnce).to.equal(true)
+      expect(TokenModel.first.calledOnce).to.equal(true)
+      expect(TokenModel.where.calledWith('token', 'my-token')).to.equal(true)
+      expect(TokenModel.with.calledWith('user')).to.equal(true)
+      TokenModel.query.restore()
+      TokenModel.where.restore()
+      TokenModel.with.restore()
+      TokenModel.first.restore()
+    })
+
+    it('should return false when token is null', function * () {
+      const newOptions = {
+        model: TokenModel
+      }
+      const isValid = yield this.lucid.validateToken(null, newOptions)
+      expect(isValid).to.equal(false)
+    })
+
+    it('should return false when token does not have get method', function * () {
+      const newOptions = {
+        model: TokenModel
+      }
+      const isValid = yield this.lucid.validateToken('foo', newOptions)
+      expect(isValid).to.equal(false)
+    })
+
+    it('should return false when token get method returns a falsy value', function * () {
+      const newOptions = {
+        model: TokenModel
+      }
+      const isValid = yield this.lucid.validateToken({get: function () {}}, newOptions)
+      expect(isValid).to.equal(false)
+    })
+
+    it('should return true when token has a forever key with positive value', function * () {
+      const newOptions = {
+        model: TokenModel
+      }
+      const isValid = yield this.lucid.validateToken({get: function () { return 'something' }, forever: true}, newOptions)
+      expect(isValid).to.equal(true)
+    })
+
+    it('should return true when token expiry date time is greater than current date time', function * () {
+      const newOptions = {
+        model: TokenModel
+      }
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() + 1)
+      const tokenInstance = {
+        get: function () { return 'something' },
+        toJSON: function () {
+          return { expiry: futureDate }
+        }
+      }
+      const isValid = yield this.lucid.validateToken(tokenInstance, newOptions)
+      expect(isValid).to.equal(true)
+    })
+
+    it('should return false when token expiry date time is lesser than current date time', function * () {
+      const newOptions = {
+        model: TokenModel
+      }
+      const futureDate = new Date()
+      futureDate.setDate(futureDate.getDate() - 1)
+      const tokenInstance = {
+        get: function () { return 'something' },
+        toJSON: function () {
+          return { expiry: futureDate }
+        }
+      }
+      const isValid = yield this.lucid.validateToken(tokenInstance, newOptions)
+      expect(isValid).to.equal(false)
     })
   })
 })
