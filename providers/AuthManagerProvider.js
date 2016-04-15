@@ -2,14 +2,14 @@
 
 const ServiceProvider = require('adonis-fold').ServiceProvider
 
-class AuthProvider extends ServiceProvider {
+class AuthManagerProvider extends ServiceProvider {
 
   * register () {
-    this.app.bind('Adonis/Src/Auth', function (app) {
+    this.app.bind('Adonis/Src/AuthManager', function (app) {
       return require('../src/AuthManager')
     })
   }
 
 }
 
-module.exports = AuthProvider
+module.exports = AuthManagerProvider
