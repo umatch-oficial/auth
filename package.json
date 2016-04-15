@@ -1,5 +1,5 @@
 {
-  "name": "adonis-auth-provider",
+  "name": "adonis-auth",
   "version": "1.0.0",
   "description": "Offical authentication provider for Adonis framework",
   "main": "index.js",
@@ -38,7 +38,6 @@
     "adonis-fold": "^3.0.0"
   },
   "dependencies": {
-    "adonis-fold": "^2.0.1",
     "cat-log": "^1.0.0",
     "harmony-reflect": "^1.4.2",
     "lodash": "^4.6.1",
