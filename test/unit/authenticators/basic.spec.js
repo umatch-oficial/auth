@@ -148,7 +148,7 @@ describe('Authenticators', function () {
       Hash.verify.restore()
     })
 
-    it('should return user if check is successfull', function * () {
+    it('should return user if check is successful', function * () {
       class User extends Model {
         static * first () {
           return {
