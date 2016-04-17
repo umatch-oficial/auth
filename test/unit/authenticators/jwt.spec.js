@@ -55,6 +55,20 @@ describe('Authenticators', function () {
   })
 
   context('Jwt', function () {
+    it('should not initialize if secret key is missing', function * () {
+      class User extends Model {
+      }
+      try {
+        const config = Config(User)
+        config.secret = null
+        const jwtAuth = new JwtAuthenticator(request, this.serializer, config)
+        expect(jwtAuth).to.equal(undefined)
+      } catch (e) {
+        expect(e.name).to.equal('DomainException')
+        expect(e.message).to.match(/Add secret key to the jwt configuration block/)
+      }
+    })
+
     it('should return false when request does not have authorization header set', function * () {
       class User extends Model {
       }
@@ -161,6 +175,38 @@ describe('Authenticators', function () {
       const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
       const user = yield jwtAuth.getUser()
       expect(user).deep.equal({id: 1})
+    })
+
+    it('should throw an error when trying to generate token without a user', function * () {
+      class User {
+        static get primaryKey () {
+          return 'id'
+        }
+      }
+      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      try {
+        yield jwtAuth.generate()
+        expect(true).to.equal(false)
+      } catch (e) {
+        expect(e.name).to.equal('InvalidArgumentException')
+        expect(e.message).to.match(/user is required to generate a jwt token/)
+      }
+    })
+
+    it('should throw an error when value of primaryKey is not defined', function * () {
+      class User {
+        static get primaryKey () {
+          return 'id'
+        }
+      }
+      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      try {
+        yield jwtAuth.generate({foo: 'bar'})
+        expect(true).to.equal(false)
+      } catch (e) {
+        expect(e.name).to.equal('InvalidArgumentException')
+        expect(e.message).to.match(/Value for id is null for given user/)
+      }
     })
 
     it('should be able to generate a token for a given user', function * () {

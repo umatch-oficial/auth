@@ -15,6 +15,13 @@ const BaseAuthenticator = require('../BaseAuthenticator')
 
 class JwtAuthenticator extends BaseAuthenticator {
 
+  constructor (request, serializer, options) {
+    super(request, serializer, options)
+    if (!options.secret) {
+      throw new NE.DomainException('Add secret key to the jwt configuration block')
+    }
+  }
+
   get jwtOptions () {
     return this.options.options || {}
   }
