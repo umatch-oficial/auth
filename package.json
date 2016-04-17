@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "npm run standard && node --harmony_proxies ./node_modules/.bin/_mocha test/unit --recursive --bail",
-    "standard": "standard src/**/*.js src/**/**/*.js test/**/*.js test/**/**/*.js providers/*.js util/*.js",
+    "standard": "standard src/**/*.js src/**/**/*.js test/**/*.js test/**/**/*.js providers/*.js util/*.js middleware/*.js",
     "coverage": "node --harmony_proxies ./node_modules/.bin/istanbul cover _mocha test/unit test/unit/serializer test/unit/authenticators"
   },
   "keywords": [
