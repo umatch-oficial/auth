@@ -72,7 +72,7 @@ describe('Authenticators', function () {
         expect(User.query.calledOnce).to.equal(true)
         expect(User.where.calledOnce).to.equal(true)
         expect(User.first.calledOnce).to.equal(true)
-        expect(User.where.calledWith({ email: 'foo@bar.com' })).to.equal(true)
+        expect(User.where.calledWith('email', 'foo@bar.com')).to.equal(true)
       } finally {
         User.query.restore()
         User.where.restore()

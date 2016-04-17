@@ -82,10 +82,10 @@ describe('Serializers', function () {
       sinon.spy(DummyModel, 'query')
       sinon.spy(DummyModel, 'where')
       sinon.spy(DummyModel, 'first')
-      yield this.lucid.findByCredentials('foo@bar.com', {}, configOptions)
+      yield this.lucid.findByCredentials('foo@bar.com', configOptions)
       expect(DummyModel.query.calledOnce).to.equal(true)
       expect(DummyModel.where.calledOnce).to.equal(true)
-      expect(DummyModel.where.calledWith({email: 'foo@bar.com'})).to.equal(true)
+      expect(DummyModel.where.calledWith('email', 'foo@bar.com')).to.equal(true)
       expect(DummyModel.first.calledOnce).to.equal(true)
       DummyModel.query.restore()
       DummyModel.where.restore()
@@ -95,12 +95,24 @@ describe('Serializers', function () {
     it('should pass extra constraints to query builder where method when defined', function * () {
       sinon.spy(DummyModel, 'query')
       sinon.spy(DummyModel, 'where')
+      sinon.spy(DummyModel, 'andWhere')
       sinon.spy(DummyModel, 'first')
-      yield this.lucid.findByCredentials('foo@bar.com', {age: 22}, configOptions)
+      const altConfig = {
+        serializer: 'Lucid',
+        model: DummyModel,
+        scheme: 'session',
+        uid: 'email',
+        password: 'password',
+        query: {age: 22}
+      }
+      yield this.lucid.findByCredentials('foo@bar.com', altConfig)
       expect(DummyModel.where.calledOnce).to.equal(true)
-      expect(DummyModel.where.calledWith({email: 'foo@bar.com', age: 22})).to.equal(true)
+      expect(DummyModel.andWhere.calledOnce).to.equal(true)
+      expect(DummyModel.where.calledWith('email', 'foo@bar.com')).to.equal(true)
+      expect(DummyModel.andWhere.calledWith({age: 22})).to.equal(true)
       DummyModel.query.restore()
       DummyModel.where.restore()
+      DummyModel.andWhere.restore()
       DummyModel.first.restore()
     })
 
@@ -109,12 +121,18 @@ describe('Serializers', function () {
       sinon.spy(DummyModel, 'where')
       sinon.spy(DummyModel, 'andWhere')
       sinon.spy(DummyModel, 'first')
-      const func = function () {}
-      yield this.lucid.findByCredentials('foo@bar.com', func, configOptions)
+      const altConfig = {
+        serializer: 'Lucid',
+        model: DummyModel,
+        scheme: 'session',
+        uid: 'email',
+        password: 'password',
+        query: function () {}
+      }
+      yield this.lucid.findByCredentials('foo@bar.com', altConfig)
       expect(DummyModel.where.calledOnce).to.equal(true)
-      expect(DummyModel.where.calledWith({email: 'foo@bar.com'})).to.equal(true)
+      expect(DummyModel.where.calledWith('email', 'foo@bar.com')).to.equal(true)
       expect(DummyModel.andWhere.calledOnce).to.equal(true)
-      expect(DummyModel.andWhere.calledWith(func)).to.equal(true)
       DummyModel.query.restore()
       DummyModel.where.restore()
       DummyModel.andWhere.restore()

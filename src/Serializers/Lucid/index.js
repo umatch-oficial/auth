@@ -14,7 +14,6 @@
 
 const Ioc = require('adonis-fold').Ioc
 const util = require('../../../lib/util')
-const _ = require('lodash')
 
 class LucidSerializer {
 
@@ -58,6 +57,21 @@ class LucidSerializer {
   }
 
   /**
+   * decorates database query object by passing options
+   * query to where object.
+   *
+   * @param  {Object} query
+   * @param  {Object} options
+   *
+   * @private
+   */
+  _decorateQuery (query, options) {
+    if (options.query) {
+      query.andWhere(options.query)
+    }
+  }
+
+  /**
    * returns the model instance by model primary key
    *
    * @param  {Number} id
@@ -75,23 +89,15 @@ class LucidSerializer {
    * returns model instance using the user credentials
    *
    * @param  {String} email
-   * @param  {Object|Function} constraints  - Other query constraints to be passed
-   *                                	       	on runtime.
    * @param  {Object} options   - Options defined as the config
    * @return {Object}
    *
    * @public
    */
-  * findByCredentials (email, constraints, options) {
-    const callback = _.isFunction(constraints) ? constraints : null
-    const whereObject = _.isPlainObject(constraints) ? constraints : {}
+  * findByCredentials (email, options) {
     const model = this._getModel(options.model)
-
-    whereObject[options.uid] = email
-    const query = model.query().where(whereObject)
-    if (callback) {
-      query.andWhere(callback)
-    }
+    const query = model.query().where(options.uid, email)
+    this._decorateQuery(query, options)
     return yield query.first()
   }
 
@@ -108,7 +114,9 @@ class LucidSerializer {
    */
   * findByToken (token, options) {
     const model = this._getModel(options.model)
-    return yield model.query().where('token', token).with('user').first()
+    const query = model.query().where('token', token)
+    this._decorateQuery(query, options)
+    return yield query.with('user').first()
   }
 
   /**

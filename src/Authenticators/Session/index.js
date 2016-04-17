@@ -104,7 +104,6 @@ class SessionAuthenticator extends BaseAuthenticator {
    *
    * @param  {String} uid
    * @param  {String} password
-   * @param  {Object} constraints
    * @return {Boolean}
    *
    * @see validate
@@ -112,8 +111,8 @@ class SessionAuthenticator extends BaseAuthenticator {
    *
    * @public
    */
-  * attempt (uid, password, constraints) {
-    const user = yield this.validate(uid, password, constraints, true)
+  * attempt (uid, password) {
+    const user = yield this.validate(uid, password, true)
     return yield this.login(user)
   }
 

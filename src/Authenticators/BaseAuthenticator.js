@@ -64,15 +64,14 @@ class BaseAuthenticator {
    *
    * @param  {String} uid
    * @param  {String} password
-   * @param  {Object} [constraints]
    * @param  {Boolean} [returnUser]
    * @return {Boolean|Object}
    *
    * @throws UserNotFoundException when unable to locate user
    * @throws PasswordMisMatchException when password does not match
    */
-  * validate (uid, password, constraints, returnUser) {
-    const user = yield this.serializer.findByCredentials(uid, constraints, this.options)
+  * validate (uid, password, returnUser) {
+    const user = yield this.serializer.findByCredentials(uid, this.options)
     if (!user) {
       throw new CE.UserNotFoundException(`Unable to find user with ${uid} ${this.options.uid}`)
     }

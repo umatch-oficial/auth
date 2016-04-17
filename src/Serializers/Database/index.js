@@ -24,11 +24,10 @@ class DatabaseSerializer {
     return yield this.database.table(options.table).where('id', id).first()
   }
 
-  * findByCredentials (email, constraints, options) {
+  * findByCredentials (email, options) {
   }
 
   * findByToken (token, options) {
-
   }
 
   * validateToken (token, options) {
