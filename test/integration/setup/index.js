@@ -67,14 +67,20 @@ setup.registerProviders = function () {
   return Registrar.register([path.join(__dirname, '../../../providers/AuthManagerProvider')])
 }
 
-setup.decorateRequest = function (req, name) {
+setup.decorateRequest = function (req, name, config) {
+  config = config || Config
   const request = {
     request: req
   }
   const AuthManager = Ioc.use('Adonis/Src/AuthManager')
-  request.auth = new AuthManager(Config, request, name)
+  request.auth = new AuthManager(config, request, name)
   request.header = function () {
     return req.headers['authorization']
+  }
+  request.session = {
+    get: function * () {
+      return req.headers['cookie'] ? req.headers['cookie'].replace('adonis-auth=', '') : null
+    }
   }
   return request
 }
