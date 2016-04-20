@@ -41,6 +41,7 @@ class Auth {
         result = yield request.auth.authenticator(authenticator).check()
       }
       if (result) {
+        request.user = yield request.auth.getUser()
         /**
          * we need to break the loop as soon as an authenticator
          * returns true. Ideally one cannot break promises chain
