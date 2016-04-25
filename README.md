@@ -27,8 +27,130 @@ You are free to add your own schemes and serializers and documentation for same 
 
 ## Table of Contents
 
+* [Config](#config)
+* [Setup](#setup)
 * [Team Members](#team-members)
 * [Contribution Guidelines](#contribution-guidelines)
+
+## <a name="config"></a>Config
+
+Configuration settings are slightly different for each scheme. When you define settings, we call them authenticators.
+
+In short, an authenticator is a combination of `scheme`, `serializer` and common settings around them.
+
+### Example
+**config/auth.js**
+```javascript
+{
+  authenticator: 'session',
+
+  session: {
+    ...
+  }
+}
+```
+
+
+### Session
+
+```javascript
+session: {
+  serializer: 'Lucid',
+  scheme: 'session',
+  model: 'App/Model/User',
+  uid: 'email',
+  password: 'password'
+}
+```
+
+### Basic Auth
+
+```javascript
+basicAuth: {
+  serializer: 'Lucid',
+  scheme: 'basic',
+  model: 'App/Model/User',
+  uid: 'email',
+  password: 'password'
+}
+```
+
+### JWT
+
+```javascript
+jwt: {
+  serializer: 'Lucid',
+  scheme: 'jwt',
+  model: 'App/Model/User',
+  secret: Config.get('app.appKey')
+}
+```
+
+## <a name="setup"></a>Setup
+
+In order to make use of the Auth provider, you need to register it inside your `bootstrap/app.js` file.
+
+### Required Setup
+
+```javascript
+const providers = [
+  ...,
+  'adonis-auth/providers/AuthManagerProvider'
+]
+```
+
+Next you need to register the `AuthInit` middleware. This middleware will create a new instance of Auth Manager and will assign it to the request object.
+
+**app/Http/kernel.js**
+```javascript
+const globalMiddleware = [
+  ...,
+  'Adonis/Middleware/AuthInit'
+]
+```
+and you are good to go. From here you can make use of `request.auth` to authenticate/login your users.
+
+### Usage
+
+```javascript
+// find if a user is logged in
+yield request.auth.check()
+
+// attempt to login a user
+yield request.auth.attempt('email', 'password')
+
+// login using user object
+yield request.auth.login(user)
+yield request.auth.loginViaId(1)
+yield request.auth.logout()
+```
+
+### Automatic Authentication
+
+Auth provider also ships with an extra middleware, which can be assigned to your routes to authenticate them.
+
+**app/Http/kernel.js**
+```javascript
+const namedMiddleware = {
+  auth: 'Adonis/Middleware/Auth'
+}
+```
+
+and then inside your routes file you can do.
+
+#### Using default authenticator
+```javascript
+Route
+  .get('account', 'AccountController.index')
+  .middleware('auth')
+```
+
+#### Defining authenticator
+```javascript
+Route
+  .get('account', 'AccountController.index')
+  .middleware('auth:basic')
+```
 
 ## <a name="team-members"></a>Team Members
 
