@@ -17,6 +17,7 @@ Auth provider is a fully featured authentication system for Adonis framework. It
 1. Sessions
 2. Basic-Auth
 3. JWT Tokens
+4. API Token
 
 In order to verify users credentials, it makes use of Serializers and below serializers are shipped with this library.
 
@@ -83,6 +84,47 @@ jwt: {
   scheme: 'jwt',
   model: 'App/Model/User',
   secret: Config.get('app.appKey')
+}
+```
+
+### API Tokens
+
+Personal api tokens are like passwords for a given account. Majority of API's needs API based authentication because:
+
+1. Their customers developers want to use the API in order to build something.
+2. Sharing account details with the developer is never secure, so instead they can generate a token
+and give it to the developer for testing.
+
+```javascript
+{
+  serializer: 'Lucid',
+  scheme: 'api',
+  model: 'App/Model/Token',
+  expiry: '30d'
+}
+```
+
+Also you need to create the relationship between the user and the token, so that the Lucid serializer can make use of it.
+
+**app/Model/User.js**
+```javascript
+class User extends Lucid {
+
+  apiTokens () {
+    return this.hasMany('App/Model/Token')
+  }
+
+}
+```
+
+**app/Model/Token.js**
+```javascript
+class Token extends Lucid {
+
+  user () {
+    return this.belongsTo('App/Model/User')
+  }
+
 }
 ```
 
