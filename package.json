@@ -46,6 +46,7 @@
     "co-functional": "^0.2.1",
     "harmony-reflect": "^1.4.2",
     "jsonwebtoken": "^5.7.0",
+    "ms": "^0.7.1",
     "node-exceptions": "^1.0.1"
   }
 }

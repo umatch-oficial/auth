@@ -17,6 +17,10 @@ const util = require('../../../lib/util')
 
 class LucidSerializer {
 
+  constructor (Hash) {
+    this.hash = Hash
+  }
+
   /**
    * dependencies to be auto injected by the IoC container
    * @return {Array}
@@ -24,10 +28,6 @@ class LucidSerializer {
    */
   static get inject () {
     return ['Adonis/Src/Hash']
-  }
-
-  constructor (Hash) {
-    this.hash = Hash
   }
 
   /**
@@ -117,6 +117,60 @@ class LucidSerializer {
     const query = model.query().where('token', token)
     this._decorateQuery(query, options)
     return yield query.with('user').first()
+  }
+
+  /**
+   * makes token expiry date by adding milliseconds
+   * to the current date.
+   *
+   * @param  {Number} expiry
+   * @return {Date}
+   *
+   * @private
+   */
+  _getTokenExpiryDate (expiry) {
+    return new Date(Date.now() + expiry)
+  }
+
+  /**
+   * saves a new token for a given user.
+   *
+   * @param  {Object} user
+   * @param  {String} token
+   * @param  {Object} options
+   * @param  {Number} expiry
+   * @returns {Number} - Saved token id
+   *
+   * @public
+   */
+  * saveToken (user, token, options, expiry) {
+    const tokenObject = {
+      token: token,
+      forever: !expiry,
+      expiry: expiry ? this._getTokenExpiryDate(expiry) : null,
+      is_revoked: false
+    }
+    const Token = this._getModel(options.model)
+    return yield user.apiTokens().save(new Token(tokenObject))
+  }
+
+  /**
+   * revokes tokens for a given user.
+   *
+   * @param  {Object} user
+   * @param  {Array} tokens
+   * @param  {Boolean} reverse
+   * @returns {Number} - Number of affected rows
+   *
+   * @public
+   */
+  * revokeTokens (user, tokens, reverse) {
+    const userTokens = user.apiTokens().query()
+    if (tokens) {
+      const method = reverse ? 'whereNotIn' : 'whereIn'
+      userTokens[method]('token', tokens)
+    }
+    return yield userTokens.update({is_revoked: true})
   }
 
   /**

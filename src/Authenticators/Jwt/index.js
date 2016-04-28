@@ -22,6 +22,14 @@ class JwtAuthenticator extends BaseAuthenticator {
     }
   }
 
+  /**
+   * returns default jwtOptions to be used while
+   * generating and verifying tokens.
+   *
+   * @return {Object}
+   *
+   * @private
+   */
   get jwtOptions () {
     return this.options.options || {}
   }

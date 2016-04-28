@@ -14,6 +14,7 @@ const chai = require('chai')
 const sinon = require('sinon-es6')
 const expect = chai.expect
 const LucidSerializer = require('../../../src/Serializers').Lucid
+const ms = require('ms')
 require('co-mocha')
 const Hash = {
   verify: function * () {
@@ -35,7 +36,24 @@ class DummyModel {
   static andWhere () {
     return this
   }
+  apiTokens () {
+    return hasMany
+  }
   static * first () {}
+}
+
+const hasMany = {
+  save: function * () {},
+  query: function () {
+    return this
+  },
+  whereIn: function () {
+    return this
+  },
+  whereNotIn: function () {
+    return this
+  },
+  update: function * () {}
 }
 
 class TokenModel {
@@ -239,6 +257,104 @@ describe('Serializers', function () {
       }
       const isValid = yield this.lucid.validateToken(tokenInstance, newOptions)
       expect(isValid).to.equal(false)
+    })
+
+    it('should create expiry date for a given token', function () {
+      const today = new Date()
+      today.setDate(today.getDate() + 3)
+      const expiry = this.lucid._getTokenExpiryDate(ms('3d'))
+      expect(expiry.getDate()).to.equal(today.getDate())
+    })
+
+    it('should save token using user model instance', function * () {
+      const newOptions = {
+        model: TokenModel
+      }
+      const dummyModel = new DummyModel()
+      sinon.spy(dummyModel, 'apiTokens')
+      sinon.spy(hasMany, 'save')
+      yield this.lucid.saveToken(dummyModel, 120102, newOptions)
+      expect(dummyModel.apiTokens.calledOnce).to.equal(true)
+      expect(hasMany.save.calledOnce).to.equal(true)
+      expect(hasMany.save.calledWith(new TokenModel({token: 120102, forever: true, expiry: null, is_revoked: false}))).to.equal(true)
+      dummyModel.apiTokens.restore()
+      hasMany.save.restore()
+    })
+
+    it('should save token using user model instance and set proper expiry date', function * () {
+      const newOptions = {
+        model: TokenModel
+      }
+      const dummyModel = new DummyModel()
+      const today = new Date()
+      today.setDate(today.getDate() + 3)
+      sinon.spy(dummyModel, 'apiTokens')
+      sinon.spy(hasMany, 'save')
+      yield this.lucid.saveToken(dummyModel, 120102, newOptions, ms('3d'))
+      expect(dummyModel.apiTokens.calledOnce).to.equal(true)
+      expect(hasMany.save.calledOnce).to.equal(true)
+      expect(hasMany.save.calledWith(new TokenModel({token: 120102, forever: false, expiry: today, is_revoked: false}))).to.equal(true)
+      dummyModel.apiTokens.restore()
+      hasMany.save.restore()
+    })
+
+    it('should revoke all of the user tokens', function * () {
+      const dummyModel = new DummyModel()
+      const today = new Date()
+      today.setDate(today.getDate() + 3)
+      sinon.spy(dummyModel, 'apiTokens')
+      sinon.spy(hasMany, 'query')
+      sinon.spy(hasMany, 'update')
+      yield this.lucid.revokeTokens(dummyModel)
+      expect(dummyModel.apiTokens.calledOnce).to.equal(true)
+      expect(hasMany.query.calledOnce).to.equal(true)
+      expect(hasMany.update.calledOnce).to.equal(true)
+      expect(hasMany.update.calledWith({is_revoked: true})).to.equal(true)
+      dummyModel.apiTokens.restore()
+      hasMany.query.restore()
+      hasMany.update.restore()
+    })
+
+    it('should revoke only given tokens', function * () {
+      const dummyModel = new DummyModel()
+      const today = new Date()
+      today.setDate(today.getDate() + 3)
+      sinon.spy(dummyModel, 'apiTokens')
+      sinon.spy(hasMany, 'query')
+      sinon.spy(hasMany, 'whereIn')
+      sinon.spy(hasMany, 'update')
+      yield this.lucid.revokeTokens(dummyModel, [1223, 81992])
+      expect(dummyModel.apiTokens.calledOnce).to.equal(true)
+      expect(hasMany.query.calledOnce).to.equal(true)
+      expect(hasMany.whereIn.calledOnce).to.equal(true)
+      expect(hasMany.whereIn.calledWith('token', [1223, 81992])).to.equal(true)
+      expect(hasMany.update.calledOnce).to.equal(true)
+      expect(hasMany.update.calledWith({is_revoked: true})).to.equal(true)
+      dummyModel.apiTokens.restore()
+      hasMany.query.restore()
+      hasMany.whereIn.restore()
+      hasMany.update.restore()
+    })
+
+    it('should revoke all tokens accept the given tokens', function * () {
+      const dummyModel = new DummyModel()
+      const today = new Date()
+      today.setDate(today.getDate() + 3)
+      sinon.spy(dummyModel, 'apiTokens')
+      sinon.spy(hasMany, 'query')
+      sinon.spy(hasMany, 'whereNotIn')
+      sinon.spy(hasMany, 'update')
+      yield this.lucid.revokeTokens(dummyModel, [1223, 81992], true)
+      expect(dummyModel.apiTokens.calledOnce).to.equal(true)
+      expect(hasMany.query.calledOnce).to.equal(true)
+      expect(hasMany.whereNotIn.calledOnce).to.equal(true)
+      expect(hasMany.whereNotIn.calledWith('token', [1223, 81992])).to.equal(true)
+      expect(hasMany.update.calledOnce).to.equal(true)
+      expect(hasMany.update.calledWith({is_revoked: true})).to.equal(true)
+      dummyModel.apiTokens.restore()
+      hasMany.query.restore()
+      hasMany.whereNotIn.restore()
+      hasMany.update.restore()
     })
   })
 })
