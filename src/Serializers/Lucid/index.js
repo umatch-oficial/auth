@@ -151,7 +151,9 @@ class LucidSerializer {
       is_revoked: false
     }
     const Token = this._getModel(options.model)
-    return yield user.apiTokens().save(new Token(tokenObject))
+    const tokenInstance = new Token(tokenObject)
+    const isSaved = yield user.apiTokens().save(tokenInstance)
+    return isSaved ? tokenInstance : null
   }
 
   /**

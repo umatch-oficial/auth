@@ -43,7 +43,9 @@ class DummyModel {
 }
 
 const hasMany = {
-  save: function * () {},
+  save: function * (values) {
+    return values
+  },
   query: function () {
     return this
   },
@@ -282,6 +284,15 @@ describe('Serializers', function () {
       expect(hasMany.save.calledWith(new TokenModel({token: 120102, forever: true, expiry: null, is_revoked: false}))).to.equal(true)
       dummyModel.apiTokens.restore()
       hasMany.save.restore()
+    })
+
+    it('should return saved token using user model instance', function * () {
+      const newOptions = {
+        model: TokenModel
+      }
+      const dummyModel = new DummyModel()
+      const token = yield this.lucid.saveToken(dummyModel, 120102, newOptions)
+      expect(token instanceof TokenModel).to.equal(true)
     })
 
     it('should save token using user model instance and set proper expiry date', function * () {
