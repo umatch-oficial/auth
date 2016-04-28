@@ -63,6 +63,9 @@ class TokenModel {
   static where () {
     return this
   }
+  static andWhere () {
+    return this
+  }
   static with () {
     return this
   }
@@ -309,7 +312,7 @@ describe('Serializers', function () {
       expect(dummyModel.apiTokens.calledOnce).to.equal(true)
       expect(hasMany.query.calledOnce).to.equal(true)
       expect(hasMany.update.calledOnce).to.equal(true)
-      expect(hasMany.update.calledWith({is_revoked: true})).to.equal(true)
+      expect(hasMany.update.calledWith('is_revoked', true)).to.equal(true)
       dummyModel.apiTokens.restore()
       hasMany.query.restore()
       hasMany.update.restore()
@@ -329,7 +332,7 @@ describe('Serializers', function () {
       expect(hasMany.whereIn.calledOnce).to.equal(true)
       expect(hasMany.whereIn.calledWith('token', [1223, 81992])).to.equal(true)
       expect(hasMany.update.calledOnce).to.equal(true)
-      expect(hasMany.update.calledWith({is_revoked: true})).to.equal(true)
+      expect(hasMany.update.calledWith('is_revoked', true)).to.equal(true)
       dummyModel.apiTokens.restore()
       hasMany.query.restore()
       hasMany.whereIn.restore()
@@ -350,7 +353,7 @@ describe('Serializers', function () {
       expect(hasMany.whereNotIn.calledOnce).to.equal(true)
       expect(hasMany.whereNotIn.calledWith('token', [1223, 81992])).to.equal(true)
       expect(hasMany.update.calledOnce).to.equal(true)
-      expect(hasMany.update.calledWith({is_revoked: true})).to.equal(true)
+      expect(hasMany.update.calledWith('is_revoked', true)).to.equal(true)
       dummyModel.apiTokens.restore()
       hasMany.query.restore()
       hasMany.whereNotIn.restore()

@@ -82,6 +82,25 @@ class BaseAuthenticator {
     return returnUser ? user : true
   }
 
+  /**
+   * returns token passed inside request, it will look
+   * for following places.
+   * Request header - Authorization=Bearer 'token'
+   * Query string - token='token'
+   * Request body - token='token'
+   *
+   * @return {String|Null}
+   *
+   * @private
+   */
+  _getRequestToken () {
+    let token = this.request.header('authorization')
+    if (token) {
+      token = token.split(' ')
+      return (token.length === 2 && token[0] === 'Bearer') ? token[1] : null
+    }
+    return this.request.input('token')
+  }
 }
 
 module.exports = BaseAuthenticator

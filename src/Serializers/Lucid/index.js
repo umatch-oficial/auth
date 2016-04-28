@@ -114,7 +114,7 @@ class LucidSerializer {
    */
   * findByToken (token, options) {
     const model = this._getModel(options.model)
-    const query = model.query().where('token', token)
+    const query = model.query().where('token', token).andWhere('is_revoked', false)
     this._decorateQuery(query, options)
     return yield query.with('user').first()
   }
@@ -170,14 +170,14 @@ class LucidSerializer {
       const method = reverse ? 'whereNotIn' : 'whereIn'
       userTokens[method]('token', tokens)
     }
-    return yield userTokens.update({is_revoked: true})
+    return yield userTokens.update('is_revoked', true)
   }
 
   /**
    * validates a token by making user a user for the corresponding
    * token exists and the token has not been expired.
    *
-   * @param  {Object} token   - token model resolved from the database
+   * @param  {Object} token   - token model resolved from findByToken
    * @param  {Object} options
    * @return {Boolean}
    *
