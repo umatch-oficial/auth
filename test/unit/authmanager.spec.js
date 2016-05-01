@@ -52,7 +52,7 @@ describe('AuthManager', function () {
     const auth = new AuthManager(Config, request)
     const methods = ['check', 'validate', 'attempt', 'login', 'loginViaId', 'getUser']
     methods.forEach(function (method) {
-      expect(auth[method]).to.be.a('function')
+      expect(typeof (auth[method])).to.equal('function')
     })
   })
 
