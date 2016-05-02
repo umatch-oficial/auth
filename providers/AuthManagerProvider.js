@@ -7,6 +7,7 @@ class AuthManagerProvider extends ServiceProvider {
   * register () {
     this._bindManager()
     this._bindMiddleware()
+    this._bindCommands()
   }
 
   _bindMiddleware () {
@@ -20,6 +21,13 @@ class AuthManagerProvider extends ServiceProvider {
     this.app.bind('Adonis/Middleware/Auth', function () {
       const Auth = require('../Middleware/Auth')
       return new Auth()
+    })
+  }
+
+  _bindCommands () {
+    this.app.bind('Adonis/Commands/Auth:Setup', function () {
+      const AuthSetup = require('../commands/Setup')
+      return new AuthSetup()
     })
   }
 
