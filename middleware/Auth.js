@@ -67,7 +67,7 @@ class Auth {
   * _authenticate (request, authenticators) {
     try {
       yield this._tryFail(request, authenticators)
-      throw new CE.InvalidLoginException('Login Failure')
+      throw new CE.InvalidLoginException('Login Failure', 401)
     } catch (e) {
       if (e.message !== 'Stop execution') {
         throw e
