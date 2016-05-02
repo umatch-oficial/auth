@@ -23,6 +23,13 @@ class AuthManagerProvider extends ServiceProvider {
     })
   }
 
+  _bindCommands () {
+    this.app.bind('Adonis/Commands/Auth:Setup', function () {
+      const AuthSetup = require('../commands/Setup')
+      return new AuthSetup()
+    })
+  }
+
   _bindManager () {
     this.app.bind('Adonis/Src/AuthManager', function () {
       return require('../src/AuthManager')
