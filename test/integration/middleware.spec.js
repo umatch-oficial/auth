@@ -20,6 +20,10 @@ const sinon = require('sinon-es6')
 const expect = chai.expect
 require('co-mocha')
 
+const View = {
+  global: function () {}
+}
+
 class DummyModel {
   static * find (id) {
     return id === '2' ? {password: 'secret', id: id} : null
@@ -80,7 +84,7 @@ describe('Auth Middleware', function () {
   it('should throw login exception when unable to authenticate a given user', function * () {
     const server = http.createServer(function (req, res) {
       const request = setup.decorateRequest(req, 'session', Config)
-      const authMiddleware = new AuthMiddleware()
+      const authMiddleware = new AuthMiddleware(View)
       co(function * () {
         yield authMiddleware.handle(request, res, function * () {})
       })
@@ -105,7 +109,7 @@ describe('Auth Middleware', function () {
     sinon.spy(DummyModel, 'find')
     const server = http.createServer(function (req, res) {
       const request = setup.decorateRequest(req, 'session', Config)
-      const authMiddleware = new AuthMiddleware()
+      const authMiddleware = new AuthMiddleware(View)
       co(function * () {
         yield authMiddleware.handle(request, res, function * () {})
       })
@@ -133,7 +137,7 @@ describe('Auth Middleware', function () {
     sinon.spy(DummyModel, 'find')
     const server = http.createServer(function (req, res) {
       const request = setup.decorateRequest(req, 'session', Config)
-      const authMiddleware = new AuthMiddleware()
+      const authMiddleware = new AuthMiddleware(View)
       co(function * () {
         yield authMiddleware.handle(request, res, function * () {})
         return yield request.auth.getUser()
@@ -163,7 +167,7 @@ describe('Auth Middleware', function () {
     sinon.spy(DummyModel, 'first')
     const server = http.createServer(function (req, res) {
       const request = setup.decorateRequest(req, 'session', Config)
-      const authMiddleware = new AuthMiddleware()
+      const authMiddleware = new AuthMiddleware(View)
       co(function * () {
         yield authMiddleware.handle(request, res, function * () {}, 'session', 'basic', 'jwt')
         return yield request.auth.getUser()
@@ -174,7 +178,6 @@ describe('Auth Middleware', function () {
         res.end()
       })
       .catch(function (error) {
-        console.log(error)
         res.writeHead(500, {'content-type': 'application/json'})
         res.write(JSON.stringify(error))
         res.end()
@@ -191,14 +194,48 @@ describe('Auth Middleware', function () {
     DummyModel.first.restore()
   })
 
-  it('should work attach the user instance to the request object', function * () {
+  it('should attach the user instance to the request object', function * () {
     sinon.spy(DummyModel, 'find')
     const server = http.createServer(function (req, res) {
       const request = setup.decorateRequest(req, 'session', Config)
-      const authMiddleware = new AuthMiddleware()
+      const authMiddleware = new AuthMiddleware(View)
       co(function * () {
         yield authMiddleware.handle(request, res, function * () {})
-        return request.user
+        return request.authUser
+      })
+      .then(function (user) {
+        res.writeHead(200, {'content-type': 'application/json'})
+        res.write(JSON.stringify(user))
+        res.end()
+      })
+      .catch(function (error) {
+        res.writeHead(500, {'content-type': 'application/json'})
+        res.write(JSON.stringify(error))
+        res.end()
+      })
+    })
+    const response = yield supertest(server).get('/').set('Cookie', ['adonis-auth=2'])
+    expect(response.body).deep.equal({password: 'secret', id: '2'})
+    expect(DummyModel.find.calledOnce).to.equal(true)
+    expect(DummyModel.find.calledWith('2')).to.equal(true)
+    expect()
+    DummyModel.find.restore()
+  })
+
+  it('should bind authUser to the view global', function * () {
+    sinon.spy(DummyModel, 'find')
+    const server = http.createServer(function (req, res) {
+      const request = setup.decorateRequest(req, 'session', Config)
+      const viewKeyValuePair = {}
+      const customView = {
+        global (key, value) {
+          viewKeyValuePair[key] = value
+        }
+      }
+      const authMiddleware = new AuthMiddleware(customView)
+      co(function * () {
+        yield authMiddleware.handle(request, res, function * () {})
+        return viewKeyValuePair.authUser
       })
       .then(function (user) {
         res.writeHead(200, {'content-type': 'application/json'})
