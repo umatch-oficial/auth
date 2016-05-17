@@ -108,6 +108,10 @@ class JwtAuthenticator extends BaseAuthenticator {
     return yield this._verifyRequestToken(this._getRequestToken(), options)
   }
 
+  * validate () {
+    throw new NE.RuntimeException('call to undefined method validate on JWT authenticator instance')
+  }
+
 }
 
 module.exports = JwtAuthenticator

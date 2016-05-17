@@ -232,5 +232,21 @@ describe('Authenticators', function () {
       expect(decoded.payload).to.equal(1)
       expect(decoded.iss).to.equal('adonisjs.com')
     })
+
+    it('should throw an RuntimeException when using validate method', function * () {
+      class User {
+        static get primaryKey () {
+          return 'id'
+        }
+      }
+      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      try {
+        yield jwtAuth.validate()
+        expect(true).to.equal(false)
+      } catch (e) {
+        expect(e.name).to.equal('RuntimeException')
+        expect(e.message).to.match(/call to undefined method validate on JWT authenticator instance/)
+      }
+    })
   })
 })
