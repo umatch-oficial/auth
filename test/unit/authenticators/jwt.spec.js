@@ -18,12 +18,13 @@ const LucidSerializer = require('../../../src/Serializers').Lucid
 const sinon = require('sinon-es6')
 require('co-mocha')
 
-const Config = function (model) {
+const Config = function (model, options) {
   return {
     serializer: 'Lucid',
     model: model,
     scheme: 'jwt',
-    secret: 'bubblegum'
+    secret: 'bubblegum',
+    options: options
   }
 }
 
@@ -226,8 +227,8 @@ describe('Authenticators', function () {
           return 'id'
         }
       }
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
-      const token = yield jwtAuth.generate({id: 1}, {issuer: 'adonisjs.com'})
+      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User, {issuer: 'adonisjs.com'}))
+      const token = yield jwtAuth.generate({id: 1})
       const decoded = jwt.verify(token, Config(User).secret)
       expect(decoded.payload).to.equal(1)
       expect(decoded.iss).to.equal('adonisjs.com')

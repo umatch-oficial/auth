@@ -90,7 +90,7 @@ class JwtAuthenticator extends BaseAuthenticator {
     }
   }
 
-  * generate (user, options) {
+  * generate (user) {
     if (!user) {
       throw new NE.InvalidArgumentException('user is required to generate a jwt token')
     }
@@ -99,13 +99,11 @@ class JwtAuthenticator extends BaseAuthenticator {
     if (!primaryValue) {
       throw new NE.InvalidArgumentException(`Value for ${primaryKey} is null for given user.`)
     }
-    options = options || this.jwtOptions
-    return this._signToken(primaryValue, options)
+    return this._signToken(primaryValue, this.jwtOptions)
   }
 
-  * decode (options) {
-    options = options || this.jwtOptions
-    return yield this._verifyRequestToken(this._getRequestToken(), options)
+  * decode () {
+    return yield this._verifyRequestToken(this._getRequestToken(), this.jwtOptions)
   }
 
   * validate () {
