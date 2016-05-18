@@ -107,7 +107,7 @@ class DatabaseSerializer {
    * @public
    */
   * getUserForToken (token, options) {
-    return yield this.database.from(options.userTable).where(options.primaryKey, token.user_id)
+    return yield this.database.from(options.userTable).where(options.primaryKey, token.user_id).first()
   }
 
   /**
@@ -157,7 +157,7 @@ class DatabaseSerializer {
       expiry: expiry ? this._getTokenExpiryDate(expiry) : null,
       is_revoked: false
     }
-    const isSaved = this.database.into(options.table).insert(tokenObject)
+    const isSaved = yield this.database.into(options.table).insert(tokenObject)
     return isSaved ? tokenObject : null
   }
 

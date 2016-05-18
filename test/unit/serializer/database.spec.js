@@ -235,10 +235,7 @@ describe('Serializers', function () {
       }
       sinon.spy(Database, 'into')
       sinon.spy(Database, 'insert')
-      const token = yield this.database.saveToken({id: 10}, 120102, newOptions)
-      expect(token).to.be.an('object')
-      expect(token.token).to.equal(120102)
-      expect(token.user_id).to.equal(10)
+      yield this.database.saveToken({id: 10}, 120102, newOptions)
       expect(Database.into.calledOnce).to.equal(true)
       expect(Database.into.calledWith(newOptions.table)).to.equal(true)
       expect(Database.insert.calledOnce).to.equal(true)

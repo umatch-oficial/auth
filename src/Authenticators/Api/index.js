@@ -72,7 +72,8 @@ class ApiAuthenticator extends BaseAuthenticator {
     if (!user) {
       throw new CE.InvalidArgumentException('user is required to generate a jwt token')
     }
-    expiry = (expiry || this.options.expiry) ? ms(expiry) : null
+    expiry = expiry || this.options.expiry
+    expiry = expiry ? ms(expiry) : null
     const token = uuid.v1().replace(/-/g, '')
     return yield this.serializer.saveToken(user, token, this.options, expiry)
   }
