@@ -55,7 +55,7 @@ class ApiAuthenticator extends BaseAuthenticator {
     if (!isValid) {
       throw new CE.InvalidTokenException(`Invalid or expired ${token} token`)
     }
-    return returnUser ? userToken.get('user') : true
+    return returnUser ? yield this.serializer.getUserForToken(userToken, this.options) : true
   }
 
   /**
@@ -87,7 +87,7 @@ class ApiAuthenticator extends BaseAuthenticator {
    * @public
    */
   revoke (user, tokens) {
-    return this.serializer.revokeTokens(user, tokens)
+    return this.serializer.revokeTokens(user, tokens, null, this.options)
   }
 
   /**
@@ -99,7 +99,7 @@ class ApiAuthenticator extends BaseAuthenticator {
    * @public
    */
   revokeAll (user) {
-    return this.serializer.revokeTokens(user)
+    return this.serializer.revokeTokens(user, null, null, this.options)
   }
 
   /**
@@ -112,7 +112,7 @@ class ApiAuthenticator extends BaseAuthenticator {
    * @public
    */
   revokeExcept (user, tokens) {
-    return this.serializer.revokeTokens(user, tokens, true)
+    return this.serializer.revokeTokens(user, tokens, true, this.options)
   }
 
 }

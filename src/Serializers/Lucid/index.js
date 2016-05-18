@@ -120,6 +120,20 @@ class LucidSerializer {
   }
 
   /**
+   * return user for a given token
+   *
+   * @param  {Object} token
+   * @return {Object}
+   *
+   * @public
+   */
+  * getUserForToken (token) {
+    // since user is eagerLoaded with token, we just need
+    // to pull the user out of it.
+    return token.get('user')
+  }
+
+  /**
    * makes token expiry date by adding milliseconds
    * to the current date.
    *
@@ -139,7 +153,7 @@ class LucidSerializer {
    * @param  {String} token
    * @param  {Object} options
    * @param  {Number} expiry
-   * @returns {Number} - Saved token id
+   * @returns {Object} - Saved token instance
    *
    * @public
    */

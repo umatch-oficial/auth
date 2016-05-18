@@ -312,7 +312,7 @@ describe('Serializers', function () {
       hasMany.save.restore()
     })
 
-    it('should revoke all of the user tokens', function * () {
+    it('should revoke all of the tokens for a user', function * () {
       const dummyModel = new DummyModel()
       const today = new Date()
       today.setDate(today.getDate() + 3)
@@ -350,7 +350,7 @@ describe('Serializers', function () {
       hasMany.update.restore()
     })
 
-    it('should revoke all tokens accept the given tokens', function * () {
+    it('should revoke all tokens except the given tokens', function * () {
       const dummyModel = new DummyModel()
       const today = new Date()
       today.setDate(today.getDate() + 3)
