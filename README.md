@@ -2,11 +2,11 @@
 
 [![Gitter](https://img.shields.io/badge/+%20GITTER-JOIN%20CHAT%20%E2%86%92-1DCE73.svg?style=flat-square)](https://gitter.im/adonisjs/adonis-framework)
 [![Trello](https://img.shields.io/badge/TRELLO-%E2%86%92-89609E.svg?style=flat-square)](https://trello.com/b/yzpqCgdl/adonis-for-humans)
-[![Version](https://img.shields.io/npm/v/adonis-auth-provider.svg?style=flat-square)](https://www.npmjs.com/package/adonis-auth-provider)
-[![Build Status](https://img.shields.io/travis/adonisjs/adonis-auth-provider/master.svg?style=flat-square)](https://travis-ci.org/adonisjs/adonis-auth-provider)
-[![Coverage Status](https://img.shields.io/coveralls/adonisjs/adonis-auth-provider/master.svg?style=flat-square)](https://coveralls.io/github/adonisjs/adonis-auth-provider?branch=master)
-[![Downloads](https://img.shields.io/npm/dt/adonis-auth-provider.svg?style=flat-square)](https://www.npmjs.com/package/adonis-auth-provider)
-[![License](https://img.shields.io/npm/l/adonis-auth-provider.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/npm/v/adonis-auth.svg?style=flat-square)](https://www.npmjs.com/package/adonis-auth)
+[![Build Status](https://img.shields.io/travis/adonisjs/adonis-auth/master.svg?style=flat-square)](https://travis-ci.org/adonisjs/adonis-auth)
+[![Coverage Status](https://img.shields.io/coveralls/adonisjs/adonis-auth/master.svg?style=flat-square)](https://coveralls.io/github/adonisjs/adonis-auth?branch=master)
+[![Downloads](https://img.shields.io/npm/dt/adonis-auth.svg?style=flat-square)](https://www.npmjs.com/package/adonis-auth)
+[![License](https://img.shields.io/npm/l/adonis-auth.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
 > :pray: This repository contains the authentication provider for Adonis Framework.
 
