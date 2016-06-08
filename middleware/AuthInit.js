@@ -11,14 +11,17 @@
 
 class AuthInit {
 
-  constructor (AuthManager, Config) {
+  constructor (AuthManager, Config, View) {
     this.AuthManager = AuthManager
     this.Config = Config
+    this.view = View
   }
 
   * handle (request, response, next) {
     const AuthManager = this.AuthManager
     request.auth = new AuthManager(this.Config, request)
+    request.currentUser = yield request.auth.getUser()
+    this.view.global('currentUser', request.currentUser)
     yield next
   }
 

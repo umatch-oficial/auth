@@ -13,11 +13,6 @@ const coFs = require('co-functional')
 const CE = require('../src/Exceptions')
 
 class Auth {
-
-  constructor (View) {
-    this.view = View
-  }
-
   /**
    * try authenticating the request using number defined
    * authenticators and throw an error once able to
@@ -32,7 +27,6 @@ class Auth {
    * @private
    */
   _tryFail (request, authenticators) {
-    const self = this
     return coFs.forEachSerial(function * (authenticator) {
       let result = null
       /**
@@ -47,7 +41,6 @@ class Auth {
       }
       if (result) {
         request.authUser = yield request.auth.getUser()
-        self.view.global('authUser', request.authUser)
         /**
          * we need to break the loop as soon as an authenticator
          * returns true. Ideally one cannot break promises chain
