@@ -12,7 +12,7 @@
 /* global it, describe, context, before */
 const chai = require('chai')
 const expect = chai.expect
-const SessionAuthenticator = require('../../../src/Authenticators/Session')
+const SessionScheme = require('../../../src/Schemes/Session')
 const LucidSerializer = require('../../../src/Serializers').Lucid
 const sinon = require('sinon-es6')
 require('co-mocha')
@@ -59,7 +59,7 @@ describe('Authenticators', function () {
           return null
         }
       }
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       sinon.spy(User, 'query')
       sinon.spy(User, 'where')
       sinon.spy(User, 'first')
@@ -94,7 +94,7 @@ describe('Authenticators', function () {
         }
       }
       const serializer = new LucidSerializer(customHash)
-      const sessionAuth = new SessionAuthenticator(request, serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, serializer, Config(User))
       try {
         yield sessionAuth.validate('foo@bar.com', 'secret')
         expect(true).to.equal(false)
@@ -112,7 +112,7 @@ describe('Authenticators', function () {
           }
         }
       }
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const isValid = yield sessionAuth.validate('foo@bar.com', 'secret')
       expect(isValid).to.equal(true)
     })
@@ -125,7 +125,7 @@ describe('Authenticators', function () {
           }
         }
       }
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const user = yield sessionAuth.validate('foo@bar.com', 'secret', {}, true)
       expect(user).deep.equal({password: '123'})
     })
@@ -143,7 +143,7 @@ describe('Authenticators', function () {
         }
       }
       sinon.spy(request.session, 'put')
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const tryLogin = yield sessionAuth.attempt('foo@bar.com', 'secret', {})
       expect(tryLogin).to.equal(true)
       expect(request.session.put.calledOnce).to.equal(true)
@@ -154,7 +154,7 @@ describe('Authenticators', function () {
     it('should return true when user property exists on the auth instance', function * () {
       class User extends Model {
       }
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       sessionAuth.user = new User()
       const isLoggedIn = yield sessionAuth.check()
       expect(isLoggedIn).to.equal(true)
@@ -164,7 +164,7 @@ describe('Authenticators', function () {
       class User extends Model {
       }
       sinon.stub(request.session, 'get').returns(function * () { return null })
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield sessionAuth.check()
       expect(isLoggedIn).to.equal(false)
       request.session.get.restore()
@@ -177,7 +177,7 @@ describe('Authenticators', function () {
         }
       }
       sinon.stub(request.session, 'get').returns(function * () { return 1 })
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield sessionAuth.check()
       expect(isLoggedIn).to.equal(false)
       request.session.get.restore()
@@ -192,7 +192,7 @@ describe('Authenticators', function () {
         }
       }
       sinon.stub(request.session, 'get').returns(function * () { return 2 })
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield sessionAuth.check()
       expect(isLoggedIn).to.equal(true)
       expect(sessionAuth.user).deep.equal({id: 2})
@@ -203,7 +203,7 @@ describe('Authenticators', function () {
       class User extends Model {
       }
       sinon.stub(request.session, 'get').returns(function * () { return null })
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const loggedUser = yield sessionAuth.getUser()
       expect(loggedUser).to.equal(null)
       request.session.get.restore()
@@ -218,7 +218,7 @@ describe('Authenticators', function () {
         }
       }
       sinon.stub(request.session, 'get').returns(function * () { return 1 })
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const loggedUser = yield sessionAuth.getUser()
       expect(loggedUser).deep.equal({id: 1})
       request.session.get.restore()
@@ -230,7 +230,7 @@ describe('Authenticators', function () {
           return null
         }
       }
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield sessionAuth.loginViaId(1)
       expect(isLoggedIn).to.equal(false)
     })
@@ -244,7 +244,7 @@ describe('Authenticators', function () {
           return 'id'
         }
       }
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield sessionAuth.loginViaId(1)
       expect(isLoggedIn).to.equal(true)
       expect(sessionAuth.user).deep.equal({id: 1})
@@ -256,7 +256,7 @@ describe('Authenticators', function () {
           return 'id'
         }
       }
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       try {
         yield sessionAuth.login(new User())
         expect(true).to.equal(false)
@@ -276,7 +276,7 @@ describe('Authenticators', function () {
           return 'id'
         }
       }
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield sessionAuth.login(new User())
       expect(isLoggedIn).to.equal(true)
       expect(sessionAuth.user).deep.equal({id: 1})
@@ -286,7 +286,7 @@ describe('Authenticators', function () {
       class User extends Model {
       }
       sinon.spy(request.session, 'forget')
-      const sessionAuth = new SessionAuthenticator(request, this.serializer, Config(User))
+      const sessionAuth = new SessionScheme(request, this.serializer, Config(User))
       const isLoggedOut = yield sessionAuth.logout(new User())
       expect(isLoggedOut).to.equal(true)
       expect(sessionAuth.user).to.equal(null)

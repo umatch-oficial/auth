@@ -11,9 +11,9 @@
 
 const jwt = require('jsonwebtoken')
 const NE = require('node-exceptions')
-const BaseAuthenticator = require('../BaseAuthenticator')
+const BaseScheme = require('../BaseScheme')
 
-class JwtAuthenticator extends BaseAuthenticator {
+class JwtScheme extends BaseScheme {
 
   constructor (request, serializer, options) {
     super(request, serializer, options)
@@ -112,4 +112,4 @@ class JwtAuthenticator extends BaseAuthenticator {
 
 }
 
-module.exports = JwtAuthenticator
+module.exports = JwtScheme

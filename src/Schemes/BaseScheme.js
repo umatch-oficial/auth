@@ -11,7 +11,7 @@
 
 const CE = require('../Exceptions')
 
-class BaseAuthenticator {
+class BaseScheme {
 
   constructor (request, serializer, options) {
     this.request = request
@@ -103,4 +103,4 @@ class BaseAuthenticator {
   }
 }
 
-module.exports = BaseAuthenticator
+module.exports = BaseScheme

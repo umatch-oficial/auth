@@ -10,8 +10,10 @@
 */
 
 const proxyHandler = require('./proxyHandler')
-const Authenticators = require('../Authenticators')
+const Schemes = require('../Schemes')
 const Serializers = require('../Serializers')
+const extendedSerializers = {}
+const extendedSchemes = {}
 const CatLog = require('cat-log')
 const logger = new CatLog('adonis:auth')
 const NE = require('node-exceptions')
@@ -29,6 +31,44 @@ class AuthManager {
   }
 
   /**
+   * exposes a method to be used by IoC container to
+   * extend the manager by adding new serializers
+   * and scheme.
+   *
+   * @param  {String} name
+   * @param  {Mixed} value
+   * @param  {String} type
+   *
+   * @public
+   */
+  static extend (name, value, type) {
+    if (!type || !value || !name) {
+      throw new NE.InvalidArgumentException('Make sure to provide the extend type name, type and body')
+    }
+    if (type !== 'serializer' && type !== 'scheme') {
+      throw new NE.InvalidArgumentException('When extending Auth provider, type must be a serializer or an scheme')
+    }
+    this._addSerializerOrProvider(name, value, type)
+  }
+
+  /**
+   * adds a custom scheme or serializer
+   *
+   * @param   {String} name
+   * @param   {Mixed} value
+   * @param   {String} type
+   *
+   * @private
+   */
+  static _addSerializerOrProvider (name, value, type) {
+    if (type === 'serializer') {
+      extendedSerializers[name] = value
+    } else if (type === 'scheme') {
+      extendedSchemes[name] = value
+    }
+  }
+
+  /**
    * returns an instance of authenticator with a
    * given serializer
    *
@@ -41,11 +81,11 @@ class AuthManager {
     name = this._makeAuthenticatorName(name)
     const config = this.config.get(name)
     if (!config) {
-      throw new NE.DomainException(`Cannot find config for ${name}.`)
+      throw new NE.DomainException(`Cannot find configuration for ${name} authenticator inside config/auth.js file.`)
     }
     const serializer = this._getSerializer(config.serializer)
     logger.verbose('making instance of %s authenticator', name)
-    return this._makeAuthenticator(config.scheme, serializer, config)
+    return this._makeScheme(config.scheme, serializer, config)
   }
 
   /**
@@ -77,6 +117,8 @@ class AuthManager {
   _getSerializer (serializer) {
     if (Serializers[serializer]) {
       return Ioc.make(Serializers[serializer])
+    } else if (extendedSerializers[serializer]) {
+      return extendedSerializers[serializer]
     }
     throw new NE.DomainException(`Cannot find ${serializer} serializer.`)
   }
@@ -94,12 +136,15 @@ class AuthManager {
    *
    * @private
    */
-  _makeAuthenticator (scheme, serializer, options) {
-    if (Authenticators[scheme]) {
-      const schemeInstance = new Authenticators[scheme](this.request, serializer, options)
+  _makeScheme (scheme, serializer, options) {
+    if (Schemes[scheme]) {
+      const schemeInstance = new Schemes[scheme](this.request, serializer, options)
+      return schemeInstance
+    } else if (extendedSchemes[scheme]) {
+      const schemeInstance = new extendedSchemes[scheme](this.request, serializer, options)
       return schemeInstance
     }
-    throw new NE.DomainException(`Cannot find authenticator for ${scheme} scheme.`)
+    throw new NE.DomainException(`Cannot find ${scheme} scheme.`)
   }
 
   /**

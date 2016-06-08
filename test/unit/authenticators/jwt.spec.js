@@ -13,7 +13,7 @@
 const chai = require('chai')
 const expect = chai.expect
 const jwt = require('jsonwebtoken')
-const JwtAuthenticator = require('../../../src/Authenticators').jwt
+const JwtScheme = require('../../../src/Schemes').jwt
 const LucidSerializer = require('../../../src/Serializers').Lucid
 const sinon = require('sinon-es6')
 require('co-mocha')
@@ -62,7 +62,7 @@ describe('Authenticators', function () {
       try {
         const config = Config(User)
         config.secret = null
-        const jwtAuth = new JwtAuthenticator(request, this.serializer, config)
+        const jwtAuth = new JwtScheme(request, this.serializer, config)
         expect(jwtAuth).to.equal(undefined)
       } catch (e) {
         expect(e.name).to.equal('DomainException')
@@ -73,7 +73,7 @@ describe('Authenticators', function () {
     it('should return false when request does not have authorization header set', function * () {
       class User extends Model {
       }
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield jwtAuth.check()
       expect(isLoggedIn).to.equal(false)
     })
@@ -86,7 +86,7 @@ describe('Authenticators', function () {
           return 'Bearer foo'
         }
       }
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield jwtAuth.check()
       expect(isLoggedIn).to.equal(false)
     })
@@ -103,7 +103,7 @@ describe('Authenticators', function () {
         }
       }
       sinon.spy(User, 'find')
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield jwtAuth.check()
       expect(isLoggedIn).to.equal(false)
       expect(User.find.calledOnce).to.equal(true)
@@ -125,7 +125,7 @@ describe('Authenticators', function () {
         }
       }
       sinon.spy(User, 'find')
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield jwtAuth.check()
       expect(isLoggedIn).to.equal(true)
       expect(User.find.calledOnce).to.equal(true)
@@ -151,7 +151,7 @@ describe('Authenticators', function () {
         }
       }
       sinon.spy(User, 'find')
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield jwtAuth.check()
       expect(isLoggedIn).to.equal(true)
       expect(User.find.calledOnce).to.equal(true)
@@ -173,7 +173,7 @@ describe('Authenticators', function () {
           return 'Bearer ' + jwt.sign({payload: 1}, Config(User).secret)
         }
       }
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
       const user = yield jwtAuth.getUser()
       expect(user).deep.equal({id: 1})
     })
@@ -184,7 +184,7 @@ describe('Authenticators', function () {
           return 'id'
         }
       }
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
       try {
         yield jwtAuth.generate()
         expect(true).to.equal(false)
@@ -200,7 +200,7 @@ describe('Authenticators', function () {
           return 'id'
         }
       }
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
       try {
         yield jwtAuth.generate({foo: 'bar'})
         expect(true).to.equal(false)
@@ -216,7 +216,7 @@ describe('Authenticators', function () {
           return 'id'
         }
       }
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
       const token = yield jwtAuth.generate({id: 1})
       expect(jwt.verify(token, Config(User).secret).payload).to.equal(1)
     })
@@ -227,7 +227,7 @@ describe('Authenticators', function () {
           return 'id'
         }
       }
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User, {issuer: 'adonisjs.com'}))
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User, {issuer: 'adonisjs.com'}))
       const token = yield jwtAuth.generate({id: 1})
       const decoded = jwt.verify(token, Config(User).secret)
       expect(decoded.payload).to.equal(1)
@@ -240,7 +240,7 @@ describe('Authenticators', function () {
           return 'id'
         }
       }
-      const jwtAuth = new JwtAuthenticator(request, this.serializer, Config(User))
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
       try {
         yield jwtAuth.validate()
         expect(true).to.equal(false)

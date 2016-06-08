@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
 */
 
-const BaseAuthenticator = require('../BaseAuthenticator')
+const BaseScheme = require('../BaseScheme')
 const basicAuth = require('basic-auth')
 
-class BasicAuthAuthenticator extends BaseAuthenticator {
+class BasicAuthScheme extends BaseScheme {
 
   * _getRequestUser () {
     const credentials = basicAuth(this.request.request)
@@ -28,4 +28,4 @@ class BasicAuthAuthenticator extends BaseAuthenticator {
 
 }
 
-module.exports = BasicAuthAuthenticator
+module.exports = BasicAuthScheme

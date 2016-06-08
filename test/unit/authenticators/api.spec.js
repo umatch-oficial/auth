@@ -12,7 +12,7 @@
 /* global it, describe, before, context */
 const chai = require('chai')
 const expect = chai.expect
-const ApiAuthenticator = require('../../../src/Authenticators').api
+const ApiScheme = require('../../../src/Schemes').api
 const LucidSerializer = require('../../../src/Serializers').Lucid
 const sinon = require('sinon-es6')
 require('co-mocha')
@@ -60,7 +60,7 @@ describe('Authenticators', function () {
           }
         }
       }
-      const api = new ApiAuthenticator({}, this.serializer, Config(Token))
+      const api = new ApiScheme({}, this.serializer, Config(Token))
       const apiToken = yield api.generate(new User())
       expect(apiToken).to.have.property('attributes')
       expect(apiToken.attributes).to.have.all.keys(['token', 'forever', 'expiry', 'is_revoked'])
@@ -83,7 +83,7 @@ describe('Authenticators', function () {
           }
         }
       }
-      const api = new ApiAuthenticator({}, this.serializer, Config(Token))
+      const api = new ApiScheme({}, this.serializer, Config(Token))
       const apiToken = yield api.generate(new User(), '30m')
       expect(apiToken).to.have.property('attributes')
       expect(apiToken.attributes.forever).to.equal(false)
@@ -107,7 +107,7 @@ describe('Authenticators', function () {
       const user = new User()
       sinon.spy(apiTokens, 'query')
       sinon.spy(apiTokens, 'update')
-      const api = new ApiAuthenticator({}, this.serializer, Config(Token))
+      const api = new ApiScheme({}, this.serializer, Config(Token))
       yield api.revokeAll(user)
       expect(apiTokens.query.calledOnce).to.equal(true)
       expect(apiTokens.update.calledOnce).to.equal(true)
@@ -137,7 +137,7 @@ describe('Authenticators', function () {
       sinon.spy(apiTokens, 'query')
       sinon.spy(apiTokens, 'update')
       sinon.spy(apiTokens, 'whereIn')
-      const api = new ApiAuthenticator({}, this.serializer, Config(Token))
+      const api = new ApiScheme({}, this.serializer, Config(Token))
       yield api.revoke(user, [1, 2])
       expect(apiTokens.query.calledOnce).to.equal(true)
       expect(apiTokens.update.calledOnce).to.equal(true)
@@ -169,7 +169,7 @@ describe('Authenticators', function () {
       sinon.spy(apiTokens, 'query')
       sinon.spy(apiTokens, 'update')
       sinon.spy(apiTokens, 'whereNotIn')
-      const api = new ApiAuthenticator({}, this.serializer, Config(Token))
+      const api = new ApiScheme({}, this.serializer, Config(Token))
       yield api.revokeExcept(user, [1, 2])
       expect(apiTokens.query.calledOnce).to.equal(true)
       expect(apiTokens.update.calledOnce).to.equal(true)
@@ -201,7 +201,7 @@ describe('Authenticators', function () {
       sinon.spy(apiTokens, 'query')
       sinon.spy(apiTokens, 'update')
       sinon.spy(apiTokens, 'whereIn')
-      const api = new ApiAuthenticator({}, this.serializer, Config(Token))
+      const api = new ApiScheme({}, this.serializer, Config(Token))
       yield api.revoke(user, [1, 2])
       expect(apiTokens.query.calledOnce).to.equal(true)
       expect(apiTokens.update.calledOnce).to.equal(true)
@@ -233,7 +233,7 @@ describe('Authenticators', function () {
       sinon.spy(apiTokens, 'query')
       sinon.spy(apiTokens, 'update')
       sinon.spy(apiTokens, 'whereNotIn')
-      const api = new ApiAuthenticator({}, this.serializer, Config(Token))
+      const api = new ApiScheme({}, this.serializer, Config(Token))
       yield api.revokeExcept(user, [1, 2])
       expect(apiTokens.query.calledOnce).to.equal(true)
       expect(apiTokens.update.calledOnce).to.equal(true)
@@ -253,7 +253,7 @@ describe('Authenticators', function () {
         },
         input: function () {}
       }
-      const apiAuth = new ApiAuthenticator(request, this.serializer, Config(Token))
+      const apiAuth = new ApiScheme(request, this.serializer, Config(Token))
       const isLoggedIn = yield apiAuth.check()
       expect(isLoggedIn).to.equal(false)
     })
@@ -285,7 +285,7 @@ describe('Authenticators', function () {
       sinon.spy(Token, 'andWhere')
       sinon.spy(Token, 'with')
       sinon.spy(Token, 'first')
-      const apiAuth = new ApiAuthenticator(request, this.serializer, Config(Token))
+      const apiAuth = new ApiScheme(request, this.serializer, Config(Token))
       const isLoggedIn = yield apiAuth.check()
       expect(isLoggedIn).to.equal(false)
       expect(Token.query.calledOnce).to.equal(true)
@@ -335,7 +335,7 @@ describe('Authenticators', function () {
         input: function () {}
       }
       sinon.spy(matchingRecord, 'toJSON')
-      const apiAuth = new ApiAuthenticator(request, this.serializer, Config(Token))
+      const apiAuth = new ApiScheme(request, this.serializer, Config(Token))
       const isLoggedIn = yield apiAuth.check()
       expect(isLoggedIn).to.equal(false)
       expect(matchingRecord.toJSON.calledOnce).to.equal(true)
@@ -380,7 +380,7 @@ describe('Authenticators', function () {
         input: function () {}
       }
       sinon.spy(matchingRecord, 'toJSON')
-      const apiAuth = new ApiAuthenticator(request, this.serializer, Config(Token))
+      const apiAuth = new ApiScheme(request, this.serializer, Config(Token))
       const isLoggedIn = yield apiAuth.check()
       expect(isLoggedIn).to.equal(true)
       expect(matchingRecord.toJSON.calledOnce).to.equal(true)

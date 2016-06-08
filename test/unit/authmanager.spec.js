@@ -12,8 +12,9 @@
 /* global it, describe  */
 const chai = require('chai')
 const expect = chai.expect
-const SessionAuthenticator = require('../../src/Authenticators').session
+const SessionScheme = require('../../src/Schemes').session
 const LucidSerializer = require('../../src/Serializers').Lucid
+const NE = require('node-exceptions')
 const Ioc = require('adonis-fold').Ioc
 Ioc.bind('Adonis/Src/Hash', function () {
   return {}
@@ -26,6 +27,11 @@ const Config = {
     switch (key) {
       case 'auth.authenticator':
         return 'session'
+      case 'auth.myauth':
+        return {
+          serializer: 'Lucid',
+          scheme: 'oauth'
+        }
       case 'auth.session':
         return {
           serializer: 'Lucid',
@@ -43,7 +49,7 @@ describe('AuthManager', function () {
     const request = {}
     const auth = new AuthManager(Config, request)
     expect(auth instanceof AuthManager).to.equal(true)
-    expect(auth.authenticatorInstance instanceof SessionAuthenticator).to.equal(true)
+    expect(auth.authenticatorInstance instanceof SessionScheme).to.equal(true)
     expect(auth.serializer instanceof LucidSerializer).to.equal(true)
   })
 
@@ -77,7 +83,7 @@ describe('AuthManager', function () {
     const request = {}
     const auth = new AuthManager(Config, request)
     const sessionAuth = auth._getAuthenticator('session')
-    expect(sessionAuth instanceof SessionAuthenticator).to.equal(true)
+    expect(sessionAuth instanceof SessionScheme).to.equal(true)
   })
 
   it('should return default authenticator when name is default', function () {
@@ -87,7 +93,7 @@ describe('AuthManager', function () {
     expect(authenticator).to.equal('auth.session')
   })
 
-  it('should prefix authenticator to the passed name', function () {
+  it('should prefix scheme to the passed name', function () {
     const request = {}
     const auth = new AuthManager(Config, request)
     const authenticator = auth._makeAuthenticatorName('api')
@@ -110,19 +116,65 @@ describe('AuthManager', function () {
     expect(lucid instanceof LucidSerializer).to.equal(true)
   })
 
-  it('should throw error when unable to authenticator instance of a given scheme', function () {
+  it('should throw error when unable to find given scheme', function () {
     const request = {}
     const auth = new AuthManager(Config, request)
     const fn = function () {
-      return auth._makeAuthenticator('foo')
+      return auth._makeScheme('foo')
     }
     expect(fn).to.throw('DomainException', /Cannot find authenticator for foo scheme/)
   })
 
-  it('should return authenticator instance using _makeAuthenticator', function () {
+  it('should return scheme instance using _makeScheme', function () {
     const request = {}
     const auth = new AuthManager(Config, request)
-    const sessionAuth = auth._makeAuthenticator('session')
-    expect(sessionAuth instanceof SessionAuthenticator).to.equal(true)
+    const sessionAuth = auth._makeScheme('session')
+    expect(sessionAuth instanceof SessionScheme).to.equal(true)
+  })
+
+  it('should throw an error when there are no arguments supplied to the extend method', function () {
+    const fn = function () {
+      return AuthManager.extend()
+    }
+    expect(fn).to.throw(NE.InvalidArgumentException, /Make sure to provide the extend type name, type and body/)
+  })
+
+  it('should throw an error when extend body and type is not defined', function () {
+    const fn = function () {
+      return AuthManager.extend('mongo')
+    }
+    expect(fn).to.throw(NE.InvalidArgumentException, /Make sure to provide the extend type name, type and body/)
+  })
+
+  it('should throw an error when extend type is not defined', function () {
+    const fn = function () {
+      return AuthManager.extend('mongo', function () {})
+    }
+    expect(fn).to.throw(NE.InvalidArgumentException, /Make sure to provide the extend type name, type and body/)
+  })
+
+  it('should throw an error when extend type is not a serializer or authenticator', function () {
+    const fn = function () {
+      return AuthManager.extend('mongo', function () {}, 'foo')
+    }
+    expect(fn).to.throw(NE.InvalidArgumentException, /When extending Auth provider, type must be a serializer or an scheme/)
+  })
+
+  it('should add and make use of a custom serializer', function () {
+    class Mongo {}
+    AuthManager.extend('mongo', new Mongo(), 'serializer')
+    const auth = new AuthManager(Config, {})
+    const serializer = auth._getSerializer('mongo')
+    expect(serializer.constructor.name).to.equal('Mongo')
+    expect(serializer instanceof Mongo).to.equal(true)
+  })
+
+  it('should add and make use of a custom scheme', function () {
+    class OAuth {}
+    AuthManager.extend('oauth', OAuth, 'scheme')
+    const auth = new AuthManager(Config, {})
+    const authenticator = auth._getAuthenticator('myauth')
+    expect(authenticator.constructor.name).to.equal('OAuth')
+    expect(authenticator instanceof OAuth).to.equal(true)
   })
 })

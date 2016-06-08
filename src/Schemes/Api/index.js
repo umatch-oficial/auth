@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
 */
 
-const BaseAuthenticator = require('../BaseAuthenticator')
+const BaseScheme = require('../BaseScheme')
 const CE = require('../../Exceptions')
 const ms = require('ms')
 const uuid = require('node-uuid')
 
-class ApiAuthenticator extends BaseAuthenticator {
+class ApiScheme extends BaseScheme {
 
   /**
    * returns user by verifying request token and
@@ -118,4 +118,4 @@ class ApiAuthenticator extends BaseAuthenticator {
 
 }
 
-module.exports = ApiAuthenticator
+module.exports = ApiScheme

@@ -13,10 +13,10 @@
  * class inside another class.
 */
 
-const BaseAuthenticator = require('../BaseAuthenticator')
+const BaseScheme = require('../BaseScheme')
 const NE = require('node-exceptions')
 
-class SessionAuthenticator extends BaseAuthenticator {
+class SessionScheme extends BaseScheme {
 
   /**
    * returns key to be used for saving session value.
@@ -118,4 +118,4 @@ class SessionAuthenticator extends BaseAuthenticator {
 
 }
 
-module.exports = SessionAuthenticator
+module.exports = SessionScheme

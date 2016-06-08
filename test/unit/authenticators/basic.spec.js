@@ -12,7 +12,7 @@
 /* global it, describe, before, context */
 const chai = require('chai')
 const expect = chai.expect
-const BasicAuthAuthenticator = require('../../../src/Authenticators').basic
+const BasicAuthScheme = require('../../../src/Schemes').basic
 const LucidSerializer = require('../../../src/Serializers').Lucid
 const sinon = require('sinon-es6')
 require('co-mocha')
@@ -59,7 +59,7 @@ describe('Authenticators', function () {
     it('should return false when request does not have basic auth headers set', function * () {
       class User extends Model {
       }
-      const basicAuth = new BasicAuthAuthenticator(request, this.serializer, Config(User))
+      const basicAuth = new BasicAuthScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield basicAuth.check()
       expect(isLoggedIn).to.equal(false)
     })
@@ -75,7 +75,7 @@ describe('Authenticators', function () {
       sinon.spy(User, 'first')
       const altRequest = request
       altRequest.request.headers.authorization = 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
-      const basicAuth = new BasicAuthAuthenticator(altRequest, this.serializer, Config(User))
+      const basicAuth = new BasicAuthScheme(altRequest, this.serializer, Config(User))
       const isLoggedIn = yield basicAuth.check()
       expect(isLoggedIn).to.equal(false)
       expect(User.query.calledOnce).to.equal(true)
@@ -102,7 +102,7 @@ describe('Authenticators', function () {
       sinon.spy(Hash, 'verify')
       const altRequest = request
       altRequest.request.headers.authorization = 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
-      const basicAuth = new BasicAuthAuthenticator(altRequest, this.serializer, Config(User))
+      const basicAuth = new BasicAuthScheme(altRequest, this.serializer, Config(User))
       const isLoggedIn = yield basicAuth.check()
       expect(isLoggedIn).to.equal(false)
       expect(User.query.calledOnce).to.equal(true)
@@ -132,7 +132,7 @@ describe('Authenticators', function () {
       sinon.spy(Hash, 'verify')
       const altRequest = request
       altRequest.request.headers.authorization = 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
-      const basicAuth = new BasicAuthAuthenticator(altRequest, this.serializer, Config(User))
+      const basicAuth = new BasicAuthScheme(altRequest, this.serializer, Config(User))
       const isLoggedIn = yield basicAuth.check()
       expect(isLoggedIn).to.equal(true)
       expect(User.query.calledOnce).to.equal(true)
@@ -158,7 +158,7 @@ describe('Authenticators', function () {
       }
       const altRequest = request
       altRequest.request.headers.authorization = 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
-      const basicAuth = new BasicAuthAuthenticator(altRequest, this.serializer, Config(User))
+      const basicAuth = new BasicAuthScheme(altRequest, this.serializer, Config(User))
       const user = yield basicAuth.getUser()
       expect(user).deep.equal({password: 'secret'})
     })

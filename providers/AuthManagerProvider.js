@@ -33,7 +33,8 @@ class AuthManagerProvider extends ServiceProvider {
   }
 
   _bindManager () {
-    this.app.bind('Adonis/Src/AuthManager', function () {
+    this.app.manager('Adonis/Src/AuthManager', require('../src/AuthManager'))
+    this.app.singleton('Adonis/Src/AuthManager', function () {
       return require('../src/AuthManager')
     })
   }
