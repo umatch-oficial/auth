@@ -18,7 +18,7 @@ describe('Util', function () {
   it('should return the utc version of a given date', function () {
     const date = new Date()
     const utcDate = util.toUtc(date)
-    expect(new Date(utcDate).getUTCHours()).not.to.equal(date.getUTCHours())
+    expect(new Date(utcDate).setUTCMinutes()).not.to.equal(date.setUTCMinutes())
   })
 
   it('should return the difference between 2 dates', function () {
