@@ -14,14 +14,14 @@ class AuthManagerProvider extends ServiceProvider {
     this.app.bind('Adonis/Middleware/AuthInit', function (app) {
       const AuthManager = app.use('Adonis/Src/AuthManager')
       const Config = app.use('Adonis/Src/Config')
+      const View = app.use('Adonis/Src/View')
       const AuthInit = require('../middleware/AuthInit')
-      return new AuthInit(AuthManager, Config)
+      return new AuthInit(AuthManager, Config, View)
     })
 
     this.app.bind('Adonis/Middleware/Auth', function (app) {
-      const View = app.use('Adonis/Src/View')
       const Auth = require('../middleware/Auth')
-      return new Auth(View)
+      return new Auth()
     })
   }
 
