@@ -24,10 +24,10 @@ class AuthSetup extends Command {
   }
 
   * handle () {
-    this.run('make:migration', 'User', {template: path.join(__dirname, './templates/userSchema.mustache')})
-    this.run('make:migration', 'Token', {template: path.join(__dirname, './templates/tokenSchema.mustache')})
-    this.run('make:model', 'User', {template: path.join(__dirname, './templates/userModel.mustache')})
-    this.run('make:model', 'Token', {template: path.join(__dirname, './templates/tokenModel.mustache')})
+    this.run('make:migration', 'create_users_table', { template: path.join(__dirname, './templates/userSchema.mustache') })
+    this.run('make:migration', 'create_tokens_table', { template: path.join(__dirname, './templates/tokenSchema.mustache') })
+    this.run('make:model', 'User', { template: path.join(__dirname, './templates/userModel.mustache') })
+    this.run('make:model', 'Token', { template: path.join(__dirname, './templates/tokenModel.mustache') })
   }
 
 }
