@@ -26,11 +26,11 @@ class BaseScheme {
    * sequence.
    * 1. return true - If user exists on the instance
    * 2. Check for session value
-   * 		a) return false - If session does not exists
-   * 		b) Go to step 3
+   * a) return false - If session does not exists
+   * b) Go to step 3
    * 3. find the user using the serializer and passing id
-   * 		a) return false - If user does not exist
-   * 		b) Go to step 4
+   * a) return false - If user does not exist
+   * b) Go to step 4
    * 4. set user object on instance and return true
    *
    * @return {Boolean}

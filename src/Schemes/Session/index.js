@@ -52,7 +52,7 @@ class SessionScheme extends BaseScheme {
    * @return {Boolean}
    *
    * @throws InvalidArgumentException when primary key value does not exists
-   *         													on the input
+   *                                  on the input
    *
    * @public
    */
