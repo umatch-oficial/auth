@@ -20,7 +20,7 @@
   "author": "adonisjs",
   "license": "MIT",
   "devDependencies": {
-    "adonis-fold": "^3.0.2",
+    "adonis-fold": "^3.0.3",
     "chai": "^3.5.0",
     "co": "^4.6.0",
     "co-mocha": "^1.1.3",
