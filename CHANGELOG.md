@@ -1,3 +1,9 @@
+<a name="1.0.2"></a>
+## 1.0.2 (2016-08-26)
+
+
+* Update adonis-fold as peer dependency
+
 <a name="1.0.1"></a>
 ## 1.0.1 (2016-08-26)
 
