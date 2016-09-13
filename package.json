@@ -1,15 +1,15 @@
 {
   "name": "adonis-auth",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Offical authentication provider for Adonis framework",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "npm run lint && node --harmony_proxies ./node_modules/.bin/istanbul cover _mocha -x providers/*.js --report lcovonly -- -R spec test/unit test/unit/authenticators test/unit/serializer test/integration && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
+    "test": "node ./bin/test.js",
     "lint": "standard src/**/*.js src/**/**/*.js test/**/*.js test/**/**/*.js providers/*.js util/*.js middleware/*.js commands/*.js",
-    "coverage": "node --harmony_proxies ./node_modules/.bin/istanbul cover _mocha test/unit test/unit/serializer test/unit/authenticators test/integration -x providers/*.js"
+    "coverage": "node ./bin/coverage.js"
   },
   "keywords": [
     "adonis",
@@ -28,6 +28,7 @@
     "cz-conventional-changelog": "^1.1.5",
     "istanbul": "^0.4.2",
     "mocha": "^3.0.2",
+    "shelljs": "^0.7.4",
     "sinon-es6": "0.0.3",
     "standard": "^8.0.0",
     "supertest": "^2.0.0"
@@ -36,9 +37,6 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
-  },
-  "peerDependencies": {
-    "adonis-fold": "^3.0.3"
   },
   "dependencies": {
     "basic-auth": "^1.0.4",

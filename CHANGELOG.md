@@ -1,3 +1,10 @@
+<a name="1.0.3"></a>
+## [1.0.3](https://github.com/adonisjs/adonis-auth/compare/v1.0.2...v1.0.3) (2016-09-13)
+
+### Bug Fixes
+
+* **migrations** keep exports and class name same
+
 <a name="1.0.2"></a>
 ## 1.0.2 (2016-08-26)
 
