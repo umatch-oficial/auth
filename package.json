@@ -7,9 +7,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node ./bin/test.js",
+    "test": "node --harmony_proxies ./node_modules/.bin/istanbul cover _mocha -x providers/*.js --report lcovonly -- -R spec test/unit test/unit/authenticators test/unit/serializer test/integration && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
     "lint": "standard src/**/*.js src/**/**/*.js test/**/*.js test/**/**/*.js providers/*.js util/*.js middleware/*.js commands/*.js",
-    "coverage": "node ./bin/coverage.js"
+    "coverage": "node --harmony_proxies ./node_modules/.bin/istanbul cover _mocha test/unit test/unit/serializer test/unit/authenticators test/integration -x providers/*.js"
   },
   "keywords": [
     "adonis",
