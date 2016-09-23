@@ -90,6 +90,15 @@ class JwtScheme extends BaseScheme {
     }
   }
 
+  /**
+   * Generates a new JWT token for a given user. The user
+   * needs to be an instance of model when serializer
+   * is Lucid
+   *
+   * @param  {Object} user
+   *
+   * @return {String}
+   */
   * generate (user) {
     if (!user) {
       throw new NE.InvalidArgumentException('user is required to generate a jwt token')
@@ -102,12 +111,27 @@ class JwtScheme extends BaseScheme {
     return this._signToken(primaryValue, this.jwtOptions)
   }
 
+  /**
+   * Decodes a token and returns jwt object.
+   *
+   * @return {Object}
+   */
   * decode () {
     return yield this._verifyRequestToken(this._getRequestToken(), this.jwtOptions)
   }
 
-  * validate () {
-    throw new NE.RuntimeException('call to undefined method validate on JWT authenticator instance')
+  /**
+   * Validates a user an returns the token
+   * if credentials have been validated.
+   *
+   * @param  {String} uid
+   * @param  {String} password
+   *
+   * @return {String}
+   */
+  * attempt (uid, password) {
+    const user = yield this.validate(uid, password, true)
+    return yield this.generate(user)
   }
 
 }
