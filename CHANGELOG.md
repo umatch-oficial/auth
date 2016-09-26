@@ -1,3 +1,13 @@
+<a name="1.0.4"></a>
+## [1.0.4](https://github.com/adonisjs/adonis-auth/compare/v1.0.3...v1.0.4) (2016-09-26)
+
+
+### Features
+
+* **jwt:** add validate and attempt methods ([46b8bb7](https://github.com/adonisjs/adonis-auth/commit/46b8bb7)), closes [#18](https://github.com/adonisjs/adonis-auth/issues/18)
+
+
+
 <a name="1.0.3"></a>
 ## [1.0.3](https://github.com/adonisjs/adonis-auth/compare/v1.0.2...v1.0.3) (2016-09-13)
 
