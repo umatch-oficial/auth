@@ -7,9 +7,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node --harmony_proxies ./node_modules/.bin/istanbul cover _mocha -x providers/*.js --report lcovonly -- -R spec test/unit test/unit/authenticators test/unit/serializer test/integration && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
-    "lint": "standard src/**/*.js src/**/**/*.js test/**/*.js test/**/**/*.js providers/*.js util/*.js middleware/*.js commands/*.js",
-    "coverage": "node --harmony_proxies ./node_modules/.bin/istanbul cover _mocha test/unit test/unit/serializer test/unit/authenticators test/integration -x providers/*.js"
+    "test": "npm run lint && node bin/test.js",
+    "lint": "standard",
+    "coverage": "npm run lint && node bin/coverage.js"
   },
   "keywords": [
     "adonis",
@@ -28,7 +28,8 @@
     "cz-conventional-changelog": "^1.1.5",
     "istanbul": "^0.4.2",
     "mocha": "^3.0.2",
-    "shelljs": "^0.7.4",
+    "semver": "^5.3.0",
+    "shelljs": "^0.7.5",
     "sinon-es6": "0.0.3",
     "standard": "^8.0.0",
     "supertest": "^2.0.0"
