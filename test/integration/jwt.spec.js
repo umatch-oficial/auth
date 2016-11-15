@@ -106,7 +106,7 @@ describe('Authenticators', function () {
           res.end()
         })
       })
-      const jwtToken = jwt.sign({payload: {identityId: 2}}, 'bubblegum')
+      const jwtToken = jwt.sign({payload: {uid: 2}}, 'bubblegum')
       const response = yield supertest(server).get('/').set('Authorization', `Bearer ${jwtToken}`)
       expect(response.body).to.equal(true)
     })
