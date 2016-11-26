@@ -43,8 +43,11 @@ class JwtScheme extends BaseScheme {
    * @private
    */
   _signToken (payload, options) {
-    return new Promise((resolve) => {
-      jwt.sign({payload: payload}, this.options.secret, options, function (token) {
+    return new Promise((resolve, reject) => {
+      jwt.sign({payload: payload}, this.options.secret, options, function (error, token) {
+        if (error) {
+          return reject(error)
+        }
         resolve(token)
       })
     })

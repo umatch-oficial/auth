@@ -212,7 +212,7 @@ describe('Authenticators', function () {
       }
     })
 
-    it('should be able to generate a token for a given user', function * () {
+    it('should be able to generate a token for a given user @foo', function * () {
       class User {
         static get primaryKey () {
           return 'id'
