@@ -67,6 +67,15 @@ class JwtScheme extends BaseScheme {
         if (error) {
           return reject(error)
         }
+
+        /**
+         * For backward compatibility we are going to auto detect the
+         * decoded payload and return it as a new payload when it
+         * does not have a uid.
+         */
+        if (decoded.payload && typeof (decoded.payload) === 'number') {
+          decoded.payload = {uid: decoded.payload}
+        }
         resolve(decoded)
       })
     })

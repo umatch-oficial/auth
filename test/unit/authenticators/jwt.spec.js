@@ -212,7 +212,7 @@ describe('Authenticators', function () {
       }
     })
 
-    it('should be able to generate a token for a given user @foo', function * () {
+    it('should be able to generate a token for a given user', function * () {
       class User {
         static get primaryKey () {
           return 'id'
@@ -221,6 +221,28 @@ describe('Authenticators', function () {
       const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
       const token = yield jwtAuth.generate({id: 1})
       expect(jwt.verify(token, Config(User).secret).payload.uid).to.equal(1)
+    })
+
+    it('should work fine when the payload does not have uid and contains old style payload', function * () {
+      class User {
+        static get primaryKey () {
+          return 'id'
+        }
+      }
+      const generateToken = function (payload) {
+        return new Promise((resolve, reject) => {
+          jwt.sign(payload, Config(User).secret, {}, function (err, token) {
+            if (err) {
+              return reject(err)
+            }
+            resolve(token)
+          })
+        })
+      }
+      const jwtAuth = new JwtScheme(request, this.serializer, Config(User))
+      const token = yield generateToken({payload: 1})
+      const verified = yield jwtAuth._verifyRequestToken(token, {})
+      expect(verified.payload).deep.equal({uid: 1})
     })
 
     it('should be able to generate a token for a given user with a custom payload', function * () {
