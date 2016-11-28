@@ -47,6 +47,6 @@
     "jsonwebtoken": "^7.1.9",
     "ms": "^0.7.2",
     "node-exceptions": "^1.0.3",
-    "node-uuid": "^1.4.7"
+    "uuid": "^3.0.0"
   }
 }
