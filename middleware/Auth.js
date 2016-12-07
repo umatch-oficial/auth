@@ -56,8 +56,8 @@ class Auth {
    * authenticate the request by gracefully handling the Stop execution
    * exception.
    *
-   * @param  {Object} request        [description]
-   * @param  {Array} authenticators [description]
+   * @param  {Object} request
+   * @param  {Array} authenticators
    *
    * @throws Exception when unable to authenticate the request.
    *
@@ -78,9 +78,9 @@ class Auth {
    * authenticates a given request using number of defined
    * authenticators.
    *
-   * @param  {Object}   request  [description]
-   * @param  {Object}   response [description]
-   * @param  {Function} next     [description]
+   * @param  {Object}   request
+   * @param  {Object}   response
+   * @param  {Function} next
    *
    * @public
    */
@@ -88,6 +88,24 @@ class Auth {
     const args = Array.prototype.slice.call(arguments)
     const authenticators = args.length > 3 ? args.splice(3, args.length) : ['default']
     yield this._authenticate(request, authenticators)
+    yield next
+  }
+
+  /**
+   * authenticates a web socket request using number of defined
+   * authenticators.
+   *
+   * @param  {Object}   socket
+   * @param  {Object}   request
+   * @param  {Function} next
+   *
+   * @public
+   */
+  * handleWs (socket, request, next) {
+    const args = Array.prototype.slice.call(arguments)
+    const authenticators = args.length > 3 ? args.splice(3, args.length) : ['default']
+    yield this._authenticate(request, authenticators)
+    socket.authUser = request.authUser
     yield next
   }
 

@@ -25,6 +25,24 @@ class AuthInit {
     yield next
   }
 
+  /**
+   * authenticates a web socket request using number of defined
+   * authenticators.
+   *
+   * @param  {Object}   socket
+   * @param  {Object}   request
+   * @param  {Function} next
+   *
+   * @public
+   */
+  * handleWs (socket, request, next) {
+    const AuthManager = this.AuthManager
+    request.auth = new AuthManager(this.Config, request)
+    request.currentUser = yield request.auth.getUser()
+    socket.currentUser = request.currentUser
+    yield next
+  }
+
 }
 
 module.exports = AuthInit
