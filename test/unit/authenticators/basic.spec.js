@@ -27,14 +27,6 @@ const Config = function (model) {
   }
 }
 
-const request = {
-  request: {
-    headers: {
-      authorization: 'a'
-    }
-  }
-}
-
 const Hash = {
   verify: function * (password, actualPassword) {
     return password === actualPassword
@@ -59,6 +51,11 @@ describe('Authenticators', function () {
     it('should return false when request does not have basic auth headers set', function * () {
       class User extends Model {
       }
+      const request = {
+        header: function () {
+          return 'a'
+        }
+      }
       const basicAuth = new BasicAuthScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield basicAuth.check()
       expect(isLoggedIn).to.equal(false)
@@ -73,9 +70,12 @@ describe('Authenticators', function () {
       sinon.spy(User, 'query')
       sinon.spy(User, 'where')
       sinon.spy(User, 'first')
-      const altRequest = request
-      altRequest.request.headers.authorization = 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
-      const basicAuth = new BasicAuthScheme(altRequest, this.serializer, Config(User))
+      const request = {
+        header: function () {
+          return 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
+        }
+      }
+      const basicAuth = new BasicAuthScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield basicAuth.check()
       expect(isLoggedIn).to.equal(false)
       expect(User.query.calledOnce).to.equal(true)
@@ -100,9 +100,12 @@ describe('Authenticators', function () {
       sinon.spy(User, 'where')
       sinon.spy(User, 'first')
       sinon.spy(Hash, 'verify')
-      const altRequest = request
-      altRequest.request.headers.authorization = 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
-      const basicAuth = new BasicAuthScheme(altRequest, this.serializer, Config(User))
+      const request = {
+        header: function () {
+          return 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
+        }
+      }
+      const basicAuth = new BasicAuthScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield basicAuth.check()
       expect(isLoggedIn).to.equal(false)
       expect(User.query.calledOnce).to.equal(true)
@@ -130,9 +133,12 @@ describe('Authenticators', function () {
       sinon.spy(User, 'where')
       sinon.spy(User, 'first')
       sinon.spy(Hash, 'verify')
-      const altRequest = request
-      altRequest.request.headers.authorization = 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
-      const basicAuth = new BasicAuthScheme(altRequest, this.serializer, Config(User))
+      const request = {
+        header: function () {
+          return 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
+        }
+      }
+      const basicAuth = new BasicAuthScheme(request, this.serializer, Config(User))
       const isLoggedIn = yield basicAuth.check()
       expect(isLoggedIn).to.equal(true)
       expect(User.query.calledOnce).to.equal(true)
@@ -156,9 +162,33 @@ describe('Authenticators', function () {
           }
         }
       }
-      const altRequest = request
-      altRequest.request.headers.authorization = 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
-      const basicAuth = new BasicAuthScheme(altRequest, this.serializer, Config(User))
+      const request = {
+        header: function () {
+          return 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
+        }
+      }
+      const basicAuth = new BasicAuthScheme(request, this.serializer, Config(User))
+      const user = yield basicAuth.getUser()
+      expect(user).deep.equal({password: 'secret'})
+    })
+
+    it('should return user when basic auth credentials have been passed as query string', function * () {
+      class User extends Model {
+        static * first () {
+          return {
+            password: 'secret'
+          }
+        }
+      }
+      const request = {
+        header: function () {
+          return null
+        },
+        input: function () {
+          return 'Basic ' + new Buffer('foo@bar.com' + ':' + 'secret').toString('base64')
+        }
+      }
+      const basicAuth = new BasicAuthScheme(request, this.serializer, Config(User))
       const user = yield basicAuth.getUser()
       expect(user).deep.equal({password: 'secret'})
     })

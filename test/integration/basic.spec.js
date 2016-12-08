@@ -41,7 +41,7 @@ describe('Authenticators', function () {
           res.end()
         })
       })
-      const response = yield supertest(server).get('/')
+      const response = yield supertest(server).get('/').expect(200)
       expect(response.body).to.equal(false)
     })
 

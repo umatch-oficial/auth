@@ -15,7 +15,8 @@ const basicAuth = require('basic-auth')
 class BasicAuthScheme extends BaseScheme {
 
   * _getRequestUser () {
-    const credentials = basicAuth(this.request.request)
+    const authString = this.request.header('authorization') || this.request.input('basic')
+    const credentials = basicAuth.parse(authString)
     if (!credentials) {
       return null
     }
