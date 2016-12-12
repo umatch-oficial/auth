@@ -1,3 +1,22 @@
+<a name="1.0.5"></a>
+## [1.0.5](https://github.com/adonisjs/adonis-auth/compare/v1.0.4...v1.0.5) (2016-12-12)
+
+
+### Bug Fixes
+
+* **api:tokens:** fix revokeTokens ([c012936](https://github.com/adonisjs/adonis-auth/commit/c012936)), closes [#24](https://github.com/adonisjs/adonis-auth/issues/24)
+* **command:** fix typo (#26) ([3409fd2](https://github.com/adonisjs/adonis-auth/commit/3409fd2)), closes [#26](https://github.com/adonisjs/adonis-auth/issues/26)
+
+
+### Features
+
+* **basic:** add support for query string ([a177aa3](https://github.com/adonisjs/adonis-auth/commit/a177aa3))
+* **jwt:** add option for passing custom payload ([2e413fe](https://github.com/adonisjs/adonis-auth/commit/2e413fe)), closes [#14](https://github.com/adonisjs/adonis-auth/issues/14)
+* **schemes:jwt:** add custom jwt payload functionality ([a542fc4](https://github.com/adonisjs/adonis-auth/commit/a542fc4))
+* **socket:** add method to support websocket ([43f0126](https://github.com/adonisjs/adonis-auth/commit/43f0126))
+
+
+
 <a name="1.0.4"></a>
 ## [1.0.4](https://github.com/adonisjs/adonis-auth/compare/v1.0.3...v1.0.4) (2016-09-26)
 
