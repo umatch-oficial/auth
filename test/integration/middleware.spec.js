@@ -217,4 +217,33 @@ describe('Auth Middleware', function () {
     expect()
     DummyModel.find.restore()
   })
+
+  it('should attach the user instance to the socket object', function * () {
+    sinon.spy(DummyModel, 'find')
+    const server = http.createServer(function (req, res) {
+      const socket = {}
+      const request = setup.decorateRequest(req, 'session', Config)
+      const authMiddleware = new AuthMiddleware()
+      co(function * () {
+        yield authMiddleware.handleWs(socket, request, function * () {})
+        return socket.authUser
+      })
+      .then(function (user) {
+        res.writeHead(200, {'content-type': 'application/json'})
+        res.write(JSON.stringify(user))
+        res.end()
+      })
+      .catch(function (error) {
+        res.writeHead(500, {'content-type': 'application/json'})
+        res.write(JSON.stringify(error))
+        res.end()
+      })
+    })
+    const response = yield supertest(server).get('/').set('Cookie', ['adonis-auth=2'])
+    expect(response.body).deep.equal({password: 'secret', id: '2'})
+    expect(DummyModel.find.calledOnce).to.equal(true)
+    expect(DummyModel.find.calledWith('2')).to.equal(true)
+    expect()
+    DummyModel.find.restore()
+  })
 })

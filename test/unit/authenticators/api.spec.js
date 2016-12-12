@@ -105,14 +105,11 @@ describe('Authenticators', function () {
         }
       }
       const user = new User()
-      sinon.spy(apiTokens, 'query')
       sinon.spy(apiTokens, 'update')
       const api = new ApiScheme({}, this.serializer, Config(Token))
       yield api.revokeAll(user)
-      expect(apiTokens.query.calledOnce).to.equal(true)
       expect(apiTokens.update.calledOnce).to.equal(true)
-      expect(apiTokens.update.calledWith('is_revoked', true)).to.equal(true)
-      apiTokens.query.restore()
+      expect(apiTokens.update.calledWith({'is_revoked': true})).to.equal(true)
       apiTokens.update.restore()
     })
 
@@ -134,16 +131,13 @@ describe('Authenticators', function () {
         }
       }
       const user = new User()
-      sinon.spy(apiTokens, 'query')
       sinon.spy(apiTokens, 'update')
       sinon.spy(apiTokens, 'whereIn')
       const api = new ApiScheme({}, this.serializer, Config(Token))
       yield api.revoke(user, [1, 2])
-      expect(apiTokens.query.calledOnce).to.equal(true)
       expect(apiTokens.update.calledOnce).to.equal(true)
       expect(apiTokens.whereIn.calledOnce).to.equal(true)
       expect(apiTokens.whereIn.calledWith('token', [1, 2])).to.equal(true)
-      apiTokens.query.restore()
       apiTokens.update.restore()
       apiTokens.whereIn.restore()
     })
@@ -166,16 +160,13 @@ describe('Authenticators', function () {
         }
       }
       const user = new User()
-      sinon.spy(apiTokens, 'query')
       sinon.spy(apiTokens, 'update')
       sinon.spy(apiTokens, 'whereNotIn')
       const api = new ApiScheme({}, this.serializer, Config(Token))
       yield api.revokeExcept(user, [1, 2])
-      expect(apiTokens.query.calledOnce).to.equal(true)
       expect(apiTokens.update.calledOnce).to.equal(true)
       expect(apiTokens.whereNotIn.calledOnce).to.equal(true)
       expect(apiTokens.whereNotIn.calledWith('token', [1, 2])).to.equal(true)
-      apiTokens.query.restore()
       apiTokens.update.restore()
       apiTokens.whereNotIn.restore()
     })
@@ -198,16 +189,13 @@ describe('Authenticators', function () {
         }
       }
       const user = new User()
-      sinon.spy(apiTokens, 'query')
       sinon.spy(apiTokens, 'update')
       sinon.spy(apiTokens, 'whereIn')
       const api = new ApiScheme({}, this.serializer, Config(Token))
       yield api.revoke(user, [1, 2])
-      expect(apiTokens.query.calledOnce).to.equal(true)
       expect(apiTokens.update.calledOnce).to.equal(true)
       expect(apiTokens.whereIn.calledOnce).to.equal(true)
       expect(apiTokens.whereIn.calledWith('token', [1, 2])).to.equal(true)
-      apiTokens.query.restore()
       apiTokens.update.restore()
       apiTokens.whereIn.restore()
     })
@@ -230,16 +218,13 @@ describe('Authenticators', function () {
         }
       }
       const user = new User()
-      sinon.spy(apiTokens, 'query')
       sinon.spy(apiTokens, 'update')
       sinon.spy(apiTokens, 'whereNotIn')
       const api = new ApiScheme({}, this.serializer, Config(Token))
       yield api.revokeExcept(user, [1, 2])
-      expect(apiTokens.query.calledOnce).to.equal(true)
       expect(apiTokens.update.calledOnce).to.equal(true)
       expect(apiTokens.whereNotIn.calledOnce).to.equal(true)
       expect(apiTokens.whereNotIn.calledWith('token', [1, 2])).to.equal(true)
-      apiTokens.query.restore()
       apiTokens.update.restore()
       apiTokens.whereNotIn.restore()
     })

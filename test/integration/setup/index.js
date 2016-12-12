@@ -77,6 +77,9 @@ setup.decorateRequest = function (req, name, config) {
   request.header = function () {
     return req.headers['authorization']
   }
+  request.input = function () {
+    return ''
+  }
   request.session = {
     get: function * () {
       return req.headers['cookie'] ? req.headers['cookie'].replace('adonis-auth=', '') : null

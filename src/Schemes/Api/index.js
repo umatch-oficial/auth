@@ -12,7 +12,7 @@
 const BaseScheme = require('../BaseScheme')
 const CE = require('../../Exceptions')
 const ms = require('ms')
-const uuid = require('node-uuid')
+const uuid = require('uuid')
 
 class ApiScheme extends BaseScheme {
 

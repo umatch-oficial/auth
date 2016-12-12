@@ -43,8 +43,11 @@ class JwtScheme extends BaseScheme {
    * @private
    */
   _signToken (payload, options) {
-    return new Promise((resolve) => {
-      jwt.sign({payload: payload}, this.options.secret, options, function (token) {
+    return new Promise((resolve, reject) => {
+      jwt.sign({payload: payload}, this.options.secret, options, function (error, token) {
+        if (error) {
+          return reject(error)
+        }
         resolve(token)
       })
     })
@@ -64,6 +67,15 @@ class JwtScheme extends BaseScheme {
         if (error) {
           return reject(error)
         }
+
+        /**
+         * For backward compatibility we are going to auto detect the
+         * decoded payload and return it as a new payload when it
+         * does not have a uid.
+         */
+        if (decoded.payload && typeof (decoded.payload) === 'number') {
+          decoded.payload = {uid: decoded.payload}
+        }
         resolve(decoded)
       })
     })
@@ -80,7 +92,7 @@ class JwtScheme extends BaseScheme {
   * _getRequestUser () {
     try {
       const requestToken = yield this.decode()
-      const userId = requestToken.payload || null
+      const userId = requestToken.payload.uid || null
       if (!userId) {
         return null
       }
@@ -99,7 +111,7 @@ class JwtScheme extends BaseScheme {
    *
    * @return {String}
    */
-  * generate (user) {
+  * generate (user, customPayload) {
     if (!user) {
       throw new NE.InvalidArgumentException('user is required to generate a jwt token')
     }
@@ -108,7 +120,11 @@ class JwtScheme extends BaseScheme {
     if (!primaryValue) {
       throw new NE.InvalidArgumentException(`Value for ${primaryKey} is null for given user.`)
     }
-    return this._signToken(primaryValue, this.jwtOptions)
+    const payload = {uid: primaryValue}
+    if (customPayload) {
+      payload.data = typeof (customPayload.toJSON) === 'function' ? customPayload.toJSON() : customPayload
+    }
+    return this._signToken(payload, this.jwtOptions)
   }
 
   /**
