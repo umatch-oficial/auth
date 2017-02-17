@@ -28,19 +28,15 @@ class Auth {
    */
   _tryFail (request, authenticators) {
     return coFs.forEachSerial(function * (authenticator) {
-      let result = null
       /**
        * it should make use of existing of existing auth instance when
        * authenticator is set to default. It will avoid invoking new
        * instance, which inturn saves a SQL query.
        */
-      if (authenticator === 'default') {
-        result = yield request.auth.check()
-      } else {
-        result = yield request.auth.authenticator(authenticator).check()
-      }
+      const authInstance = authenticator === 'default' ? request.auth : request.auth.authenticator(authenticator)
+      const result = yield authInstance.check()
       if (result) {
-        request.authUser = yield request.auth.getUser()
+        request.authUser = yield authInstance.getUser()
         /**
          * we need to break the loop as soon as an authenticator
          * returns true. Ideally one cannot break promises chain

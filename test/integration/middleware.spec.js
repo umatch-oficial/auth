@@ -17,12 +17,18 @@ const http = require('http')
 const supertest = require('supertest')
 const co = require('co')
 const sinon = require('sinon-es6')
+const jwt = require('jsonwebtoken')
 const expect = chai.expect
 require('co-mocha')
 
 class DummyModel {
   static * find (id) {
-    return id === '2' ? {password: 'secret', id: id} : null
+    if (id === 'jwt-1') {
+      return { user: true }
+    } else if (id === '2') {
+      return {password: 'secret', id: id}
+    }
+    return null
   }
   static query () {
     return this
@@ -30,6 +36,7 @@ class DummyModel {
   static where () {
     return this
   }
+
   static * first () {
     return {password: 'secret'}
   }
@@ -54,7 +61,8 @@ const basicConfig = {
 const jwtConfig = {
   serializer: 'Lucid',
   model: DummyModel,
-  scheme: 'jwt'
+  scheme: 'jwt',
+  secret: 'bubblegum'
 }
 
 const Config = {
@@ -245,5 +253,29 @@ describe('Auth Middleware', function () {
     expect(DummyModel.find.calledWith('2')).to.equal(true)
     expect()
     DummyModel.find.restore()
+  })
+
+  it('should fetch user using the right authenticator when multiple authenticators are in use', function * () {
+    const server = http.createServer(function (req, res) {
+      const request = setup.decorateRequest(req, 'session', Config)
+      const authMiddleware = new AuthMiddleware()
+      co(function * () {
+        yield authMiddleware.handle(request, res, function * () {}, 'session', 'jwt')
+        return yield request.authUser
+      })
+      .then(function (user) {
+        res.writeHead(200, {'content-type': 'application/json'})
+        res.write(JSON.stringify(user))
+        res.end()
+      })
+      .catch(function (error) {
+        res.writeHead(500, {'content-type': 'application/json'})
+        res.write(JSON.stringify(error))
+        res.end()
+      })
+    })
+    const token = 'Bearer ' + jwt.sign({payload: {uid: 'jwt-1'}}, jwtConfig.secret)
+    const response = yield supertest(server).get('/').set('Authorization', token)
+    expect(response.body).deep.equal({user: true})
   })
 })
