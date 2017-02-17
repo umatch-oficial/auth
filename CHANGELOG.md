@@ -1,3 +1,13 @@
+<a name="1.0.6"></a>
+## [1.0.6](https://github.com/adonisjs/adonis-auth/compare/v1.0.5...v1.0.6) (2017-02-17)
+
+
+### Bug Fixes
+
+* **middleware:** use authenticator instance for check and getUser ([c4493e7](https://github.com/adonisjs/adonis-auth/commit/c4493e7)), closes [#32](https://github.com/adonisjs/adonis-auth/issues/32)
+
+
+
 <a name="1.0.5"></a>
 ## [1.0.5](https://github.com/adonisjs/adonis-auth/compare/v1.0.4...v1.0.5) (2016-12-12)
 
