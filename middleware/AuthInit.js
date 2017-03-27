@@ -18,10 +18,11 @@ class AuthInit {
   }
 
   * handle (request, response, next) {
+    const view = response.viewInstance || this.view
     const AuthManager = this.AuthManager
     request.auth = new AuthManager(this.Config, request)
     request.currentUser = yield request.auth.getUser()
-    this.view.global('currentUser', request.currentUser)
+    view.global('currentUser', request.currentUser)
     yield next
   }
 
