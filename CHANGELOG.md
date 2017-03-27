@@ -1,3 +1,13 @@
+<a name="1.0.7"></a>
+## [1.0.7](https://github.com/adonisjs/adonis-auth/compare/v1.0.6...v1.0.7) (2017-03-27)
+
+
+### Bug Fixes
+
+* **middleware:** use request.viewInstance over view global ([00d4c20](https://github.com/adonisjs/adonis-auth/commit/00d4c20))
+
+
+
 <a name="1.0.6"></a>
 ## [1.0.6](https://github.com/adonisjs/adonis-auth/compare/v1.0.5...v1.0.6) (2017-02-17)
 
