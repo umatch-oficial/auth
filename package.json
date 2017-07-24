@@ -43,6 +43,9 @@
       "path": "./node_modules/cz-conventional-changelog"
     }
   },
+  "nyc": {
+    "include": ["src", "test/**/*.spec.js"]
+  },
   "dependencies": {
     "node-exceptions": "^2.0.2",
     "resetable": "^1.0.2"
