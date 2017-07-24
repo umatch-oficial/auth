@@ -1,6 +1,6 @@
 'use strict'
 
-/**
+/*
  * adonis-auth
  *
  * (c) Harminder Virk <virk@adonisjs.com>
@@ -9,11 +9,7 @@
  * file that was distributed with this source code.
 */
 
-let proxyHandler = exports = module.exports = {}
-
-proxyHandler.get = function (target, name) {
-  if (target[name]) {
-    return target[name]
-  }
-  return target.authenticatorInstance[name]
+class Auth {
 }
+
+module.exports = Auth

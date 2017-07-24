@@ -1,7 +1,7 @@
 'use strict'
 
-/**
- * adonis-auth
+/*
+ * adonis-lucid
  *
  * (c) Harminder Virk <virk@adonisjs.com>
  *
@@ -10,6 +10,5 @@
 */
 
 module.exports = {
-  Lucid: require('./Lucid'),
-  Database: require('./Database')
+  lucid: require('./Lucid')
 }

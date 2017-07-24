@@ -9,6 +9,5 @@
  * file that was distributed with this source code.
 */
 
-module.exports = {
-  session: require('./Session')
-}
+const cli = require('japa/cli')
+cli.run('test/**/*.spec.js')
