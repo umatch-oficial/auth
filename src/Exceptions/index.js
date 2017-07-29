@@ -31,6 +31,14 @@ class RuntimeException extends NE.RuntimeException {
   static missingUid () {
     return new this('Cannot login user, since user id is not defined', 500, 'E_CANNOT_LOGIN')
   }
+
+  static missingScheme (name) {
+    return new this(`Unable to find ${name} authentication scheme. Make sure it exists`, 500, 'E_MISSING_AUTH_SCHEME')
+  }
+
+  static missingSerializer (name) {
+    return new this(`Unable to find ${name} authentication serializer. Make sure it exists`, 500, 'E_MISSING_AUTH_SERIALIZER')
+  }
 }
 
 module.exports = {
