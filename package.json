@@ -44,10 +44,16 @@
     }
   },
   "nyc": {
-    "include": ["src", "test/**/*.spec.js"]
+    "include": [
+      "src",
+      "test/**/*.spec.js"
+    ]
   },
   "dependencies": {
+    "lodash": "^4.17.4",
+    "ms": "^2.0.0",
     "node-exceptions": "^2.0.2",
-    "resetable": "^1.0.2"
+    "resetable": "^1.0.2",
+    "uuid": "^3.1.0"
   }
 }
