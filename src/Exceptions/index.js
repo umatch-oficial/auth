@@ -39,6 +39,14 @@ class RuntimeException extends NE.RuntimeException {
   static missingSerializer (name) {
     return new this(`Unable to find ${name} authentication serializer. Make sure it exists`, 500, 'E_MISSING_AUTH_SERIALIZER')
   }
+
+  static missingConfig (key) {
+    return new this(`Cannot find config for ${key}`, 500, 'E_MISSING_CONFIG')
+  }
+
+  static invalidConfig (key, missingKeys) {
+    return new this(`Make sure to define ${missingKeys.join(', ')} on ${key} authenticator`, 500, 'E_INVALID_CONFIG')
+  }
 }
 
 module.exports = {

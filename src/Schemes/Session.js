@@ -88,7 +88,7 @@ class SessionScheme extends BaseScheme {
    *
    * @method remember
    *
-   * @param  {String|Number} duration
+   * @param  {String|Number} [duration = 5y]
    *
    * @chainable
    */
