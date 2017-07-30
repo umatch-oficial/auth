@@ -41,6 +41,7 @@ const proxyHandler = {
     if (typeof (target.authenticatorInstance[name]) === 'function') {
       return target.authenticatorInstance[name].bind(target.authenticatorInstance)
     }
+
     return target.authenticatorInstance[name]
   }
 }
@@ -56,6 +57,7 @@ class Auth {
   constructor (ctx, Config) {
     this._ctx = ctx
     this.Config = Config
+    this._authenticatorsPool = {}
     this.authenticatorInstance = this.authenticator()
     return new Proxy(this, proxyHandler)
   }
@@ -72,6 +74,14 @@ class Auth {
    */
   authenticator (name) {
     name = name || this.Config.get('auth.authenticator')
+
+    /**
+     * if authenticator instance exists, please return it
+     */
+    if (this._authenticatorsPool[name]) {
+      return this._authenticatorsPool[name]
+    }
+
     const config = this.Config.get(`auth.${name}`)
 
     /**
@@ -102,6 +112,10 @@ class Auth {
     schemeInstance.setOptions(config, serializerInstance)
     schemeInstance.setCtx(this._ctx)
 
+    /**
+     * Storing scheme instance inside pool
+     */
+    this._authenticatorsPool[name] = schemeInstance
     return schemeInstance
   }
 }

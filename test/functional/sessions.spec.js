@@ -34,11 +34,10 @@ test.group('Session', (group) => {
     this.server.on('request', (req, res) => {
       const Context = ioc.use('Adonis/Src/Context')
 
-      const ctx = new Context({
-        request: helpers.getRequest(req),
-        response: helpers.getResponse(req, res),
-        session: helpers.getSession()
-      })
+      const ctx = new Context()
+      ctx.request = helpers.getRequest(req)
+      ctx.response = helpers.getResponse(req, res)
+      ctx.session = helpers.getSession(req, res)
 
       ctx
         .auth
@@ -63,11 +62,10 @@ test.group('Session', (group) => {
     this.server.on('request', (req, res) => {
       const Context = ioc.use('Adonis/Src/Context')
 
-      const ctx = new Context({
-        request: helpers.getRequest(req),
-        response: helpers.getResponse(req, res),
-        session: helpers.getSession()
-      })
+      const ctx = new Context()
+      ctx.request = helpers.getRequest(req)
+      ctx.response = helpers.getResponse(req, res)
+      ctx.session = helpers.getSession(req, res)
 
       ctx
         .auth

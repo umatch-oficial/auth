@@ -38,6 +38,13 @@ module.exports = async () => {
         model: 'App/Models/User',
         serializer: 'lucid',
         scheme: 'session'
+      },
+      basic: {
+        uid: 'email',
+        password: 'password',
+        model: 'App/Models/User',
+        serializer: 'lucid',
+        scheme: 'basic'
       }
     })
 
