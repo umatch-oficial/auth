@@ -64,7 +64,7 @@ class AuthProvider extends ServiceProvider {
     const Config = this.app.use('Adonis/Src/Config')
 
     Context.getter('auth', function () {
-      return new Auth(this, Config)
+      return new Auth({ request: this.request, response: this.response, session: this.session }, Config)
     }, true)
   }
 }

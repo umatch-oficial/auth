@@ -38,6 +38,9 @@ const proxyHandler = {
     /**
      * Fallback to authenticator instance
      */
+    if (typeof (target.authenticatorInstance[name]) === 'function') {
+      return target.authenticatorInstance[name].bind(target.authenticatorInstance)
+    }
     return target.authenticatorInstance[name]
   }
 }
