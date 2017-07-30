@@ -13,13 +13,13 @@ const NE = require('node-exceptions')
 
 class UserNotFoundException extends NE.LogicalException {
   static invoke (message) {
-    return new this(message, 500, 'E_USER_NOT_FOUND')
+    return new this(message, 401, 'E_USER_NOT_FOUND')
   }
 }
 
 class PasswordMisMatchException extends NE.LogicalException {
   static invoke (message) {
-    return new this(message, 500, 'E_PASSWORD_MISMATCH')
+    return new this(message, 401, 'E_PASSWORD_MISMATCH')
   }
 }
 
