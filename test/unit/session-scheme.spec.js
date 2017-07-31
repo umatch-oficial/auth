@@ -203,7 +203,8 @@ test.group('Schemes - Session', (group) => {
     assert.instanceOf(user, User)
     assert.equal(rememberMeToken.key, 'adonis-remember-token')
     assert.isDefined(rememberMeToken.value)
-    assert.deepEqual(rememberMeToken.options, { expires: 157788000000 })
+    const expiryYear = new Date(rememberMeToken.options.expires).getFullYear()
+    assert.equal(expiryYear, new Date().getFullYear() + 5)
   })
 
   test('customize remember me duration', async (assert) => {
@@ -245,7 +246,10 @@ test.group('Schemes - Session', (group) => {
     assert.instanceOf(user, User)
     assert.equal(rememberMeToken.key, 'adonis-remember-token')
     assert.isDefined(rememberMeToken.value)
-    assert.deepEqual(rememberMeToken.options, { expires: 36000000 })
+    const expiryHours = new Date(rememberMeToken.options.expires).getHours()
+    const date = new Date()
+    date.setHours(date.getHours() + 10)
+    assert.equal(expiryHours, date.getHours())
   })
 
   test('do not set remember me token when false is passed', async (assert) => {
@@ -323,11 +327,14 @@ test.group('Schemes - Session', (group) => {
     })
 
     await User.create({ email: 'foo@bar.com', password: 'supersecret' })
-    const user = await session.remember(3000).attempt('foo@bar.com', 'supersecret')
+    const user = await session.remember(60000).attempt('foo@bar.com', 'supersecret')
     assert.instanceOf(user, User)
     assert.equal(rememberMeToken.key, 'adonis-remember-token')
     assert.isDefined(rememberMeToken.value)
-    assert.deepEqual(rememberMeToken.options, { expires: 3000 })
+    const expiryMinutes = new Date(rememberMeToken.options.expires).getMinutes()
+    const date = new Date()
+    date.setMinutes(date.getMinutes() + 1)
+    assert.equal(expiryMinutes, date.getMinutes())
   })
 
   test('throw exception when re-using same instance to authenticate user twice', async (assert) => {
