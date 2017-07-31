@@ -78,12 +78,6 @@ class AuthProvider extends ServiceProvider {
     const Context = this.app.use('Adonis/Src/Context')
     const Auth = this.app.use('Adonis/Src/Auth')
     const Config = this.app.use('Adonis/Src/Config')
-    const Server = this.app.use('Adonis/Src/Server')
-
-    /**
-     * Implictly adding auth init middleware
-     */
-    Server.registerGlobal(['Adonis/Middleware/AuthInit'])
 
     Context.getter('auth', function () {
       return new Auth({ request: this.request, response: this.response, session: this.session }, Config)
