@@ -112,6 +112,32 @@ class BaseScheme {
     this._serializerInstance.query(callback)
     return this
   }
+
+  /**
+   * Returns the value of authorization header
+   * or request payload token key value
+   *
+   * @method getAuthHeader
+   *
+   * @return {String|Null}
+   */
+  getAuthHeader () {
+    const { request } = this._ctx
+
+    /**
+     * Parse the auth header and fetch token from it
+     */
+    let token = request.header('authorization')
+    if (token) {
+      token = token.split(' ')
+      return (token.length === 2 && token[0] === 'Bearer') ? token[1] : null
+    }
+
+    /**
+     * Fallback to `input` field
+     */
+    return request.input('token', null)
+  }
 }
 
 module.exports = BaseScheme

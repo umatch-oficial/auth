@@ -11,7 +11,8 @@ module.exports = {
       client: 'sqlite',
       connection: {
         filename: path.join(__dirname, '../tmp/dev.sqlite3')
-      }
+      },
+      debug: process.env.DEBUG
     })
   },
 
@@ -30,7 +31,7 @@ module.exports = {
         table.integer('user_id')
         table.string('token')
         table.string('type')
-        table.string('is_revoked')
+        table.boolean('is_revoked')
         table.timestamps()
       })
     ])
@@ -98,5 +99,11 @@ module.exports = {
     User._bootIfNotBooted()
     Tokens._bootIfNotBooted()
     return User
+  },
+
+  sleep (time) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, time)
+    })
   }
 }
