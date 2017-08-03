@@ -1,7 +1,7 @@
 'use strict'
 
 /*
- * adonis-lucid
+ * adonis-auth
  *
  * (c) Harminder Virk <virk@adonisjs.com>
  *
@@ -12,14 +12,14 @@
 const { ioc } = require('@adonisjs/fold')
 const debug = require('debug')('adonis:auth')
 
-/**
- * Lucid serializers uses lucid model to validate
- * and fetch user details.
- *
- * @class LucidSerializer
- * @constructor
- */
-class LucidSerializer {
+class DatabaseSerializer {
+  constructor (Hash) {
+    this.Hash = Hash
+    this._config = null
+    this._queryCallback = null
+    this._Db = ioc.use('Adonis/Src/Database')
+  }
+
   /* istanbul ignore next */
   /**
    * Dependencies to be injected by Ioc container
@@ -32,28 +32,82 @@ class LucidSerializer {
     return ['Adonis/Src/Hash']
   }
 
-  constructor (Hash) {
-    this.Hash = Hash
-    this._config = null
-    this._Model = null
-    this._queryCallback = null
-  }
-
   /**
    * Returns an instance of the model query
    *
    * @method _getQuery
    *
+   * @param  {String} [table = this.table]
+   *
    * @return {Object}
    *
    * @private
    */
-  _getQuery () {
-    const query = this._Model.query()
+  _getQuery (table = this.table) {
+    const query = this._Db.connection(this.connection).table(table)
     if (typeof (this._queryCallback) === 'function') {
       this._queryCallback(query)
+      this._queryCallback = null
     }
     return query
+  }
+
+  /**
+   * The connection to be used for making
+   * database queries
+   *
+   * @attribute connection
+   *
+   * @return {String}
+   */
+  get connection () {
+    return this._config.connection || ''
+  }
+
+  /**
+   * The table name for fetching user
+   *
+   * @attribute table
+   *
+   * @return {String}
+   */
+  get table () {
+    return this._config.table
+  }
+
+  /**
+   * Returns the primary key for the
+   * model. It is used to set the
+   * session key
+   *
+   * @attribute primaryKey
+   *
+   * @return {String}
+   */
+  get primaryKey () {
+    return this._config.primaryKey
+  }
+
+  /**
+   * The foriegn key for tokens table
+   *
+   * @attribute foreignKey
+   *
+   * @return {String}
+   */
+  get foreignKey () {
+    return this._config.foreignKey
+  }
+
+  /**
+   * The tokens table
+   *
+   * @attribute tokensTable
+   *
+   * @return {String}
+   */
+  get tokensTable () {
+    return this._config.tokensTable
   }
 
   /**
@@ -67,20 +121,6 @@ class LucidSerializer {
    */
   setConfig (config) {
     this._config = config
-    this._Model = ioc.make(this._config.model)
-  }
-
-  /**
-   * Returns the primary key for the
-   * model. It is used to set the
-   * session key
-   *
-   * @method primaryKey
-   *
-   * @return {String}
-   */
-  get primaryKey () {
-    return this._Model.primaryKey
   }
 
   /**
@@ -156,10 +196,17 @@ class LucidSerializer {
    */
   async findByToken (token, type) {
     debug('finding user for %s token', token)
+    const self = this
+
     return this
       ._getQuery()
-      .whereHas('tokens', function (builder) {
-        builder.where({ token, type, is_revoked: false })
+      .whereExists(function () {
+        this
+          .from(self.tokensTable)
+          .where({ token, type, is_revoked: false })
+          .whereRaw(
+            `${self._config.table}.${self.primaryKey} = ${self.tokensTable}.${self.foreignKey}`
+          )
       }).first()
   }
 
@@ -177,12 +224,17 @@ class LucidSerializer {
    * @return {void}
    */
   async saveToken (user, token, type) {
-    const tokenInstance = new (user.tokens()).RelatedModel()
-    tokenInstance.token = token
-    tokenInstance.type = type
-    tokenInstance.is_revoked = false
-    debug('saving token for %s user with %j payload', user.primaryKeyValue, tokenInstance)
-    await user.tokens().save(tokenInstance)
+    const foreignKeyValue = user[this.primaryKey]
+
+    const insertPayload = {
+      token,
+      type,
+      is_revoked: false,
+      [this.foreignKey]: foreignKeyValue
+    }
+
+    debug('saving token for %s user with %j payload', foreignKeyValue, insertPayload)
+    await this._getQuery(this.tokensTable).insert(insertPayload)
   }
 
   /**
@@ -197,7 +249,9 @@ class LucidSerializer {
    * @return {Number}           Number of impacted rows
    */
   async revokeTokens (user, tokens = null, inverse = false) {
-    const query = user.tokens()
+    const foreignKeyValue = user[this.primaryKey]
+
+    const query = this._getQuery(this.tokensTable)
     if (tokens) {
       tokens = tokens instanceof Array === true ? tokens : [tokens]
       inverse ? query.whereNotIn('token', tokens) : query.whereIn('token', tokens)
@@ -205,8 +259,10 @@ class LucidSerializer {
     } else {
       debug('revoking all tokens for %s user', user.primaryKeyValue)
     }
+
+    query.where(this.foreignKey, foreignKeyValue)
     return query.update({ is_revoked: true })
   }
 }
 
-module.exports = LucidSerializer
+module.exports = DatabaseSerializer

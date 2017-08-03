@@ -10,5 +10,6 @@
 */
 
 module.exports = {
-  lucid: require('./Lucid')
+  lucid: require('./Lucid'),
+  database: require('./Database')
 }
