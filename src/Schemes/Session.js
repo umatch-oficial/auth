@@ -181,7 +181,7 @@ class SessionScheme extends BaseScheme {
     const duration = this._rememberTokenDuration.pull()
     const rememberToken = duration ? uuid.v4() : null
     if (rememberToken) {
-      await this._serializerInstance.saveRememberToken(user, rememberToken)
+      await this._serializerInstance.saveToken(user, rememberToken, 'remember_token')
     }
 
     this._setSession(this.primaryKeyValue, rememberToken, duration)
@@ -214,8 +214,14 @@ class SessionScheme extends BaseScheme {
    *
    * @return {void}
    */
-  logout () {
-    this.user = null
+  async logout () {
+    if (this.user) {
+      const rememberMeToken = this._ctx.request.cookie(this.remeberTokenKey)
+      if (rememberMeToken) {
+        await this._serializerInstance.revokeTokens(this.user, [rememberMeToken])
+      }
+      this.user = null
+    }
     this._removeSession()
   }
 
@@ -241,7 +247,7 @@ class SessionScheme extends BaseScheme {
       this.user = await this._serializerInstance.findById(sessionValue)
       return !!this.user
     } else if (rememberMeToken) {
-      const user = await this._serializerInstance.findByRememberToken(rememberMeToken)
+      const user = await this._serializerInstance.findByToken(rememberMeToken, 'remember_token')
       if (user) {
         this.login(user)
       }

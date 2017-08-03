@@ -145,4 +145,123 @@ test.group('Serializers - Lucid', (group) => {
 
     assert.equal(authQuery.sql, 'select * from "users" where "is_active" = ? and "id" = ? limit ?')
   })
+
+  test('make correct findByToken query', async (assert) => {
+    const User = helpers.getUserModel()
+
+    let authQuery = null
+    User.onQuery((query) => (authQuery = query))
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    await lucid.findByToken('20', 'remember_token')
+    assert.equal(
+      authQuery.sql,
+      'select * from "users" where exists (select * from "tokens" where "token" = ? and "type" = ? and "is_revoked" = ? and users.id = tokens.user_id) limit ?'
+    )
+    assert.deepEqual(authQuery.bindings, ['20', 'remember_token', false, 1])
+  })
+
+  test('save token for a given user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    let tokensQuery = null
+    user.tokens().RelatedModel.onQuery((query) => (tokensQuery = query))
+
+    await lucid.saveToken(user, '20', 'remember_token')
+    assert.equal(
+      tokensQuery.sql,
+      'insert into "tokens" ("is_revoked", "token", "type", "user_id") values (?, ?, ?, ?)'
+    )
+    assert.deepEqual(tokensQuery.bindings, [false, '20', 'remember_token', 1])
+  })
+
+  test('remove single token for a given user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    let tokensQuery = null
+    user.tokens().RelatedModel.onQuery((query) => (tokensQuery = query))
+
+    await lucid.revokeTokens(user, '20')
+    assert.equal(
+      tokensQuery.sql,
+      'update "tokens" set "is_revoked" = ? where "token" in (?) and "user_id" = ?'
+    )
+    assert.deepEqual(tokensQuery.bindings, [true, '20', 1])
+  })
+
+  test('remove all tokens for a given user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    let tokensQuery = null
+    user.tokens().RelatedModel.onQuery((query) => (tokensQuery = query))
+
+    await lucid.revokeTokens(user)
+    assert.equal(
+      tokensQuery.sql,
+      'update "tokens" set "is_revoked" = ? where "user_id" = ?'
+    )
+    assert.deepEqual(tokensQuery.bindings, [true, 1])
+  })
+
+  test('remove multiple tokens for a given user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    let tokensQuery = null
+    user.tokens().RelatedModel.onQuery((query) => (tokensQuery = query))
+
+    await lucid.revokeTokens(user, ['20', '30'])
+    assert.equal(
+      tokensQuery.sql,
+      'update "tokens" set "is_revoked" = ? where "token" in (?, ?) and "user_id" = ?'
+    )
+    assert.deepEqual(tokensQuery.bindings, [true, '20', '30', 1])
+  })
 })

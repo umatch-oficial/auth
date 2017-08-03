@@ -22,16 +22,24 @@ module.exports = {
         table.string('email')
         table.string('password')
         table.boolean('is_active')
-        table.string('remember_me_token')
         table.timestamps()
         table.timestamp('deleted_at').nullable()
+      }),
+      db.schema.createTable('tokens', function (table) {
+        table.increments()
+        table.integer('user_id')
+        table.string('token')
+        table.string('type')
+        table.string('is_revoked')
+        table.timestamps()
       })
     ])
   },
 
   dropTables (db) {
     return Promise.all([
-      db.schema.dropTable('users')
+      db.schema.dropTable('users'),
+      db.schema.dropTable('tokens')
     ])
   },
 
@@ -71,12 +79,24 @@ module.exports = {
   },
 
   getUserModel () {
-    class User extends Model {
-      static get makePlain () {
-        return true
+    class Tokens extends Model {
+      static get createdAtColumn () {
+        return null
+      }
+
+      static get updatedAtColumn () {
+        return null
       }
     }
+
+    class User extends Model {
+      tokens () {
+        return this.hasMany(Tokens)
+      }
+    }
+
     User._bootIfNotBooted()
+    Tokens._bootIfNotBooted()
     return User
   }
 }

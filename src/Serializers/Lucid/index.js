@@ -10,6 +10,7 @@
 */
 
 const { ioc } = require('@adonisjs/fold')
+const debug = require('debug')('adonis:auth')
 
 /**
  * Lucid serializers uses lucid model to validate
@@ -108,6 +109,7 @@ class LucidSerializer {
    * @return {User|Null}  The model instance or `null`
    */
   async findById (id) {
+    debug('finding user with primary key as %s', id)
     return this._getQuery().where(this.primaryKey, id).first()
   }
 
@@ -121,20 +123,8 @@ class LucidSerializer {
    * @return {Model|Null} The model instance or `null`
    */
   async findByUid (uid) {
+    debug('finding user with %s as %s', this._config.uid, uid)
     return this._getQuery().where(this._config.uid, uid).first()
-  }
-
-  /**
-   * Finds a user using the rememeber token
-   *
-   * @method findByRememberToken
-   *
-   * @param  {String}  token
-   *
-   * @return {Model|Null} The model instance or `null`
-   */
-  async findByRememberToken (token) {
-    return this._getQuery().where('remember_me_token', token).first()
   }
 
   /**
@@ -155,18 +145,67 @@ class LucidSerializer {
   }
 
   /**
-   * Save remeber token for the user
+   * Finds a user with token
    *
-   * @method saveRememberToken
+   * @method findByToken
    *
-   * @param  {Object}          user
-   * @param  {String}          token
+   * @param  {String}    token
+   * @param  {String}    type
+   *
+   * @return {Object|Null}
+   */
+  async findByToken (token, type) {
+    debug('finding user for %s token', token)
+    return this
+      ._getQuery()
+      .whereHas('tokens', function (builder) {
+        builder.where({ token, type, is_revoked: false })
+      }).first()
+  }
+
+  /**
+   * Save token for a user. Tokens are usually secondary
+   * way to login a user when their primary login is
+   * expired
+   *
+   * @method saveToken
+   *
+   * @param  {Object}  user
+   * @param  {String}  token
+   * @param  {String}  type
    *
    * @return {void}
    */
-  async saveRememberToken (user, token) {
-    user.remember_me_token = token
-    await user.save()
+  async saveToken (user, token, type) {
+    const tokenInstance = new (user.tokens()).RelatedModel()
+    tokenInstance.token = token
+    tokenInstance.type = type
+    tokenInstance.is_revoked = false
+    debug('saving token for %s user with %j payload', user.primaryKeyValue, tokenInstance)
+    await user.tokens().save(tokenInstance)
+  }
+
+  /**
+   * Revoke token(s) or all tokens for a given user
+   *
+   * @method revokeTokens
+   *
+   * @param  {Object}           user
+   * @param  {Array|String}     [tokens = null]
+   * @param  {Boolean}          [inverse = false]
+   *
+   * @return {Number}           Number of impacted rows
+   */
+  async revokeTokens (user, tokens = null, inverse = false) {
+    const query = user.tokens()
+    if (tokens) {
+      tokens = tokens instanceof Array === true ? tokens : [tokens]
+      inverse ? query.whereNotIn('token', tokens) : query.whereIn('token', tokens)
+      debug('revoking %j tokens for %s user', tokens, user.primaryKeyValue)
+    } else {
+      debug('revoking all tokens for %s user', user.primaryKeyValue)
+    }
+    return query.update({ is_revoked: true })
   }
 }
 

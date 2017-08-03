@@ -141,9 +141,9 @@ test.group('Session', (group) => {
 
     const { headers } = await supertest(this.server).get('/?email=foo@bar.com&password=secret').expect(200)
     assert.match(headers['set-cookie'][0], new RegExp('adonis-remember-token='))
-    const user = await ioc.use('App/Models/User').first()
-    assert.isDefined(user.remember_me_token)
-    assert.equal(user.remember_me_token, headers['set-cookie'][0].split('=')[1])
+    const user = await ioc.use('App/Models/User').query().with('tokens').first()
+    assert.isDefined(user.getRelated('tokens').first())
+    assert.equal(user.getRelated('tokens').first().token, headers['set-cookie'][0].split('=')[1])
   })
 
   test('get loggedin user when cookie exists', async (assert) => {
@@ -237,11 +237,11 @@ test.group('Session', (group) => {
   })
 
   test('find user via remember_me_token', async (assert) => {
-    await ioc.use('App/Models/User').create({
+    const user = await ioc.use('App/Models/User').create({
       email: 'foo@bar.com',
-      password: 'secret',
-      remember_me_token: '2020'
+      password: 'secret'
     })
+    await user.tokens().create({ token: '2020', is_revoked: false, type: 'remember_token' })
 
     this.server.on('request', (req, res) => {
       const Context = ioc.use('Adonis/Src/Context')

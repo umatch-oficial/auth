@@ -13,10 +13,10 @@ require('@adonisjs/lucid/lib/iocResolver').setFold(require('@adonisjs/fold'))
 
 const test = require('japa')
 const { ioc } = require('@adonisjs/fold')
-const Model = require('@adonisjs/lucid/src/Lucid/Model')
 
 const { session: Session } = require('../../src/Schemes')
 const { lucid: LucidSerializer } = require('../../src/Serializers')
+const helpers = require('./helpers')
 const setup = require('./setup')
 
 test.group('Schemes - Session', (group) => {
@@ -25,13 +25,7 @@ test.group('Schemes - Session', (group) => {
 
   test('throw exception when unable to find user', async (assert) => {
     assert.plan(1)
-
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -54,12 +48,7 @@ test.group('Schemes - Session', (group) => {
   test('throw exception when password doesn\'t match', async (assert) => {
     assert.plan(1)
 
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -82,12 +71,7 @@ test.group('Schemes - Session', (group) => {
   })
 
   test('return true when user credentails are correct', async (assert) => {
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -106,12 +90,7 @@ test.group('Schemes - Session', (group) => {
   })
 
   test('return user instance when user credentails are correct', async (assert) => {
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -132,12 +111,7 @@ test.group('Schemes - Session', (group) => {
   test('set user session cookie', async (assert) => {
     let httpSession = null
 
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -167,12 +141,7 @@ test.group('Schemes - Session', (group) => {
   test('set remember me cookie when remeber me is set to true', async (assert) => {
     let rememberMeToken = null
 
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -210,12 +179,7 @@ test.group('Schemes - Session', (group) => {
   test('customize remember me duration', async (assert) => {
     let rememberMeToken = null
 
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -255,12 +219,7 @@ test.group('Schemes - Session', (group) => {
   test('do not set remember me token when false is passed', async (assert) => {
     let rememberMeToken = null
 
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -295,12 +254,7 @@ test.group('Schemes - Session', (group) => {
   test('set remember me cookie in milliseconds', async (assert) => {
     let rememberMeToken = null
 
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -339,12 +293,7 @@ test.group('Schemes - Session', (group) => {
 
   test('throw exception when re-using same instance to authenticate user twice', async (assert) => {
     assert.plan(1)
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -376,12 +325,7 @@ test.group('Schemes - Session', (group) => {
 
   test('throw exception when user doesn\'t have an id', async (assert) => {
     assert.plan(1)
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -412,12 +356,7 @@ test.group('Schemes - Session', (group) => {
 
   test('throw exception when loginViaId is unable to find user id', async (assert) => {
     assert.plan(1)
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -447,12 +386,7 @@ test.group('Schemes - Session', (group) => {
   test('set session when able to find user with id', async (assert) => {
     let httpSession = null
 
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -480,12 +414,7 @@ test.group('Schemes - Session', (group) => {
   })
 
   test('set user property when login is successful', async (assert) => {
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -513,12 +442,7 @@ test.group('Schemes - Session', (group) => {
   test('add query constraints when trying to login user', async (assert) => {
     assert.plan(1)
 
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -549,12 +473,7 @@ test.group('Schemes - Session', (group) => {
   })
 
   test('return false when user session cookie is missing', async (assert) => {
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -584,12 +503,7 @@ test.group('Schemes - Session', (group) => {
   })
 
   test('return false when session is found but unable to find user', async (assert) => {
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -622,12 +536,7 @@ test.group('Schemes - Session', (group) => {
   test('return true when user session is missing but remeber token is found', async (assert) => {
     let httpSession = null
 
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -657,7 +566,8 @@ test.group('Schemes - Session', (group) => {
       }
     })
 
-    await User.create({ email: 'foo@bar.com', password: 'supersecret', remember_me_token: '101' })
+    const user = await User.create({ email: 'foo@bar.com', password: 'supersecret' })
+    await user.tokens().create({ token: '101', user_id: 1, is_revoked: false, type: 'remember_token' })
     const logged = await session.check()
     assert.isTrue(logged)
     assert.instanceOf(session.user, User)
@@ -665,12 +575,7 @@ test.group('Schemes - Session', (group) => {
   })
 
   test('return user when already logged in', async (assert) => {
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -697,12 +602,7 @@ test.group('Schemes - Session', (group) => {
   test('logout user', async (assert) => {
     let httpSession = null
 
-    class User extends Model {
-      static get makePlain () {
-        return true
-      }
-    }
-    User._bootIfNotBooted()
+    const User = helpers.getUserModel()
 
     const config = {
       model: User,
@@ -725,6 +625,11 @@ test.group('Schemes - Session', (group) => {
           httpSession = { key }
         }
       },
+      request: {
+        cookie () {
+          return '101'
+        }
+      },
       response: {
         clearCookie (key) {
           httpSession.clearCookie = { key }
@@ -734,7 +639,7 @@ test.group('Schemes - Session', (group) => {
 
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
     await session.login(user)
-    session.logout()
+    await session.logout()
     assert.isNull(session.user)
     assert.deepEqual(httpSession, { key: 'adonis-auth', clearCookie: { key: 'adonis-remember-token' } })
   })

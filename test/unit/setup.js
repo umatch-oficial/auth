@@ -26,6 +26,7 @@ module.exports = {
 
     group.beforeEach(async () => {
       await ioc.use('Database').table('users').truncate()
+      await ioc.use('Database').table('tokens').truncate()
     })
 
     group.after(async () => {
