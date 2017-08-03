@@ -472,7 +472,8 @@ test.group('Schemes - Session', (group) => {
     }
   })
 
-  test('return false when user session cookie is missing', async (assert) => {
+  test('throw exception when user session cookie is missing', async (assert) => {
+    assert.plan(2)
     const User = helpers.getUserModel()
 
     const config = {
@@ -498,11 +499,16 @@ test.group('Schemes - Session', (group) => {
       }
     })
 
-    const logged = await session.check()
-    assert.isFalse(logged)
+    try {
+      await session.check()
+    } catch ({ name, message }) {
+      assert.equal(name, 'InvalidLoginException')
+      assert.equal(message, 'E_MISSING_SESSION: No session found for user')
+    }
   })
 
   test('return false when session is found but unable to find user', async (assert) => {
+    assert.plan(2)
     const User = helpers.getUserModel()
 
     const config = {
@@ -529,8 +535,12 @@ test.group('Schemes - Session', (group) => {
     })
 
     await User.create({ email: 'foo@bar.com', password: 'supersecret' })
-    const logged = await session.check()
-    assert.isFalse(logged)
+    try {
+      await session.check()
+    } catch ({ name, message }) {
+      assert.equal(name, 'UserNotFoundException')
+      assert.equal(message, 'E_USER_NOT_FOUND: Cannot find user with id as 2')
+    }
   })
 
   test('return true when user session is missing but remeber token is found', async (assert) => {

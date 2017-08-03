@@ -171,7 +171,9 @@ class SessionScheme extends BaseScheme {
      * Make sure primary key value exists.
      */
     if (!this.primaryKeyValue) {
-      throw GE.RuntimeException.invoke('Cannot login user, since user id is not defined', 500, 'E_CANNOT_LOGIN')
+      throw GE
+        .RuntimeException
+        .invoke('Cannot login user, since user id is not defined', 500, 'E_CANNOT_LOGIN')
     }
 
     /**
@@ -243,18 +245,44 @@ class SessionScheme extends BaseScheme {
     const sessionValue = this._ctx.session.get(this.sessionKey)
     const rememberMeToken = this._ctx.request.cookie(this.remeberTokenKey)
 
+    /**
+     * Look for user only when there is a session
+     * cookie
+     */
     if (sessionValue) {
       this.user = await this._serializerInstance.findById(sessionValue)
-      return !!this.user
-    } else if (rememberMeToken) {
-      const user = await this._serializerInstance.findByToken(rememberMeToken, 'remember_token')
-      if (user) {
-        this.login(user)
-      }
-      return !!user
     }
 
-    return false
+    /**
+     * If got user then return
+     */
+    if (this.user) {
+      return true
+    }
+
+    /**
+     * Attempt to login the user when remeber me
+     * token exists
+     */
+    if (rememberMeToken) {
+      const user = await this._serializerInstance.findByToken(rememberMeToken, 'remember_token')
+      if (user) {
+        await this.login(user)
+        return true
+      }
+    }
+
+    /**
+     * If a user is not found and there is no remeberMeToken
+     * then throw an exception
+     */
+    if (!this.user && !rememberMeToken && sessionValue) {
+      throw CE
+        .UserNotFoundException
+        .invoke(`Cannot find user with ${this.primaryKey} as ${sessionValue}`)
+    }
+
+    throw CE.InvalidLoginException.missingSession()
   }
 
   /**

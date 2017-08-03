@@ -49,8 +49,15 @@ class JwtTokenException extends GE.LogicalException {
   }
 }
 
+class InvalidLoginException extends GE.LogicalException {
+  static missingSession () {
+    return new this('No session found for user', 401, 'E_MISSING_SESSION')
+  }
+}
+
 module.exports = {
   UserNotFoundException,
   PasswordMisMatchException,
-  JwtTokenException
+  JwtTokenException,
+  InvalidLoginException
 }

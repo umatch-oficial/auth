@@ -166,6 +166,7 @@ test.group('Session', (group) => {
           res.end()
         })
         .catch(({ status, message }) => {
+          console.log(message)
           res.writeHead(status || 500)
           res.write(message)
           res.end()
@@ -176,7 +177,7 @@ test.group('Session', (group) => {
     assert.equal(text, 'true')
   })
 
-  test('return false when cookie exists but user doesn\'t', async (assert) => {
+  test('throw exception when cookie exists but user doesn\'t', async (assert) => {
     this.server.on('request', (req, res) => {
       const Context = ioc.use('Adonis/Src/Context')
 
@@ -188,9 +189,8 @@ test.group('Session', (group) => {
       ctx
         .auth
         .check()
-        .then((isLogged) => {
+        .then(() => {
           res.writeHead(200)
-          res.write(String(isLogged))
           res.end()
         })
         .catch(({ status, message }) => {
@@ -200,8 +200,8 @@ test.group('Session', (group) => {
         })
     })
 
-    const { text } = await supertest(this.server).get('/').set('Cookie', 'adonis-auth=1').expect(200)
-    assert.equal(text, 'false')
+    const { text } = await supertest(this.server).get('/').set('Cookie', 'adonis-auth=1').expect(401)
+    assert.equal(text, 'E_USER_NOT_FOUND: Cannot find user with id as 1')
   })
 
   test('set user property on auth when user exists', async (assert) => {
@@ -260,6 +260,7 @@ test.group('Session', (group) => {
           res.end()
         })
         .catch(({ status, message }) => {
+          console.log(message)
           res.writeHead(status || 500)
           res.write(message)
           res.end()

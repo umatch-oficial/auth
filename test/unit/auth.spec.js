@@ -15,6 +15,7 @@ const test = require('japa')
 const { Config } = require('@adonisjs/sink')
 const Auth = require('../../src/Auth')
 const setup = require('./setup')
+const helpers = require('./helpers')
 const { session: Session } = require('../../src/Schemes')
 const { lucid: Lucid } = require('../../src/Serializers')
 
@@ -87,6 +88,7 @@ test.group('Auth', (group) => {
   })
 
   test('proxy scheme methods', async (assert) => {
+    assert.plan(1)
     const config = new Config()
 
     config.set('auth', {
@@ -95,6 +97,7 @@ test.group('Auth', (group) => {
         serializer: 'lucid',
         scheme: 'session',
         uid: 'email',
+        model: helpers.getUserModel(),
         password: 'password'
       }
     })
@@ -104,7 +107,11 @@ test.group('Auth', (group) => {
       response: { cookie: function () {} },
       request: { cookie: function () {} }
     }, config)
-    const isLogged = await auth.check()
-    assert.isFalse(isLogged)
+
+    try {
+      await auth.check()
+    } catch ({ message }) {
+      assert.equal(message, 'E_MISSING_SESSION: No session found for user')
+    }
   })
 })
