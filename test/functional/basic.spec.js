@@ -29,7 +29,7 @@ test.group('Basic Auth', (group) => {
     this.server = http.createServer()
   })
 
-  test('return false when credentials are not passed', async (assert) => {
+  test('return error when credentials are not passed', async (assert) => {
     this.server.on('request', (req, res) => {
       const Context = ioc.use('Adonis/Src/Context')
 
@@ -48,15 +48,14 @@ test.group('Basic Auth', (group) => {
           res.end()
         })
         .catch(({ status, message }) => {
-          console.log(message)
           res.writeHead(status || 500)
           res.write(message)
           res.end()
         })
     })
 
-    const { text } = await supertest(this.server).get('/').expect(200)
-    assert.equal(text, 'false')
+    const { text } = await supertest(this.server).get('/').expect(401)
+    assert.equal(text, 'E_MISSING_AUTH_HEADER: Cannot parser or read Basic auth header')
   })
 
   test('return false when user doesn\'t exists', async (assert) => {
@@ -78,7 +77,6 @@ test.group('Basic Auth', (group) => {
           res.end()
         })
         .catch(({ status, message }) => {
-          console.log(message)
           res.writeHead(status || 500)
           res.write(message)
           res.end()
@@ -90,9 +88,9 @@ test.group('Basic Auth', (group) => {
     const { text } = await supertest(this.server)
       .get('/')
       .set('Authorization', `Basic ${userCredentials}`)
-      .expect(200)
+      .expect(401)
 
-    assert.equal(text, 'false')
+    assert.equal(text, 'E_USER_NOT_FOUND: Cannot find user with email as foo@bar.com')
   })
 
   test('return true when user does exists', async (assert) => {

@@ -141,7 +141,9 @@ test.group('Schemes - BasicAuth', (group) => {
     assert.isTrue(isLogged)
   })
 
-  test('return false when unable to verify user credentials', async (assert) => {
+  test('throw exception when unable to verify user credentials', async (assert) => {
+    assert.plan(2)
+
     class User extends Model {
       static get makePlain () {
         return true
@@ -170,8 +172,12 @@ test.group('Schemes - BasicAuth', (group) => {
       }
     } })
 
-    const isLogged = await basic.check()
-    assert.isFalse(isLogged)
+    try {
+      await basic.check()
+    } catch ({ message, name }) {
+      assert.equal(message, 'E_PASSWORD_MISMATCH: Cannot verify user password')
+      assert.equal(name, 'PasswordMisMatchException')
+    }
   })
 
   test('return user via getUser', async (assert) => {
