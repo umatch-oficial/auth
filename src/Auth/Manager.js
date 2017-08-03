@@ -12,7 +12,7 @@
 const { ioc } = require('@adonisjs/fold')
 const Serializers = require('../Serializers')
 const Schemes = require('../Schemes')
-const CE = require('../Exceptions')
+const GE = require('@adonisjs/generic-exceptions')
 
 class AuthManager {
   constructor () {
@@ -43,7 +43,9 @@ class AuthManager {
       return
     }
 
-    throw new Error('Auth.extend type must be a serializer or scheme')
+    throw GE
+      .InvalidArgumentException
+      .invalidParameter(`Auth.extend type must be a serializer or scheme, instead received ${type}`)
   }
 
   /**
@@ -58,7 +60,7 @@ class AuthManager {
   getSerializer (name) {
     const serializer = Serializers[name] || this._serializers[name]
     if (!serializer) {
-      throw CE.RuntimeException.missingSerializer(name)
+      throw GE.RuntimeException.incompleteConfig('auth', [`${name} serializer`], 'config/auth.js')
     }
     return ioc.make(serializer)
   }
@@ -75,7 +77,7 @@ class AuthManager {
   getScheme (name) {
     const scheme = Schemes[name] || this._schemes[name]
     if (!scheme) {
-      throw CE.RuntimeException.missingScheme(name)
+      throw GE.RuntimeException.incompleteConfig('auth', [`${name} scheme`], 'config/auth.js')
     }
     return ioc.make(scheme)
   }

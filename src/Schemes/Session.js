@@ -13,6 +13,7 @@ const Resetable = require('resetable')
 const ms = require('ms')
 const uuid = require('uuid')
 const BaseScheme = require('./Base')
+const GE = require('@adonisjs/generic-exceptions')
 const CE = require('../Exceptions')
 
 class SessionScheme extends BaseScheme {
@@ -159,7 +160,9 @@ class SessionScheme extends BaseScheme {
    */
   async login (user) {
     if (this.user) {
-      throw CE.RuntimeException.authenticatedInstance()
+      throw GE
+        .RuntimeException
+        .invoke('Cannot login multiple users at once, since a user is already logged in', 500, 'E_CANNOT_LOGIN')
     }
 
     this.user = user
@@ -168,7 +171,7 @@ class SessionScheme extends BaseScheme {
      * Make sure primary key value exists.
      */
     if (!this.primaryKeyValue) {
-      throw CE.RuntimeException.missingUid()
+      throw GE.RuntimeException.invoke('Cannot login user, since user id is not defined', 500, 'E_CANNOT_LOGIN')
     }
 
     /**

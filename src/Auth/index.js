@@ -11,7 +11,7 @@
 
 const _ = require('lodash')
 const AuthManager = require('./Manager')
-const CE = require('../Exceptions')
+const GE = require('@adonisjs/generic-exceptions')
 
 /**
  * The proxy handler to proxy all authenticator
@@ -88,7 +88,7 @@ class Auth {
      * Throws exception when config is defined or missing
      */
     if (!config || !_.size(config)) {
-      throw CE.RuntimeException.missingConfig(`auth.${name}`)
+      throw GE.RuntimeException.missingConfig(`auth.${name}`, 'config/auth.js')
     }
 
     /**
@@ -96,7 +96,7 @@ class Auth {
      * missing
      */
     if (!_.every([config.serializer, config.scheme])) {
-      throw CE.RuntimeException.invalidConfig(`auth.${name}`, ['serializer', 'scheme'])
+      throw GE.RuntimeException.incompleteConfig(`auth.${name}`, ['serializer', 'scheme'], 'config/auth.js')
     }
 
     /**

@@ -23,7 +23,7 @@ test.group('Auth', (group) => {
 
   test('throw exception when config is missing', (assert) => {
     const auth = () => new Auth({}, new Config())
-    assert.throw(auth, 'E_MISSING_CONFIG: Cannot find config for auth.undefined')
+    assert.throw(auth, 'E_MISSING_CONFIG: auth.undefined is not defined inside config/auth.js file')
   })
 
   test('throw exception when config values are missing', (assert) => {
@@ -36,7 +36,7 @@ test.group('Auth', (group) => {
     })
 
     const auth = () => new Auth({}, config)
-    assert.throw(auth, 'E_MISSING_CONFIG: Cannot find config for auth.session')
+    assert.throw(auth, 'E_MISSING_CONFIG: auth.session is not defined inside config/auth.js file')
   })
 
   test('throw exception when serializer is not defined', (assert) => {
@@ -50,7 +50,7 @@ test.group('Auth', (group) => {
     })
 
     const auth = () => new Auth({}, config)
-    assert.throw(auth, 'E_INVALID_CONFIG: Make sure to define serializer, scheme on auth.session authenticator')
+    assert.throw(auth, 'E_INCOMPLETE_CONFIG: Make sure to define serializer, scheme on auth.session inside config/auth.js')
   })
 
   test('throw exception when scheme is missing', (assert) => {
@@ -64,7 +64,7 @@ test.group('Auth', (group) => {
     })
 
     const auth = () => new Auth({}, config)
-    assert.throw(auth, 'E_INVALID_CONFIG: Make sure to define serializer, scheme on auth.session authenticator')
+    assert.throw(auth, 'E_INCOMPLETE_CONFIG: Make sure to define serializer, scheme on auth.session inside config/auth.js')
   })
 
   test('return authenticator instance when everything is fine', (assert) => {
