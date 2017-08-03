@@ -217,8 +217,8 @@ test.group('Session', (group) => {
 
       ctx
         .auth
-        .check()
-        .then((isLogged) => {
+        .loginIfCan()
+        .then(() => {
           res.writeHead(200, { 'content-type': 'application/json' })
           res.write(JSON.stringify(ctx.auth.user))
           res.end()
@@ -271,5 +271,35 @@ test.group('Session', (group) => {
     assert.equal(body.id, 1)
     assert.equal(body.email, 'foo@bar.com')
     assert.equal(body.password, 'secret')
+  })
+
+  test('ignore silently when there is no session cookie', async (assert) => {
+    await ioc.use('App/Models/User').create({ email: 'foo@bar.com', password: 'secret' })
+
+    this.server.on('request', (req, res) => {
+      const Context = ioc.use('Adonis/Src/Context')
+
+      const ctx = new Context()
+      ctx.request = helpers.getRequest(req)
+      ctx.response = helpers.getResponse(req, res)
+      ctx.session = helpers.getSession(req, res)
+
+      ctx
+        .auth
+        .loginIfCan()
+        .then(() => {
+          res.writeHead(200)
+          res.write(ctx.auth.user || 'not logged in')
+          res.end()
+        })
+        .catch(({ status, message }) => {
+          res.writeHead(status || 500)
+          res.write(message)
+          res.end()
+        })
+    })
+
+    const { text } = await supertest(this.server).get('/').expect(200)
+    assert.equal(text, 'not logged in')
   })
 })

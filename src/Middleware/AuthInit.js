@@ -12,7 +12,7 @@
 class AuthInit {
   constructor (Config) {
     const authenticator = Config.get('auth.authenticator')
-    this.scheme = Config.get(`auth.${authenticator}.scheme`)
+    this.scheme = Config.get(`auth.${authenticator}.scheme`, null)
   }
 
   /**
@@ -29,7 +29,7 @@ class AuthInit {
    */
   async handle ({ auth }, next) {
     if (this.scheme === 'session') {
-      await auth.check()
+      await auth.loginIfCan()
     }
     await next()
   }

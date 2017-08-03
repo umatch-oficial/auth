@@ -286,6 +286,44 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
+   * This method tries to login the user if it
+   * finds a session id but doesn't throw
+   * exceptions.
+   *
+   * It is used on requests which should have user
+   * instance due to peristant login flow.
+   *
+   * @method loginIfCan
+   *
+   * @return {void}
+   */
+  async loginIfCan () {
+    if (this.user) {
+      return
+    }
+
+    /**
+     * Don't do anything when there is no session
+     */
+    const sessionValue = this._ctx.session.get(this.sessionKey)
+    const rememberMeToken = this._ctx.request.cookie(this.remeberTokenKey)
+
+    /**
+     * Don't attempt for anything when there is no session
+     * value and no remember token
+     */
+    if (!sessionValue && !rememberMeToken) {
+      return
+    }
+
+    try {
+      return this.check()
+    } catch (error) {
+      // swallow exception
+    }
+  }
+
+  /**
    * Makes sure user is loggedin and then
    * returns the user back
    *

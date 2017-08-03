@@ -48,6 +48,9 @@ module.exports = {
     return {
       request: req,
       cookie (key) {
+        if (!this.request.headers.cookie) {
+          return null
+        }
         const parsedCookies = cookie.parse(this.request.headers.cookie)
         return parsedCookies[key]
       }
@@ -73,6 +76,9 @@ module.exports = {
       },
 
       get (key) {
+        if (!this.req.headers.cookie) {
+          return null
+        }
         const parsedCookies = cookie.parse(this.req.headers.cookie)
         return parsedCookies[key]
       }
