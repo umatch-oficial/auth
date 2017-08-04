@@ -1,5 +1,5 @@
 {
-  "name": "adonis-auth",
+  "name": "@adonisjs/auth",
   "version": "1.0.7",
   "description": "Offical authentication provider for Adonis framework",
   "main": "index.js",
@@ -7,9 +7,13 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run lint && FORCE_COLOR=true node bin/test.js",
     "lint": "standard",
-    "coverage": "npm run lint && node bin/coverage.js"
+    "pretest": "npm run lint",
+    "posttest": "npm run coverage",
+    "test:local": "FORCE_COLOR=true node bin/index.js --local",
+    "test": "nyc npm run test:local",
+    "test:win": "set FORCE_COLOR=true && node bin/index.js --win",
+    "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "keywords": [
     "adonis",
@@ -20,18 +24,21 @@
   "author": "adonisjs",
   "license": "MIT",
   "devDependencies": {
-    "adonis-fold": "^3.0.3",
-    "chai": "^3.5.0",
-    "co": "^4.6.0",
-    "co-mocha": "^1.2.0",
-    "coveralls": "^2.11.16",
+    "@adonisjs/fold": "^4.0.2",
+    "@adonisjs/lucid": "^4.0.9",
+    "@adonisjs/sink": "^1.0.11",
+    "cookie": "^0.3.1",
+    "coveralls": "^2.13.1",
     "cz-conventional-changelog": "^2.0.0",
-    "istanbul": "^0.4.5",
-    "mocha": "^3.2.0",
-    "semver": "^5.3.0",
-    "shelljs": "^0.7.6",
-    "sinon-es6": "0.0.3",
-    "standard": "^8.6.0",
+    "fs-extra": "^4.0.1",
+    "japa": "^1.0.3",
+    "japa-cli": "^1.0.1",
+    "macroable": "^1.0.0",
+    "node-req": "^2.0.1",
+    "nyc": "^11.1.0",
+    "semver": "^5.4.1",
+    "sqlite3": "^3.1.8",
+    "standard": "^10.0.2",
     "supertest": "^3.0.0"
   },
   "config": {
@@ -40,16 +47,24 @@
     }
   },
   "nyc": {
-    "include": ["src", "test/**/*.spec.js"]
+    "include": [
+      "src",
+      "test/**/*.spec.js"
+    ]
+  },
+  "standard": {
+    "ignore": [
+      "templates"
+    ]
   },
   "dependencies": {
+    "@adonisjs/generic-exceptions": "^1.0.0",
     "basic-auth": "^1.1.0",
-    "cat-log": "^1.0.2",
-    "co-functional": "^0.2.1",
-    "harmony-reflect": "^1.5.1",
-    "jsonwebtoken": "^7.3.0",
+    "debug": "^2.6.8",
+    "jsonwebtoken": "^7.4.1",
+    "lodash": "^4.17.4",
     "ms": "^2.0.0",
-    "node-exceptions": "^1.0.3",
-    "uuid": "^3.0.1"
+    "resetable": "^1.0.2",
+    "uuid": "^3.1.0"
   }
 }
