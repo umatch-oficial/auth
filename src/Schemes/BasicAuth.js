@@ -44,9 +44,7 @@ class BasicAuthScheme extends BaseScheme {
 
   /**
    * Check whether a user is logged in or
-   * not. Also this method will re-login
-   * the user when remember me token
-   * is defined
+   * not.
    *
    * @method check
    *

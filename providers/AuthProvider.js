@@ -75,7 +75,7 @@ class AuthProvider extends ServiceProvider {
    * @return {void}
    */
   boot () {
-    const Context = this.app.use('Adonis/Src/Context')
+    const Context = this.app.use('Adonis/Src/HttpContext')
     const Auth = this.app.use('Adonis/Src/Auth')
     const Config = this.app.use('Adonis/Src/Config')
 

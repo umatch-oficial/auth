@@ -1,0 +1,50 @@
+## Register provider
+
+Once installed the authentication provider, make sure to register the provider inside `start/app.js` file in order to make use of it.
+
+```js
+const providers = [
+  '@adonisjs/auth/providers/AuthProvider'
+]
+```
+
+## Register global middleware
+
+Next you need to do is register couple of middleware to ensure everything works as expected.
+
+Middleware are defined inside `start/kernel.js` file. Make sure to define the middleware after `Adonis/Middleware/Session`, since authentication relies on sessions unless you are using JWT etc.
+
+```js
+const globalMiddleware = [
+  'Adonis/Middleware/AuthInit'
+]
+```
+
+## Register named middleware
+
+The named middleware is used to authenticate selected routes by applying the middleware on them and is registered within the same `start/kernel.js` file.
+
+```js
+const namedMiddleware = {
+  auth: 'Adonis/Middleware/Auth'
+}
+```
+
+Once done 🔒 you are ready to authenticate your routes.
+
+```js
+Route
+  .get('/profile', 'UserController.profile')
+  .middleware('auth')
+```
+
+Also you can instruct the middleware to use a different `authenticator`
+
+```js
+Route
+  .get('/profile', 'UserController.profile')
+  .middleware('auth:basic')
+```
+
+
+
