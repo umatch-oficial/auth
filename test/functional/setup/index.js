@@ -23,7 +23,7 @@ Context._getters = {}
 Context._macros = {}
 
 module.exports = async () => {
-  ioc.bind('Adonis/Src/Context', () => {
+  ioc.bind('Adonis/Src/HttpContext', () => {
     return Context
   })
 

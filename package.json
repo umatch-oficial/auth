@@ -52,6 +52,11 @@
       "test/**/*.spec.js"
     ]
   },
+  "standard": {
+    "ignore": [
+      "templates"
+    ]
+  },
   "dependencies": {
     "@adonisjs/generic-exceptions": "^1.0.0",
     "basic-auth": "^1.1.0",

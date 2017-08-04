@@ -32,7 +32,7 @@ test.group('Session', (group) => {
 
   test('throw error when credentials are invalid', async (assert) => {
     this.server.on('request', (req, res) => {
-      const Context = ioc.use('Adonis/Src/Context')
+      const Context = ioc.use('Adonis/Src/HttpContext')
 
       const ctx = new Context()
       ctx.request = helpers.getRequest(req)
@@ -60,7 +60,7 @@ test.group('Session', (group) => {
     await ioc.use('App/Models/User').create({ email: 'foo@bar.com', password: 'secret' })
 
     this.server.on('request', (req, res) => {
-      const Context = ioc.use('Adonis/Src/Context')
+      const Context = ioc.use('Adonis/Src/HttpContext')
 
       const ctx = new Context()
       ctx.request = helpers.getRequest(req)
@@ -88,7 +88,7 @@ test.group('Session', (group) => {
     await ioc.use('App/Models/User').create({ email: 'foo@bar.com', password: 'secret' })
 
     this.server.on('request', (req, res) => {
-      const Context = ioc.use('Adonis/Src/Context')
+      const Context = ioc.use('Adonis/Src/HttpContext')
 
       const ctx = new Context()
       ctx.request = helpers.getRequest(req)
@@ -117,7 +117,7 @@ test.group('Session', (group) => {
     await ioc.use('App/Models/User').create({ email: 'foo@bar.com', password: 'secret' })
 
     this.server.on('request', (req, res) => {
-      const Context = ioc.use('Adonis/Src/Context')
+      const Context = ioc.use('Adonis/Src/HttpContext')
 
       const ctx = new Context()
       ctx.request = helpers.getRequest(req)
@@ -150,7 +150,7 @@ test.group('Session', (group) => {
     await ioc.use('App/Models/User').create({ email: 'foo@bar.com', password: 'secret' })
 
     this.server.on('request', (req, res) => {
-      const Context = ioc.use('Adonis/Src/Context')
+      const Context = ioc.use('Adonis/Src/HttpContext')
 
       const ctx = new Context()
       ctx.request = helpers.getRequest(req)
@@ -179,7 +179,7 @@ test.group('Session', (group) => {
 
   test('throw exception when cookie exists but user doesn\'t', async (assert) => {
     this.server.on('request', (req, res) => {
-      const Context = ioc.use('Adonis/Src/Context')
+      const Context = ioc.use('Adonis/Src/HttpContext')
 
       const ctx = new Context()
       ctx.request = helpers.getRequest(req)
@@ -208,7 +208,7 @@ test.group('Session', (group) => {
     await ioc.use('App/Models/User').create({ email: 'foo@bar.com', password: 'secret' })
 
     this.server.on('request', (req, res) => {
-      const Context = ioc.use('Adonis/Src/Context')
+      const Context = ioc.use('Adonis/Src/HttpContext')
 
       const ctx = new Context()
       ctx.request = helpers.getRequest(req)
@@ -244,7 +244,7 @@ test.group('Session', (group) => {
     await user.tokens().create({ token: '2020', is_revoked: false, type: 'remember_token' })
 
     this.server.on('request', (req, res) => {
-      const Context = ioc.use('Adonis/Src/Context')
+      const Context = ioc.use('Adonis/Src/HttpContext')
 
       const ctx = new Context()
       ctx.request = helpers.getRequest(req)
@@ -277,7 +277,7 @@ test.group('Session', (group) => {
     await ioc.use('App/Models/User').create({ email: 'foo@bar.com', password: 'secret' })
 
     this.server.on('request', (req, res) => {
-      const Context = ioc.use('Adonis/Src/Context')
+      const Context = ioc.use('Adonis/Src/HttpContext')
 
       const ctx = new Context()
       ctx.request = helpers.getRequest(req)
