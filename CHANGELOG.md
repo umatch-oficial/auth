@@ -1,3 +1,35 @@
+<a name="2.0.0"></a>
+# [2.0.0](https://github.com/adonisjs/adonis-auth/compare/v1.0.7...v2.0.0) (2017-08-04)
+
+
+### Bug Fixes
+
+* **auth:** get cookie expiry as a date ([5bb56b8](https://github.com/adonisjs/adonis-auth/commit/5bb56b8))
+* **package:** update ms to version 1.0.0 (#37) ([87fd5a9](https://github.com/adonisjs/adonis-auth/commit/87fd5a9))
+
+
+### Features
+
+* **auth:** add auth class ([23b749e](https://github.com/adonisjs/adonis-auth/commit/23b749e))
+* **exceptions:** use generic-exceptions module ([c7026f5](https://github.com/adonisjs/adonis-auth/commit/c7026f5))
+* **instructions:** added instructions files ([23d4532](https://github.com/adonisjs/adonis-auth/commit/23d4532))
+* **jwt:** add jwt scheme ([be074d6](https://github.com/adonisjs/adonis-auth/commit/be074d6))
+* **manager:** add auth manager ([9132fb9](https://github.com/adonisjs/adonis-auth/commit/9132fb9))
+* **middleware:** add authinit middleware ([b255540](https://github.com/adonisjs/adonis-auth/commit/b255540))
+* **provider:** add provider ([4ff5650](https://github.com/adonisjs/adonis-auth/commit/4ff5650))
+* **scheme:** implement basic auth scheme ([2a39cf2](https://github.com/adonisjs/adonis-auth/commit/2a39cf2))
+* **scheme:** implement session scheme ([e2be7d3](https://github.com/adonisjs/adonis-auth/commit/e2be7d3))
+* **serializer:** add methods to support tokens ([7c4c28d](https://github.com/adonisjs/adonis-auth/commit/7c4c28d))
+* **serializer:** implement database serializer ([533a2fb](https://github.com/adonisjs/adonis-auth/commit/533a2fb))
+* **session:** add loginIfCan method ([bdc0274](https://github.com/adonisjs/adonis-auth/commit/bdc0274))
+
+
+### Reverts
+
+* **provider:** do not register middleware ([d203a97](https://github.com/adonisjs/adonis-auth/commit/d203a97))
+
+
+
 <a name="1.0.7"></a>
 ## [1.0.7](https://github.com/adonisjs/adonis-auth/compare/v1.0.6...v1.0.7) (2017-03-27)
 
