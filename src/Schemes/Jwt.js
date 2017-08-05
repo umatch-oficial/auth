@@ -32,7 +32,7 @@ class JwtScheme extends BaseScheme {
    * @return {Object|Null}
    */
   get jwtOptions () {
-    return _.get(this._config, 'jwt', null)
+    return _.get(this._config, 'options', null)
   }
 
   /**

@@ -126,7 +126,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -154,7 +154,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -181,7 +181,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -207,7 +207,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET,
         issuer: 'adonisjs'
       }
@@ -233,7 +233,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET,
         issuer: 'adonisjs'
       }
@@ -262,7 +262,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -297,7 +297,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -331,7 +331,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -366,7 +366,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET,
         issuer: 'adonisjs'
       }
@@ -404,7 +404,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -441,7 +441,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -473,7 +473,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -505,7 +505,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -534,7 +534,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -563,7 +563,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {}
+      options: {}
     }
 
     const lucid = new LucidSerializer(ioc.use('Hash'))
@@ -588,7 +588,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: 'SECRET'
       }
     }
@@ -614,7 +614,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -649,7 +649,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -685,7 +685,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }

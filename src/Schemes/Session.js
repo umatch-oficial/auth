@@ -317,7 +317,7 @@ class SessionScheme extends BaseScheme {
     }
 
     try {
-      return this.check()
+      return await this.check()
     } catch (error) {
       // swallow exception
     }
