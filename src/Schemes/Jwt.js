@@ -60,9 +60,9 @@ class JwtScheme extends BaseScheme {
    *
    * @throws {Error} If unable to sign payload and generate token
    */
-  _signToken (payload) {
+  _signToken (payload, options) {
     return new Promise((resolve, reject) => {
-      const options = _.omit(this.jwtOptions, 'secret')
+      options = _.size(options) && _.isPlainObject(options) ? options : _.omit(this.jwtOptions, 'secret')
       jwt.sign(payload, this.jwtSecret, options, (error, token) => {
         if (error) {
           reject(error)
@@ -129,6 +129,19 @@ class JwtScheme extends BaseScheme {
   }
 
   /**
+   * Same as withRefreshToken but a better alias
+   * to map with `generateForRefreshToken`
+   *
+   * @method newRefreshToken
+   *
+   * @chainable
+   */
+  newRefreshToken () {
+    this._generateRefreshToken.set(true)
+    return this
+  }
+
+  /**
    * Validate user credentials
    *
    * @method validate
@@ -164,12 +177,15 @@ class JwtScheme extends BaseScheme {
    *
    * @param  {String} uid
    * @param  {String} password
+   * @param  {Object|Boolean} [jwtPayload] Pass true when want to attach user object in the payload
+   *                                       or set a custom object
+   * @param  {Object} [jwtOptions = null]
    *
    * @return {String}
    */
-  async attempt (uid, password, jwtPayload) {
+  async attempt (uid, password, jwtPayload, jwtOptions) {
     const user = await this.validate(uid, password, true)
-    return this.generate(user, jwtPayload)
+    return this.generate(user, jwtPayload, jwtOptions)
   }
 
   /**
@@ -181,12 +197,13 @@ class JwtScheme extends BaseScheme {
    * @param  {Object} user
    * @param  {Object|Boolean} [jwtPayload] Pass true when want to attach user object in the payload
    *                                       or set a custom object
+   * @param  {Object} [jwtOptions = null]
    *
    * @return {Object}
    *
    * @throws {RuntimeException} If jwt secret is not defined or user doesn't have a primary key value
    */
-  async generate (user, jwtPayload) {
+  async generate (user, jwtPayload, jwtOptions) {
     /**
      * Throw exception when trying to generate token without
      * jwt secret
@@ -227,7 +244,7 @@ class JwtScheme extends BaseScheme {
     /**
      * Return the generate token
      */
-    const token = await this._signToken(payload)
+    const token = await this._signToken(payload, jwtOptions)
     const withRefresh = this._generateRefreshToken.pull()
     const refreshToken = withRefresh ? await this._saveRefreshToken(user) : null
     return { type: 'bearer', token, refreshToken }
@@ -241,12 +258,13 @@ class JwtScheme extends BaseScheme {
    * @param {String} refreshToken
    * @param  {Object|Boolean} [jwtPayload] Pass true when want to attach user object in the payload
    *                                       or set a custom object
+   * @param  {Object}         [jwtOptions = null]
    *
    * @method generateForRefreshToken
    *
    * @return {Object}
    */
-  async generateForRefreshToken (refreshToken, jwtPayload) {
+  async generateForRefreshToken (refreshToken, jwtPayload, jwtOptions) {
     const user = await this._serializerInstance.findByToken(refreshToken, 'jwt_refresh_token')
     if (!user) {
       throw CE
@@ -254,8 +272,21 @@ class JwtScheme extends BaseScheme {
         .invoke(`Cannot find user with refresh token as ${refreshToken}`)
     }
 
-    await this._serializerInstance.revokeTokens(user, [refreshToken])
-    return this.withRefreshToken().generate(user, jwtPayload)
+    const token = await this.generate(user, jwtPayload)
+
+    /**
+     * If user generated a new refresh token, in that we
+     * should revoke the old one, otherwise we should
+     * set the refreshToken as the existing refresh
+     * token in the return payload
+     */
+    if (!token.refreshToken) {
+      token.refreshToken = refreshToken
+    } else {
+      await this._serializerInstance.revokeTokens(user, [refreshToken])
+    }
+
+    return token
   }
 
   /**
