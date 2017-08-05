@@ -126,7 +126,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -154,7 +154,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -181,7 +181,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -207,7 +207,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET,
         issuer: 'adonisjs'
       }
@@ -233,7 +233,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET,
         issuer: 'adonisjs'
       }
@@ -262,7 +262,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -297,7 +297,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -331,7 +331,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -366,7 +366,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET,
         issuer: 'adonisjs'
       }
@@ -404,7 +404,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -441,7 +441,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -473,7 +473,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -487,13 +487,42 @@ test.group('Schemes - Jwt', (group) => {
     const jwt = new Jwt()
     jwt.setOptions(config, lucid)
 
-    const { token, refreshToken } = await jwt.generateForRefreshToken('20')
+    const { token } = await jwt.generateForRefreshToken('20')
+    assert.isDefined(token)
+
+    const payload = await verifyToken(token)
+    assert.equal(payload.uid, 1)
+    const firstToken = await user.tokens().where('token', '20').first()
+    assert.equal(firstToken.is_revoked, 0)
+  })
+
+  test('on generating token with refreshToken revoke the old one', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    await user.tokens().create({ token: '20', is_revoked: false, type: 'jwt_refresh_token' })
+
+    const jwt = new Jwt()
+    jwt.setOptions(config, lucid)
+
+    const { token, refreshToken } = await jwt.newRefreshToken().generateForRefreshToken('20')
     assert.isDefined(token)
 
     const payload = await verifyToken(token)
     assert.equal(payload.uid, 1)
     assert.notEqual(refreshToken, '20')
-
     const firstToken = await user.tokens().where('token', '20').first()
     assert.equal(firstToken.is_revoked, 1)
   })
@@ -505,7 +534,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -534,7 +563,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -563,7 +592,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {}
+      options: {}
     }
 
     const lucid = new LucidSerializer(ioc.use('Hash'))
@@ -588,7 +617,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: 'SECRET'
       }
     }
@@ -614,7 +643,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -649,7 +678,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -685,7 +714,7 @@ test.group('Schemes - Jwt', (group) => {
       model: User,
       uid: 'email',
       password: 'password',
-      jwt: {
+      options: {
         secret: SECRET
       }
     }
@@ -711,5 +740,31 @@ test.group('Schemes - Jwt', (group) => {
     } catch ({ message }) {
       assert.equal(message, 'E_INVALID_JWT_TOKEN: jwt must be provided')
     }
+  })
+
+  test('pass runtime options to generate token', async (assert) => {
+    assert.plan(1)
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt()
+    jwt.setOptions(config, lucid)
+
+    const { token } = await jwt.generate(user, {}, { issuer: 'adonisjs' })
+    const { iss } = await verifyToken(token)
+    assert.equal(iss, 'adonisjs')
   })
 })

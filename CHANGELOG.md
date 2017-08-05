@@ -1,3 +1,13 @@
+<a name="2.0.1"></a>
+## [2.0.1](https://github.com/adonisjs/adonis-auth/compare/v2.0.0...v2.0.1) (2017-08-05)
+
+
+### Bug Fixes
+
+* fix typo errors ([4a600d3](https://github.com/adonisjs/adonis-auth/commit/4a600d3))
+
+
+
 <a name="2.0.0"></a>
 # [2.0.0](https://github.com/adonisjs/adonis-auth/compare/v1.0.7...v2.0.0) (2017-08-04)
 
