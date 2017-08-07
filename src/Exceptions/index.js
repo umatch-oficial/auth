@@ -12,7 +12,9 @@
 const GE = require('@adonisjs/generic-exceptions')
 
 /**
- * This exception is raised when user is not found
+ * This exception is raised when user is not found. This usally
+ * happens when trying to authenticate user using their
+ * credentials.
  *
  * @class UserNotFoundException
  */
@@ -23,7 +25,8 @@ class UserNotFoundException extends GE.LogicalException {
 }
 
 /**
- * This exception is raised when user password mis-matches
+ * This exception is raised when user password mis-matches. This usally
+ * happens when trying to authenticate user using their credentials.
  *
  * @class PasswordMisMatchException
  */
@@ -40,34 +43,70 @@ class PasswordMisMatchException extends GE.LogicalException {
  * @class InvalidLoginException
  */
 class InvalidLoginException extends GE.LogicalException {
-  static missingSession () {
-    return new this('No session found for user', 401, 'E_MISSING_SESSION')
+  /**
+   * User session is invalid but trying to use secure
+   * resource
+   *
+   * @method invalidSession
+   *
+   * @return {Object}
+   */
+  static invalidSession () {
+    return new this('Invalid session', 401, 'E_INVALID_SESSION')
   }
 
-  static missingBasicAuthCredentials (message) {
-    return new this('Cannot parser or read Basic auth header', 401, 'E_MISSING_AUTH_HEADER')
+  /**
+   * The basic auth header/credentials are misssing
+   *
+   * @method missingBasicAuthCredentials
+   *
+   * @return {Object}
+   */
+  static missingBasicAuthCredentials () {
+    return new this('Cannot parse or read Basic auth header', 401, 'E_MISSING_AUTH_HEADER')
   }
 }
 
 /**
- * This exception is raised when jwt token is invalid
- * is expired
+ * This exception is raised when jwt token is invalid or
+ * unable to find user for JWT token.
  *
- * @class JwtTokenException
+ * @class InvalidJwtToken
  */
-class JwtTokenException extends InvalidLoginException {
-  static expired () {
-    return new this('Token has been expired', 401, 'E_JWT_TOKEN_EXPIRED')
-  }
-
+class InvalidJwtToken extends InvalidLoginException {
   static invoke (message) {
-    return new this(message, 401, 'E_INVALID_JWT_TOKEN')
+    return new this(message || 'The Jwt token is invalid', 401, 'E_INVALID_JWT_TOKEN')
+  }
+}
+
+/**
+ * This exception is raised when jwt refresh token is
+ * invalid.
+ *
+ * @class InvalidRefreshToken
+ */
+class InvalidRefreshToken extends InvalidLoginException {
+  static invoke (refreshToken) {
+    return new this(`Invalid refresh token ${refreshToken}`, 401, 'E_INVALID_JWT_REFRESH_TOKEN')
+  }
+}
+
+/**
+ * This exception is raised when jwt token is expired
+ *
+ * @class ExpiredJwtToken
+ */
+class ExpiredJwtToken extends InvalidLoginException {
+  static invoke () {
+    return new this('The jwt token has been expired. Generate a new one to continue', 401, 'E_JWT_TOKEN_EXPIRED')
   }
 }
 
 module.exports = {
   UserNotFoundException,
   PasswordMisMatchException,
-  JwtTokenException,
+  InvalidJwtToken,
+  InvalidRefreshToken,
+  ExpiredJwtToken,
   InvalidLoginException
 }

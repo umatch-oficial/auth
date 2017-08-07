@@ -201,7 +201,7 @@ test.group('Session', (group) => {
     })
 
     const { text } = await supertest(this.server).get('/').set('Cookie', 'adonis-auth=1').expect(401)
-    assert.equal(text, 'E_USER_NOT_FOUND: Cannot find user with id as 1')
+    assert.equal(text, 'E_INVALID_SESSION: Invalid session')
   })
 
   test('set user property on auth when user exists', async (assert) => {

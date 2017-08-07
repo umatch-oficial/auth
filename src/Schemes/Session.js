@@ -272,17 +272,7 @@ class SessionScheme extends BaseScheme {
       }
     }
 
-    /**
-     * If a user is not found and there is no remeberMeToken
-     * then throw an exception
-     */
-    if (!this.user && !rememberMeToken && sessionValue) {
-      throw CE
-        .UserNotFoundException
-        .invoke(`Cannot find user with ${this.primaryKey} as ${sessionValue}`)
-    }
-
-    throw CE.InvalidLoginException.missingSession()
+    throw CE.InvalidLoginException.invalidSession()
   }
 
   /**

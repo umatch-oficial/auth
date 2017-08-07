@@ -503,11 +503,11 @@ test.group('Schemes - Session', (group) => {
       await session.check()
     } catch ({ name, message }) {
       assert.equal(name, 'InvalidLoginException')
-      assert.equal(message, 'E_MISSING_SESSION: No session found for user')
+      assert.equal(message, 'E_INVALID_SESSION: Invalid session')
     }
   })
 
-  test('return false when session is found but unable to find user', async (assert) => {
+  test('throw exception when session is found but unable to find user', async (assert) => {
     assert.plan(2)
     const User = helpers.getUserModel()
 
@@ -538,8 +538,8 @@ test.group('Schemes - Session', (group) => {
     try {
       await session.check()
     } catch ({ name, message }) {
-      assert.equal(name, 'UserNotFoundException')
-      assert.equal(message, 'E_USER_NOT_FOUND: Cannot find user with id as 2')
+      assert.equal(name, 'InvalidLoginException')
+      assert.equal(message, 'E_INVALID_SESSION: Invalid session')
     }
   })
 

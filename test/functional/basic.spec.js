@@ -55,7 +55,7 @@ test.group('Basic Auth', (group) => {
     })
 
     const { text } = await supertest(this.server).get('/').expect(401)
-    assert.equal(text, 'E_MISSING_AUTH_HEADER: Cannot parser or read Basic auth header')
+    assert.equal(text, 'E_MISSING_AUTH_HEADER: Cannot parse or read Basic auth header')
   })
 
   test('return false when user doesn\'t exists', async (assert) => {
