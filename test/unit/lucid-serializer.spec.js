@@ -264,4 +264,44 @@ test.group('Serializers - Lucid', (group) => {
     )
     assert.deepEqual(tokensQuery.bindings, [true, '20', '30', 1])
   })
+
+  test('remove all but not the metioned tokens for a given user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    let tokensQuery = null
+    user.tokens().RelatedModel.onQuery((query) => (tokensQuery = query))
+
+    await lucid.revokeTokens(user, ['20', '30'], true)
+    assert.equal(
+      tokensQuery.sql,
+      'update "tokens" set "is_revoked" = ? where "token" not in (?, ?) and "user_id" = ?'
+    )
+    assert.deepEqual(tokensQuery.bindings, [true, '20', '30', 1])
+  })
+
+  test('return false when there is no password is user payload', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const verified = await lucid.validateCredentails({ id: 1 }, 'foo')
+    assert.isFalse(verified)
+  })
 })
