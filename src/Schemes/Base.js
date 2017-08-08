@@ -9,6 +9,13 @@
  * file that was distributed with this source code.
 */
 
+/**
+ * The base scheme is supposed to be extend by other
+ * schemes.
+ *
+ * @class BaseScheme
+ * @constructor
+ */
 class BaseScheme {
   constructor () {
     this._config = null
@@ -37,6 +44,17 @@ class BaseScheme {
    */
   get passwordField () {
     return this._config.password
+  }
+
+  /**
+   * The scheme in use
+   *
+   * @method scheme
+   *
+   * @return {String}
+   */
+  get scheme () {
+    return this._config.scheme
   }
 
   /**

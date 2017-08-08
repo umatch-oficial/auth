@@ -23,6 +23,61 @@ test.group('Schemes - Session', (group) => {
   setup.databaseHook(group)
   setup.hashHook(group)
 
+  test('return uid field name', async (assert) => {
+    assert.plan(1)
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer()
+    lucid.setConfig(config)
+
+    const session = new Session()
+    session.setOptions(config, lucid)
+    assert.equal(session.uidField, 'email')
+  })
+
+  test('return password field name', async (assert) => {
+    assert.plan(1)
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer()
+    lucid.setConfig(config)
+
+    const session = new Session()
+    session.setOptions(config, lucid)
+    assert.equal(session.passwordField, 'password')
+  })
+
+  test('return scheme name', async (assert) => {
+    assert.plan(1)
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      scheme: 'session'
+    }
+
+    const lucid = new LucidSerializer()
+    lucid.setConfig(config)
+
+    const session = new Session()
+    session.setOptions(config, lucid)
+    assert.equal(session.scheme, 'session')
+  })
+
   test('throw exception when unable to find user', async (assert) => {
     assert.plan(1)
     const User = helpers.getUserModel()
