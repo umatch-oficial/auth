@@ -18,6 +18,28 @@ class BaseScheme {
   }
 
   /**
+   * The uid field name
+   *
+   * @method uidField
+   *
+   * @return {String}
+   */
+  get uidField () {
+    return this._config.uid
+  }
+
+  /**
+   * The password field name
+   *
+   * @method passwordField
+   *
+   * @return {String}
+   */
+  get passwordField () {
+    return this._config.password
+  }
+
+  /**
    * The primary key value for a given
    * user
    *
