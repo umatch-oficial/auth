@@ -111,7 +111,7 @@ test.group('Auth', (group) => {
     try {
       await auth.check()
     } catch ({ message }) {
-      assert.equal(message, 'E_MISSING_SESSION: No session found for user')
+      assert.equal(message, 'E_INVALID_SESSION: Invalid session')
     }
   })
 })

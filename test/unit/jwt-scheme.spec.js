@@ -319,7 +319,7 @@ test.group('Schemes - Jwt', (group) => {
       await jwt.check()
     } catch ({ name, message }) {
       assert.equal(message, 'E_INVALID_JWT_TOKEN: jwt malformed')
-      assert.equal(name, 'JwtTokenException')
+      assert.equal(name, 'InvalidJwtToken')
     }
   })
 
@@ -353,8 +353,8 @@ test.group('Schemes - Jwt', (group) => {
     try {
       await jwt.check()
     } catch ({ name, message }) {
-      assert.equal(message, 'E_USER_NOT_FOUND: Cannot find user with id as 1')
-      assert.equal(name, 'UserNotFoundException')
+      assert.equal(message, 'E_INVALID_JWT_TOKEN: The Jwt token is invalid')
+      assert.equal(name, 'InvalidJwtToken')
     }
   })
 
@@ -392,7 +392,7 @@ test.group('Schemes - Jwt', (group) => {
       await jwt.check()
     } catch ({ name, message }) {
       assert.equal(message, 'E_INVALID_JWT_TOKEN: jwt issuer invalid. expected: adonisjs')
-      assert.equal(name, 'JwtTokenException')
+      assert.equal(name, 'InvalidJwtToken')
     }
   })
 
@@ -429,8 +429,8 @@ test.group('Schemes - Jwt', (group) => {
     try {
       await jwt.check()
     } catch ({ name, message }) {
-      assert.equal(message, 'E_JWT_TOKEN_EXPIRED: Token has been expired')
-      assert.equal(name, 'JwtTokenException')
+      assert.equal(message, 'E_JWT_TOKEN_EXPIRED: The jwt token has been expired. Generate a new one to continue')
+      assert.equal(name, 'ExpiredJwtToken')
     }
   }).timeout(0)
 
@@ -579,8 +579,8 @@ test.group('Schemes - Jwt', (group) => {
     try {
       await jwt.generateForRefreshToken('20')
     } catch ({ name, message }) {
-      assert.equal(name, 'UserNotFoundException')
-      assert.equal(message, 'E_USER_NOT_FOUND: Cannot find user with refresh token as 20')
+      assert.equal(name, 'InvalidRefreshToken')
+      assert.equal(message, 'E_INVALID_JWT_REFRESH_TOKEN: Invalid refresh token 20')
     }
   })
 

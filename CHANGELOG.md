@@ -1,3 +1,19 @@
+<a name="2.0.2"></a>
+## [2.0.2](https://github.com/adonisjs/adonis-auth/compare/v2.0.1...v2.0.2) (2017-08-08)
+
+
+### Bug Fixes
+
+* **test:** add dummy provider for Exceptions ([f308199](https://github.com/adonisjs/adonis-auth/commit/f308199))
+
+
+### Features
+
+* **exceptions:** add handlers for exceptions ([70ac097](https://github.com/adonisjs/adonis-auth/commit/70ac097))
+* **schemes:** expose base scheme and few config properties ([60b9e18](https://github.com/adonisjs/adonis-auth/commit/60b9e18))
+
+
+
 <a name="2.0.1"></a>
 ## [2.0.1](https://github.com/adonisjs/adonis-auth/compare/v2.0.0...v2.0.1) (2017-08-05)
 

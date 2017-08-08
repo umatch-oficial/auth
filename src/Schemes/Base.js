@@ -9,12 +9,52 @@
  * file that was distributed with this source code.
 */
 
+/**
+ * The base scheme is supposed to be extend by other
+ * schemes.
+ *
+ * @class BaseScheme
+ * @constructor
+ */
 class BaseScheme {
   constructor () {
     this._config = null
     this._serializerInstance = null
     this._instanceUser = null
     this._ctx = null
+  }
+
+  /**
+   * The uid field name
+   *
+   * @method uidField
+   *
+   * @return {String}
+   */
+  get uidField () {
+    return this._config.uid
+  }
+
+  /**
+   * The password field name
+   *
+   * @method passwordField
+   *
+   * @return {String}
+   */
+  get passwordField () {
+    return this._config.password
+  }
+
+  /**
+   * The scheme in use
+   *
+   * @method scheme
+   *
+   * @return {String}
+   */
+  get scheme () {
+    return this._config.scheme
   }
 
   /**

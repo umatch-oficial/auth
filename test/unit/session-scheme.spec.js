@@ -23,6 +23,61 @@ test.group('Schemes - Session', (group) => {
   setup.databaseHook(group)
   setup.hashHook(group)
 
+  test('return uid field name', async (assert) => {
+    assert.plan(1)
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer()
+    lucid.setConfig(config)
+
+    const session = new Session()
+    session.setOptions(config, lucid)
+    assert.equal(session.uidField, 'email')
+  })
+
+  test('return password field name', async (assert) => {
+    assert.plan(1)
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer()
+    lucid.setConfig(config)
+
+    const session = new Session()
+    session.setOptions(config, lucid)
+    assert.equal(session.passwordField, 'password')
+  })
+
+  test('return scheme name', async (assert) => {
+    assert.plan(1)
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      scheme: 'session'
+    }
+
+    const lucid = new LucidSerializer()
+    lucid.setConfig(config)
+
+    const session = new Session()
+    session.setOptions(config, lucid)
+    assert.equal(session.scheme, 'session')
+  })
+
   test('throw exception when unable to find user', async (assert) => {
     assert.plan(1)
     const User = helpers.getUserModel()
@@ -503,11 +558,11 @@ test.group('Schemes - Session', (group) => {
       await session.check()
     } catch ({ name, message }) {
       assert.equal(name, 'InvalidLoginException')
-      assert.equal(message, 'E_MISSING_SESSION: No session found for user')
+      assert.equal(message, 'E_INVALID_SESSION: Invalid session')
     }
   })
 
-  test('return false when session is found but unable to find user', async (assert) => {
+  test('throw exception when session is found but unable to find user', async (assert) => {
     assert.plan(2)
     const User = helpers.getUserModel()
 
@@ -538,8 +593,8 @@ test.group('Schemes - Session', (group) => {
     try {
       await session.check()
     } catch ({ name, message }) {
-      assert.equal(name, 'UserNotFoundException')
-      assert.equal(message, 'E_USER_NOT_FOUND: Cannot find user with id as 2')
+      assert.equal(name, 'InvalidLoginException')
+      assert.equal(message, 'E_INVALID_SESSION: Invalid session')
     }
   })
 

@@ -27,6 +27,12 @@ module.exports = async () => {
     return Context
   })
 
+  ioc.bind('Adonis/Src/Exception', () => {
+    return {
+      handle () {}
+    }
+  })
+
   ioc.bind('Adonis/Src/Config', () => {
     const config = new Config()
 

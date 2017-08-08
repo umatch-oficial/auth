@@ -267,9 +267,7 @@ class JwtScheme extends BaseScheme {
   async generateForRefreshToken (refreshToken, jwtPayload, jwtOptions) {
     const user = await this._serializerInstance.findByToken(refreshToken, 'jwt_refresh_token')
     if (!user) {
-      throw CE
-        .UserNotFoundException
-        .invoke(`Cannot find user with refresh token as ${refreshToken}`)
+      throw CE.InvalidRefreshToken.invoke(refreshToken)
     }
 
     const token = await this.generate(user, jwtPayload)
@@ -312,9 +310,9 @@ class JwtScheme extends BaseScheme {
       this.jwtPayload = await this._verifyToken(this.getAuthHeader())
     } catch ({ name, message }) {
       if (name === 'TokenExpiredError') {
-        throw CE.JwtTokenException.expired()
+        throw CE.ExpiredJwtToken.invoke()
       }
-      throw CE.JwtTokenException.invoke(message)
+      throw CE.InvalidJwtToken.invoke(message)
     }
 
     this.user = await this._serializerInstance.findById(this.jwtPayload.uid)
@@ -323,9 +321,7 @@ class JwtScheme extends BaseScheme {
      * Throw exception when user is not found
      */
     if (!this.user) {
-      throw CE
-        .UserNotFoundException
-        .invoke(`Cannot find user with ${this.primaryKey} as ${this.jwtPayload.uid}`)
+      throw CE.InvalidJwtToken.invoke()
     }
     return true
   }
