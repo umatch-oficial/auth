@@ -51,6 +51,16 @@ module.exports = async () => {
         model: 'App/Models/User',
         serializer: 'lucid',
         scheme: 'basic'
+      },
+      jwt: {
+        model: 'App/Models/User',
+        scheme: 'jwt',
+        serializer: 'lucid',
+        uid: 'email',
+        password: 'password',
+        options: {
+          secret: 'SECRET'
+        }
       }
     })
 

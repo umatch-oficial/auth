@@ -54,6 +54,22 @@ class AuthProvider extends ServiceProvider {
   }
 
   /**
+   * Register auth middleware under `Adonis/Middleware/Auth` namespace.
+   *
+   * @method _registerAuthMiddleware
+   *
+   * @return {void}
+   *
+   * @private
+   */
+  _registerAuthMiddleware () {
+    this.app.bind('Adonis/Middleware/Auth', (app) => {
+      const Auth = require('../src/Middleware/Auth')
+      return new Auth(app.use('Adonis/Src/Config'))
+    })
+  }
+
+  /**
    * Register namespaces to the IoC container
    *
    * @method register
@@ -64,6 +80,7 @@ class AuthProvider extends ServiceProvider {
     this._registerAuth()
     this._registerAuthManager()
     this._registerAuthInitMiddleware()
+    this._registerAuthMiddleware()
   }
 
   /**

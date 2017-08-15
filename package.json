@@ -52,7 +52,7 @@
       "test/**/*.spec.js"
     ],
     "exclude": [
-      "src/ExceptionHandler/index.js"
+      "src/ExceptionHandler/*"
     ]
   },
   "standard": {
