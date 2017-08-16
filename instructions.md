@@ -14,8 +14,11 @@ Next you need to do is register couple of middleware to ensure everything works 
 
 Middleware are defined inside `start/kernel.js` file. Make sure to define the middleware after `Adonis/Middleware/Session`, since authentication relies on sessions unless you are using JWT etc.
 
+Note: Make sure you have setup sessions middleware ( if using session scheme )
+
 ```js
 const globalMiddleware = [
+  'Adonis/Middleware/Session', // after this
   'Adonis/Middleware/AuthInit'
 ]
 ```
