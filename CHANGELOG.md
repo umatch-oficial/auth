@@ -1,3 +1,14 @@
+<a name="2.0.3"></a>
+## [2.0.3](https://github.com/adonisjs/adonis-auth/compare/v2.0.2...v2.0.3) (2017-08-16)
+
+
+### Features
+
+* **middleware:** add auth middleware ([50e7346](https://github.com/adonisjs/adonis-auth/commit/50e7346))
+* **schemes:** add api tokens scheme ([b4c98d7](https://github.com/adonisjs/adonis-auth/commit/b4c98d7))
+
+
+
 <a name="2.0.2"></a>
 ## [2.0.2](https://github.com/adonisjs/adonis-auth/compare/v2.0.1...v2.0.2) (2017-08-08)
 

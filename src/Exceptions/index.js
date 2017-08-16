@@ -102,11 +102,18 @@ class ExpiredJwtToken extends InvalidLoginException {
   }
 }
 
+class InvalidApiToken extends InvalidLoginException {
+  static invoke () {
+    return new this('The api is invalid or missing', 401, 'E_INVALID_API_TOKEN')
+  }
+}
+
 module.exports = {
   UserNotFoundException,
   PasswordMisMatchException,
   InvalidJwtToken,
   InvalidRefreshToken,
   ExpiredJwtToken,
-  InvalidLoginException
+  InvalidLoginException,
+  InvalidApiToken
 }
