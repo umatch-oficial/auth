@@ -9,110 +9,12 @@
  * file that was distributed with this source code.
 */
 
-const Resetable = require('resetable')
-const jwt = require('jsonwebtoken')
 const uuid = require('uuid')
-const _ = require('lodash')
 const BaseScheme = require('./Base')
 const GE = require('@adonisjs/generic-exceptions')
 const CE = require('../Exceptions')
 
 class ApiScheme extends BaseScheme {
-  /**
-   * Signs payload with jwtSecret and options
-   *
-   * @method _signToken
-   * @async
-   *
-   * @param  {Object}   payload
-   *
-   * @return {String}
-   *
-   * @private
-   *
-   * @throws {Error} If unable to sign payload and generate token
-   */
-  _signToken (payload, options) {
-    return new Promise((resolve, reject) => {
-      options = _.size(options) && _.isPlainObject(options) ? options : _.omit(this.jwtOptions, 'secret')
-      jwt.sign(payload, this.jwtSecret, options, (error, token) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve(token)
-        }
-      })
-    })
-  }
-
-  /**
-   * Verifies the jwt token by decoding it
-   *
-   * @method _verifyToken
-   * @async
-   *
-   * @param  {String}     token
-   *
-   * @return {Object}
-   *
-   * @private
-   */
-  _verifyToken (token) {
-    return new Promise((resolve, reject) => {
-      const options = _.omit(this.jwtOptions, 'secret')
-      jwt.verify(token, this.jwtSecret, options, (error, payload) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve(payload)
-        }
-      })
-    })
-  }
-
-  /**
-   * Saves jwt refresh token for a given user
-   *
-   * @method _saveRefreshToken
-   *
-   * @param  {Object}          user
-   *
-   * @return {String}
-   *
-   * @private
-   */
-  async _saveRefreshToken (user) {
-    const refreshToken = uuid.v4()
-    await this._serializerInstance.saveToken(user, refreshToken, 'jwt_refresh_token')
-    return refreshToken
-  }
-
-  /**
-   * Instruct class to generate a refresh token
-   * when generate jwt token
-   *
-   * @method withRefreshToken
-   *
-   * @chainable
-   */
-  withRefreshToken () {
-    this._generateRefreshToken.set(true)
-    return this
-  }
-
-  /**
-   * Same as withRefreshToken but a better alias
-   * to map with `generateForRefreshToken`
-   *
-   * @method newRefreshToken
-   *
-   * @chainable
-   */
-  newRefreshToken () {
-    this._generateRefreshToken.set(true)
-    return this
-  }
-
   /**
    * Validate user credentials
    *
@@ -149,41 +51,25 @@ class ApiScheme extends BaseScheme {
    *
    * @param  {String} uid
    * @param  {String} password
-   * @param  {Object|Boolean} [jwtPayload] Pass true when want to attach user object in the payload
-   *                                       or set a custom object
-   * @param  {Object} [jwtOptions = null]
    *
    * @return {String}
    */
-  async attempt (uid, password, jwtPayload, jwtOptions) {
+  async attempt (uid, password) {
     const user = await this.validate(uid, password, true)
-    return this.generate(user, jwtPayload, jwtOptions)
+    return this.generate(user)
   }
 
   /**
-   * Generates a jwt token for a user
+   * Generates a personal API token for a user
    *
    * @method generate
    * @async
    *
    * @param  {Object} user
-   * @param  {Object|Boolean} [jwtPayload] Pass true when want to attach user object in the payload
-   *                                       or set a custom object
-   * @param  {Object} [jwtOptions = null]
    *
    * @return {Object}
-   *
-   * @throws {RuntimeException} If jwt secret is not defined or user doesn't have a primary key value
    */
-  async generate (user, jwtPayload, jwtOptions) {
-    /**
-     * Throw exception when trying to generate token without
-     * jwt secret
-     */
-    if (!this.jwtSecret) {
-      throw GE.RuntimeException.incompleteConfig('jwt', ['secret'], 'config/auth.js')
-    }
-
+  async generate (user) {
     /**
      * Throw exception when user is not persisted to
      * database
@@ -193,77 +79,15 @@ class ApiScheme extends BaseScheme {
       throw GE.RuntimeException.invoke('Primary key value is missing for user')
     }
 
-    /**
-     * The jwt payload
-     *
-     * @type {Object}
-     */
-    const payload = { uid: userId }
-
-    if (jwtPayload === true) {
-    /**
-     * Attach user as data object only when
-     * jwtPayload is true
-     */
-      payload.data = typeof (user.toJSON) === 'function' ? user.toJSON() : user
-    } else if (_.isPlainObject(jwtPayload)) {
-      /**
-       * Attach payload as it is when it's an object
-       */
-      payload.data = jwtPayload
-    }
-
-    /**
-     * Return the generate token
-     */
-    const token = await this._signToken(payload, jwtOptions)
-    const withRefresh = this._generateRefreshToken.pull()
-    const refreshToken = withRefresh ? await this._saveRefreshToken(user) : null
-    return { type: 'bearer', token, refreshToken }
+    const token = uuid.v4().replace(/-/g, '')
+    await this._serializerInstance.saveToken(user, token, 'api_token')
+    return { type: 'bearer', token }
   }
 
   /**
-   * Generate a new token using the refresh token.
-   * This method will revoke the existing token
-   * and issues a new refresh token
-   *
-   * @param {String} refreshToken
-   * @param  {Object|Boolean} [jwtPayload] Pass true when want to attach user object in the payload
-   *                                       or set a custom object
-   * @param  {Object}         [jwtOptions = null]
-   *
-   * @method generateForRefreshToken
-   *
-   * @return {Object}
-   */
-  async generateForRefreshToken (refreshToken, jwtPayload, jwtOptions) {
-    const user = await this._serializerInstance.findByToken(refreshToken, 'jwt_refresh_token')
-    if (!user) {
-      throw CE.InvalidRefreshToken.invoke(refreshToken)
-    }
-
-    const token = await this.generate(user, jwtPayload)
-
-    /**
-     * If user generated a new refresh token, in that we
-     * should revoke the old one, otherwise we should
-     * set the refreshToken as the existing refresh
-     * token in the return payload
-     */
-    if (!token.refreshToken) {
-      token.refreshToken = refreshToken
-    } else {
-      await this._serializerInstance.revokeTokens(user, [refreshToken])
-    }
-
-    return token
-  }
-
-  /**
-   * Check whether a user is logged in or
-   * not. Also this method will re-login
-   * the user when remember me token
-   * is defined
+   * Check whether the api token has been passed
+   * in the request header and is it valid or
+   * not.
    *
    * @method check
    *
@@ -274,26 +98,18 @@ class ApiScheme extends BaseScheme {
       return true
     }
 
-    /**
-     * Verify jwt token and wrap exception inside custom
-     * exception classes
-     */
-    try {
-      this.jwtPayload = await this._verifyToken(this.getAuthHeader())
-    } catch ({ name, message }) {
-      if (name === 'TokenExpiredError') {
-        throw CE.ExpiredJwtToken.invoke()
-      }
-      throw CE.InvalidJwtToken.invoke(message)
+    const token = this.getAuthHeader()
+    if (!token) {
+      throw CE.InvalidApiToken.invoke()
     }
 
-    this.user = await this._serializerInstance.findById(this.jwtPayload.uid)
+    this.user = await this._serializerInstance.findByToken(token, 'api_token')
 
     /**
      * Throw exception when user is not found
      */
     if (!this.user) {
-      throw CE.InvalidJwtToken.invoke()
+      throw CE.InvalidApiToken.invoke()
     }
     return true
   }
