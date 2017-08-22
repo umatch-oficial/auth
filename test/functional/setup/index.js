@@ -27,6 +27,18 @@ module.exports = async () => {
     return Context
   })
 
+  ioc.bind('Adonis/Src/Encryption', () => {
+    return {
+      encrypt (token) {
+        return `e${token}`
+      },
+
+      decrypt (token) {
+        return token.replace(/^e/, '')
+      }
+    }
+  })
+
   ioc.bind('Adonis/Src/Exception', () => {
     return {
       handle () {}

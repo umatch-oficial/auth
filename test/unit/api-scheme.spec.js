@@ -19,6 +19,16 @@ const { lucid: LucidSerializer } = require('../../src/Serializers')
 const helpers = require('./helpers')
 const setup = require('./setup')
 
+const Encryption = {
+  encrypt (token) {
+    return `e${token}`
+  },
+
+  decrypt (token) {
+    return token.replace(/^e/, '')
+  }
+}
+
 test.group('Schemes - Api', (group) => {
   setup.databaseHook(group)
   setup.hashHook(group)
@@ -37,7 +47,7 @@ test.group('Schemes - Api', (group) => {
     const lucid = new LucidSerializer()
     lucid.setConfig(config)
 
-    const api = new Api()
+    const api = new Api(Encryption)
     api.setOptions(config, lucid)
 
     try {
@@ -63,7 +73,7 @@ test.group('Schemes - Api', (group) => {
 
     await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const api = new Api()
+    const api = new Api(Encryption)
     api.setOptions(config, lucid)
 
     try {
@@ -87,7 +97,7 @@ test.group('Schemes - Api', (group) => {
 
     await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const api = new Api()
+    const api = new Api(Encryption)
     api.setOptions(config, lucid)
     const validated = await api.validate('foo@bar.com', 'secret')
     assert.isTrue(validated)
@@ -107,7 +117,7 @@ test.group('Schemes - Api', (group) => {
 
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const api = new Api()
+    const api = new Api(Encryption)
     api.setOptions(config, lucid)
     const tokenPayload = await api.generate(user)
 
@@ -128,14 +138,14 @@ test.group('Schemes - Api', (group) => {
     lucid.setConfig(config)
 
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
-    await user.tokens().create({ type: 'api_token', token: 22, is_revoked: false })
+    await user.tokens().create({ type: 'api_token', token: '22', is_revoked: false })
 
-    const api = new Api()
+    const api = new Api(Encryption)
     api.setOptions(config, lucid)
     api.setCtx({
       request: {
         header (key) {
-          return `Bearer 22`
+          return `Bearer e22`
         }
       }
     })
@@ -160,7 +170,7 @@ test.group('Schemes - Api', (group) => {
 
     await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const api = new Api()
+    const api = new Api(Encryption)
     api.setOptions(config, lucid)
     api.setCtx({
       request: {
@@ -193,7 +203,7 @@ test.group('Schemes - Api', (group) => {
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
     await user.tokens().create({ type: 'api_token', token: 22, is_revoked: false })
 
-    const api = new Api()
+    const api = new Api(Encryption)
     api.setOptions(config, lucid)
     api.setCtx({
       request: {
@@ -222,7 +232,7 @@ test.group('Schemes - Api', (group) => {
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
     await user.tokens().create({ type: 'api_token', token: 22, is_revoked: false })
 
-    const api = new Api()
+    const api = new Api(Encryption)
     api.setOptions(config, lucid)
     api.setCtx({
       request: {

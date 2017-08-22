@@ -21,6 +21,16 @@ const helpers = require('./helpers')
 const setup = require('./setup')
 const SECRET = 'averylongsecretkey'
 
+const Encryption = {
+  encrypt (token) {
+    return `e${token}`
+  },
+
+  decrypt (token) {
+    return token.replace(/^e/, '')
+  }
+}
+
 const verifyToken = function (token, options) {
   return new Promise((resolve, reject) => {
     return jwtLib.verify(token, SECRET, options, (error, payload) => {
@@ -63,7 +73,7 @@ test.group('Schemes - Jwt', (group) => {
     const lucid = new LucidSerializer()
     lucid.setConfig(config)
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
 
     try {
@@ -89,7 +99,7 @@ test.group('Schemes - Jwt', (group) => {
 
     await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
 
     try {
@@ -113,7 +123,7 @@ test.group('Schemes - Jwt', (group) => {
 
     await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     const validated = await jwt.validate('foo@bar.com', 'secret')
     assert.isTrue(validated)
@@ -136,7 +146,7 @@ test.group('Schemes - Jwt', (group) => {
 
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     const tokenPayload = await jwt.generate(user)
     const payload = await verifyToken(tokenPayload.token)
@@ -164,7 +174,7 @@ test.group('Schemes - Jwt', (group) => {
 
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     const { token } = await jwt.generate(user, true)
     const payload = await verifyToken(token)
@@ -191,7 +201,7 @@ test.group('Schemes - Jwt', (group) => {
 
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     const { token } = await jwt.generate(user, { isAdmin: true })
     const payload = await verifyToken(token)
@@ -218,7 +228,7 @@ test.group('Schemes - Jwt', (group) => {
 
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     const { token } = await jwt.generate(user)
     const payload = await verifyToken(token)
@@ -244,13 +254,13 @@ test.group('Schemes - Jwt', (group) => {
 
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     const { refreshToken } = await jwt.withRefreshToken().generate(user)
     assert.isDefined(refreshToken)
     const userTokens = await user.tokens().fetch()
     assert.equal(userTokens.size(), 1)
-    assert.equal(userTokens.first().token, refreshToken)
+    assert.equal(`e${userTokens.first().token}`, refreshToken)
     assert.equal(userTokens.first().is_revoked, 0)
     assert.equal(userTokens.first().type, 'jwt_refresh_token')
   })
@@ -273,7 +283,7 @@ test.group('Schemes - Jwt', (group) => {
     await User.create({ email: 'foo@bar.com', password: 'secret' })
     const token = await generateToken({ uid: 1 })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     jwt.setCtx({
       request: {
@@ -305,7 +315,7 @@ test.group('Schemes - Jwt', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     jwt.setCtx({
       request: {
@@ -340,7 +350,7 @@ test.group('Schemes - Jwt', (group) => {
     lucid.setConfig(config)
     const token = await generateToken({ uid: 1 })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     jwt.setCtx({
       request: {
@@ -378,7 +388,7 @@ test.group('Schemes - Jwt', (group) => {
     await User.create({ email: 'foo@bar.com', password: 'secret' })
     const token = await generateToken({ uid: 1 })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     jwt.setCtx({
       request: {
@@ -415,7 +425,7 @@ test.group('Schemes - Jwt', (group) => {
     await User.create({ email: 'foo@bar.com', password: 'secret' })
     const token = await generateToken({ uid: 1 }, { expiresIn: 1 })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     jwt.setCtx({
       request: {
@@ -452,7 +462,7 @@ test.group('Schemes - Jwt', (group) => {
     await User.create({ email: 'foo@bar.com', password: 'secret' })
     const token = await generateToken({ uid: 1 })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     jwt.setCtx({
       request: {
@@ -484,7 +494,7 @@ test.group('Schemes - Jwt', (group) => {
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
     await user.tokens().create({ token: '20', is_revoked: false, type: 'jwt_refresh_token' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
 
     const { token } = await jwt.generateForRefreshToken('20')
@@ -514,7 +524,7 @@ test.group('Schemes - Jwt', (group) => {
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
     await user.tokens().create({ token: '20', is_revoked: false, type: 'jwt_refresh_token' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
 
     const { token, refreshToken } = await jwt.newRefreshToken().generateForRefreshToken('20')
@@ -544,7 +554,7 @@ test.group('Schemes - Jwt', (group) => {
 
     await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
 
     const { token, refreshToken } = await jwt.attempt('foo@bar.com', 'secret')
@@ -573,7 +583,7 @@ test.group('Schemes - Jwt', (group) => {
 
     await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
 
     try {
@@ -598,7 +608,7 @@ test.group('Schemes - Jwt', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
 
     try {
@@ -625,7 +635,7 @@ test.group('Schemes - Jwt', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
 
     try {
@@ -654,7 +664,7 @@ test.group('Schemes - Jwt', (group) => {
     await User.create({ email: 'foo@bar.com', password: 'secret' })
     const token = await generateToken({ uid: 1 })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     jwt.setCtx({
       request: {
@@ -689,7 +699,7 @@ test.group('Schemes - Jwt', (group) => {
     await User.create({ email: 'foo@bar.com', password: 'secret' })
     const token = await generateToken({ uid: 1 }, { expiresIn: 1 })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     jwt.setCtx({
       request: {
@@ -725,7 +735,7 @@ test.group('Schemes - Jwt', (group) => {
     await User.create({ email: 'foo@bar.com', password: 'secret' })
     const token = await generateToken({ uid: 1 }, { expiresIn: 1 })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
     jwt.setCtx({
       request: {
@@ -760,7 +770,7 @@ test.group('Schemes - Jwt', (group) => {
 
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
 
-    const jwt = new Jwt()
+    const jwt = new Jwt(Encryption)
     jwt.setOptions(config, lucid)
 
     const { token } = await jwt.generate(user, {}, { issuer: 'adonisjs' })

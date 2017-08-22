@@ -15,6 +15,23 @@ const GE = require('@adonisjs/generic-exceptions')
 const CE = require('../Exceptions')
 
 class ApiScheme extends BaseScheme {
+  constructor (Encryption) {
+    super()
+    this.Encryption = Encryption
+  }
+
+  /* istanbul ignore next */
+  /**
+   * IoC container injections
+   *
+   * @method inject
+   *
+   * @return {Array}
+   */
+  static get inject () {
+    return ['Adonis/Src/Encryption']
+  }
+
   /**
    * Validate user credentials
    *
@@ -79,8 +96,15 @@ class ApiScheme extends BaseScheme {
       throw GE.RuntimeException.invoke('Primary key value is missing for user')
     }
 
-    const token = uuid.v4().replace(/-/g, '')
-    await this._serializerInstance.saveToken(user, token, 'api_token')
+    const plainToken = uuid.v4().replace(/-/g, '')
+    await this._serializerInstance.saveToken(user, plainToken, 'api_token')
+
+    /**
+     * Encrypting the token before giving it to the
+     * user.
+     */
+    const token = this.Encryption.encrypt(plainToken)
+
     return { type: 'bearer', token }
   }
 
@@ -103,7 +127,13 @@ class ApiScheme extends BaseScheme {
       throw CE.InvalidApiToken.invoke()
     }
 
-    this.user = await this._serializerInstance.findByToken(token, 'api_token')
+    /**
+     * Decrypting the token before querying
+     * the db.
+     */
+    const plainToken = this.Encryption.decrypt(token)
+
+    this.user = await this._serializerInstance.findByToken(plainToken, 'api_token')
 
     /**
      * Throw exception when user is not found

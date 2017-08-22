@@ -17,10 +17,29 @@ const BaseScheme = require('./Base')
 const GE = require('@adonisjs/generic-exceptions')
 const CE = require('../Exceptions')
 
+/**
+ * Jwt scheme for adonis auth provider
+ *
+ * @class JwtScheme
+ * @constructor
+ */
 class JwtScheme extends BaseScheme {
-  constructor () {
+  constructor (Encryption) {
     super()
+    this.Encryption = Encryption
     this._generateRefreshToken = new Resetable(false)
+  }
+
+  /* istanbul ignore next */
+  /**
+   * IoC container injections
+   *
+   * @method inject
+   *
+   * @return {Array}
+   */
+  static get inject () {
+    return ['Adonis/Src/Encryption']
   }
 
   /**
@@ -246,7 +265,14 @@ class JwtScheme extends BaseScheme {
      */
     const token = await this._signToken(payload, jwtOptions)
     const withRefresh = this._generateRefreshToken.pull()
-    const refreshToken = withRefresh ? await this._saveRefreshToken(user) : null
+    const plainRefreshToken = withRefresh ? await this._saveRefreshToken(user) : null
+
+    /**
+     * Encrypting the token before giving it to the
+     * user.
+     */
+    const refreshToken = plainRefreshToken ? this.Encryption.encrypt(plainRefreshToken) : null
+
     return { type: 'bearer', token, refreshToken }
   }
 
@@ -265,7 +291,12 @@ class JwtScheme extends BaseScheme {
    * @return {Object}
    */
   async generateForRefreshToken (refreshToken, jwtPayload, jwtOptions) {
-    const user = await this._serializerInstance.findByToken(refreshToken, 'jwt_refresh_token')
+    /**
+     * Decrypting the token before finding it in the db
+     */
+    const plainRefreshToken = refreshToken ? this.Encryption.decrypt(refreshToken) : refreshToken
+
+    const user = await this._serializerInstance.findByToken(plainRefreshToken, 'jwt_refresh_token')
     if (!user) {
       throw CE.InvalidRefreshToken.invoke(refreshToken)
     }
