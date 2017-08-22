@@ -272,7 +272,7 @@ class SessionScheme extends BaseScheme {
       }
     }
 
-    throw CE.InvalidLoginException.invalidSession()
+    throw CE.InvalidSessionException.invoke()
   }
 
   /**
