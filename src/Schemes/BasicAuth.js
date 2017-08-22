@@ -57,7 +57,7 @@ class BasicAuthScheme extends BaseScheme {
 
     const credentials = auth(this._ctx.request.request)
     if (!credentials) {
-      throw CE.InvalidLoginException.missingBasicAuthCredentials()
+      throw CE.InvalidBasicAuthException.invoke()
     }
 
     this.user = await this.validate(credentials.name, credentials.pass, true)

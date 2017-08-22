@@ -557,7 +557,7 @@ test.group('Schemes - Session', (group) => {
     try {
       await session.check()
     } catch ({ name, message }) {
-      assert.equal(name, 'InvalidLoginException')
+      assert.equal(name, 'InvalidSessionException')
       assert.equal(message, 'E_INVALID_SESSION: Invalid session')
     }
   })
@@ -593,7 +593,7 @@ test.group('Schemes - Session', (group) => {
     try {
       await session.check()
     } catch ({ name, message }) {
-      assert.equal(name, 'InvalidLoginException')
+      assert.equal(name, 'InvalidSessionException')
       assert.equal(message, 'E_INVALID_SESSION: Invalid session')
     }
   })
