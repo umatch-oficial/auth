@@ -10,11 +10,29 @@
 */
 
 const uuid = require('uuid')
+const _ = require('lodash')
 const BaseScheme = require('./Base')
 const GE = require('@adonisjs/generic-exceptions')
 const CE = require('../Exceptions')
 
 class ApiScheme extends BaseScheme {
+  constructor (Encryption) {
+    super()
+    this.Encryption = Encryption
+  }
+
+  /* istanbul ignore next */
+  /**
+   * IoC container injections
+   *
+   * @method inject
+   *
+   * @return {Array}
+   */
+  static get inject () {
+    return ['Adonis/Src/Encryption']
+  }
+
   /**
    * Validate user credentials
    *
@@ -79,8 +97,15 @@ class ApiScheme extends BaseScheme {
       throw GE.RuntimeException.invoke('Primary key value is missing for user')
     }
 
-    const token = uuid.v4().replace(/-/g, '')
-    await this._serializerInstance.saveToken(user, token, 'api_token')
+    const plainToken = uuid.v4().replace(/-/g, '')
+    await this._serializerInstance.saveToken(user, plainToken, 'api_token')
+
+    /**
+     * Encrypting the token before giving it to the
+     * user.
+     */
+    const token = this.Encryption.encrypt(plainToken)
+
     return { type: 'bearer', token }
   }
 
@@ -103,7 +128,13 @@ class ApiScheme extends BaseScheme {
       throw CE.InvalidApiToken.invoke()
     }
 
-    this.user = await this._serializerInstance.findByToken(token, 'api_token')
+    /**
+     * Decrypting the token before querying
+     * the db.
+     */
+    const plainToken = this.Encryption.decrypt(token)
+
+    this.user = await this._serializerInstance.findByToken(plainToken, 'api_token')
 
     /**
      * Throw exception when user is not found
@@ -125,6 +156,49 @@ class ApiScheme extends BaseScheme {
   async getUser () {
     await this.check()
     return this.user
+  }
+
+  /**
+   * List tokens for a given user for the
+   * currently logged in user.
+   *
+   * @method listTokens
+   *
+   * @param  {Object} forUser
+   *
+   * @return {Object}
+   */
+  async listTokens (forUser) {
+    forUser = forUser || this.user
+    if (!forUser) {
+      return this._serializerInstance.fakeResult()
+    }
+
+    const tokens = await this._serializerInstance.listTokens(forUser, 'api_token')
+
+    /**
+     * We need to pull the `rows` when serializer is lucid, otherwise
+     * we use the array as it is.
+     *
+     * @type {Array}
+     */
+    const tokensArray = _.isArray(tokens) ? tokens : tokens.rows
+
+    /**
+     * If tokens array is empty then return the fake response
+     */
+    if (!_.isArray(tokensArray) || !_.size(tokensArray)) {
+      return this._serializerInstance.fakeResult()
+    }
+
+    /**
+     * Encrypt the tokens
+     */
+    tokensArray.forEach((token) => {
+      token.token = this.Encryption.encrypt(token.token)
+    })
+
+    return tokens
   }
 }
 

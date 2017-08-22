@@ -1,3 +1,19 @@
+<a name="2.0.4"></a>
+## [2.0.4](https://github.com/adonisjs/adonis-auth/compare/v2.0.3...v2.0.4) (2017-08-22)
+
+
+### Bug Fixes
+
+* **jwt:** jwt remove password when attaching user ([542d331](https://github.com/adonisjs/adonis-auth/commit/542d331))
+
+
+### Features
+
+* **jwt,api:** add listTokens method ([1932449](https://github.com/adonisjs/adonis-auth/commit/1932449))
+* **tokens:** encrypt api and jwt refresh tokens ([57d5650](https://github.com/adonisjs/adonis-auth/commit/57d5650))
+
+
+
 <a name="2.0.3"></a>
 ## [2.0.3](https://github.com/adonisjs/adonis-auth/compare/v2.0.2...v2.0.3) (2017-08-16)
 

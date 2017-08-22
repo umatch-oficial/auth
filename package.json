@@ -1,6 +1,6 @@
 {
   "name": "@adonisjs/auth",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Offical authentication provider for Adonis framework",
   "main": "index.js",
   "directories": {
@@ -47,12 +47,11 @@
     }
   },
   "nyc": {
-    "include": [
-      "src",
-      "test/**/*.spec.js"
-    ],
     "exclude": [
-      "src/ExceptionHandler/*"
+      "src/ExceptionHandler/*",
+      "providers",
+      "test",
+      "bin"
     ]
   },
   "standard": {
