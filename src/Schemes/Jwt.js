@@ -252,7 +252,12 @@ class JwtScheme extends BaseScheme {
      * Attach user as data object only when
      * jwtPayload is true
      */
-      payload.data = typeof (user.toJSON) === 'function' ? user.toJSON() : user
+      const data = typeof (user.toJSON) === 'function' ? user.toJSON() : user
+
+      /**
+       * Remove password from jwt data
+       */
+      payload.data = _.omit(data, 'password')
     } else if (_.isPlainObject(jwtPayload)) {
       /**
        * Attach payload as it is when it's an object

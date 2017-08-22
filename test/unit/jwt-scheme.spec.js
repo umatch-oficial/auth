@@ -182,6 +182,7 @@ test.group('Schemes - Jwt', (group) => {
     assert.equal(payload.uid, 1)
     assert.equal(payload.data.id, 1)
     assert.equal(payload.data.email, 'foo@bar.com')
+    assert.isUndefined(payload.data.password)
   })
 
   test('generate token for user and attach custom data to it', async (assert) => {
