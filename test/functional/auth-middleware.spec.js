@@ -171,7 +171,7 @@ test.group('Middleware | Auth', (group) => {
           res.writeHead(200)
           assert.isDefined(ctx.auth.current)
           assert.equal(ctx.auth.current.scheme, 'basic')
-          assert.notDeepEqual(ctx.auth.current.scheme, ctx.auth.authenticatorInstance)
+          assert.notDeepEqual(ctx.auth.current, ctx.auth.authenticatorInstance)
           res.end()
         })
         .catch(({ status, message }) => {
