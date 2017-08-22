@@ -183,7 +183,7 @@ test.group('Schemes - Api', (group) => {
     try {
       await api.check()
     } catch ({ name, message }) {
-      assert.equal(message, 'E_INVALID_API_TOKEN: The api is invalid or missing')
+      assert.equal(message, 'E_INVALID_API_TOKEN: The api token is missing or invalid')
       assert.equal(name, 'InvalidApiToken')
     }
   })
@@ -247,6 +247,44 @@ test.group('Schemes - Api', (group) => {
 
     const isLogged = await api.check()
     assert.isTrue(isLogged)
+  })
+
+  test('throw exception when token is missing', async (assert) => {
+    assert.plan(3)
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    await user.tokens().create({ type: 'api_token', token: 22, is_revoked: false })
+
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+    api.setCtx({
+      request: {
+        header () {
+          return null
+        },
+        input () {
+          return null
+        }
+      }
+    })
+
+    try {
+      await api.check()
+    } catch ({ name, message, status }) {
+      assert.equal(name, 'InvalidApiToken')
+      assert.equal(message, 'E_INVALID_API_TOKEN: The api token is missing or invalid')
+      assert.equal(status, 401)
+    }
   })
 
   test('return a list of tokens for a given user', async (assert) => {
@@ -331,5 +369,27 @@ test.group('Schemes - Api', (group) => {
     const tokensList = await api.listTokens(user)
     assert.lengthOf(tokensList, 1)
     assert.equal(tokensList[0].token, payload.token)
+  })
+
+  test('generate token via user credentials', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+    const tokenPayload = await api.attempt('foo@bar.com', 'secret')
+
+    assert.isDefined(tokenPayload.token)
+    assert.equal(tokenPayload.type, 'bearer')
   })
 })

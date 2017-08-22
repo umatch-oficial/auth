@@ -102,9 +102,14 @@ class ExpiredJwtToken extends InvalidLoginException {
   }
 }
 
+/**
+ * This exception is raised when API token is invalid
+ *
+ * @constructor InvalidApiToken
+ */
 class InvalidApiToken extends InvalidLoginException {
   static invoke () {
-    return new this('The api is invalid or missing', 401, 'E_INVALID_API_TOKEN')
+    return new this('The api token is missing or invalid', 401, 'E_INVALID_API_TOKEN')
   }
 }
 
