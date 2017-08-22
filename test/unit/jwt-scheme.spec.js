@@ -16,7 +16,7 @@ const { ioc } = require('@adonisjs/fold')
 const jwtLib = require('jsonwebtoken')
 
 const { jwt: Jwt } = require('../../src/Schemes')
-const { lucid: LucidSerializer } = require('../../src/Serializers')
+const { lucid: LucidSerializer, database: DatabaseSerializer } = require('../../src/Serializers')
 const helpers = require('./helpers')
 const setup = require('./setup')
 const SECRET = 'averylongsecretkey'
@@ -776,5 +776,108 @@ test.group('Schemes - Jwt', (group) => {
     const { token } = await jwt.generate(user, {}, { issuer: 'adonisjs' })
     const { iss } = await verifyToken(token)
     assert.equal(iss, 'adonisjs')
+  })
+
+  test('list refresh tokens', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+
+    const payload = await jwt.withRefreshToken().generate(user)
+    const tokensList = await jwt.listTokens(user)
+    assert.equal(tokensList.size(), 1)
+    assert.equal(tokensList.first().token, payload.refreshToken)
+  })
+
+  test('return fake response when no tokens exists', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+
+    const tokensList = await jwt.listTokens(user)
+    assert.equal(tokensList.size(), 0)
+  })
+
+  test('return fake response when user has not been defined', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+    await jwt.withRefreshToken().generate(user)
+
+    const tokensList = await jwt.listTokens()
+    assert.equal(tokensList.size(), 0)
+  })
+
+  test('return encrypted tokens via database serializer', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      primaryKey: 'id',
+      table: 'users',
+      tokensTable: 'tokens',
+      uid: 'email',
+      foreignKey: 'user_id',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const database = new DatabaseSerializer(ioc.use('Hash'))
+    database.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, database)
+    const payload = await jwt.withRefreshToken().generate(user)
+
+    const tokensList = await jwt.listTokens({ id: 1 }, 'jwt_refresh_token')
+    assert.deepEqual(tokensList[0].token, payload.refreshToken)
   })
 })

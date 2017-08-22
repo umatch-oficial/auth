@@ -369,6 +369,49 @@ class JwtScheme extends BaseScheme {
     await this.check()
     return this.user
   }
+
+  /**
+   * List tokens for a given user for the
+   * currently logged in user.
+   *
+   * @method listTokens
+   *
+   * @param  {Object} forUser
+   *
+   * @return {Object}
+   */
+  async listTokens (forUser) {
+    forUser = forUser || this.user
+    if (!forUser) {
+      return this._serializerInstance.fakeResult()
+    }
+
+    const tokens = await this._serializerInstance.listTokens(forUser, 'jwt_refresh_token')
+
+    /**
+     * We need to pull the `rows` when serializer is lucid, otherwise
+     * we use the array as it is.
+     *
+     * @type {Array}
+     */
+    const tokensArray = _.isArray(tokens) ? tokens : tokens.rows
+
+    /**
+     * If tokens array is empty then return the fake response
+     */
+    if (!_.isArray(tokensArray) || !_.size(tokensArray)) {
+      return this._serializerInstance.fakeResult()
+    }
+
+    /**
+     * Encrypt the tokens
+     */
+    tokensArray.forEach((token) => {
+      token.token = this.Encryption.encrypt(token.token)
+    })
+
+    return tokens
+  }
 }
 
 module.exports = JwtScheme

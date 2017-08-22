@@ -15,7 +15,7 @@ const test = require('japa')
 const { ioc } = require('@adonisjs/fold')
 
 const { api: Api } = require('../../src/Schemes')
-const { lucid: LucidSerializer } = require('../../src/Serializers')
+const { lucid: LucidSerializer, database: DatabaseSerializer } = require('../../src/Serializers')
 const helpers = require('./helpers')
 const setup = require('./setup')
 
@@ -247,5 +247,89 @@ test.group('Schemes - Api', (group) => {
 
     const isLogged = await api.check()
     assert.isTrue(isLogged)
+  })
+
+  test('return a list of tokens for a given user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+    const payload = await api.generate(user)
+    const tokensList = await api.listTokens(user)
+    assert.equal(tokensList.size(), 1)
+    assert.equal(tokensList.first().token, payload.token)
+  })
+
+  test('return fake response when no tokens exists', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+    const tokensList = await api.listTokens(user)
+    assert.equal(tokensList.size(), 0)
+  })
+
+  test('return fake response when user is not defined', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+    await api.generate(user)
+    const tokensList = await api.listTokens()
+    assert.equal(tokensList.size(), 0)
+  })
+
+  test('return a list of tokens via database serializer', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      primaryKey: 'id',
+      table: 'users',
+      tokensTable: 'tokens',
+      uid: 'email',
+      foreignKey: 'user_id',
+      password: 'password'
+    }
+
+    const database = new DatabaseSerializer(ioc.use('Hash'))
+    database.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    const api = new Api(Encryption)
+    api.setOptions(config, database)
+    const payload = await api.generate(user)
+    const tokensList = await api.listTokens(user)
+    assert.lengthOf(tokensList, 1)
+    assert.equal(tokensList[0].token, payload.token)
   })
 })
