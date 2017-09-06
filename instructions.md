@@ -50,4 +50,13 @@ Route
 ```
 
 
+## Testing
+
+The testing client is used to login users when writing tests. Make sure to register the trait before using the `loginVia` method.
+
+```js
+trait('Auth/Client')
+```
+
+If using sessions, make sure the `Auth/Client` trait comes before the `Session/Client`.
 

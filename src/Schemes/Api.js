@@ -200,6 +200,23 @@ class ApiScheme extends BaseScheme {
 
     return tokens
   }
+
+  /**
+   * Login a user as a client. This method will set the
+   * API token as a header on the request.
+   *
+   * @param  {Function}    headerFn
+   * @param  {Function}    sessionFn
+   * @param  {Object}      token
+   *
+   * @method clientLogin
+   * @async
+   *
+   * @return {void}
+   */
+  async clientLogin (headerFn, sessionFn, token) {
+    headerFn('authorization', `Bearer ${token}`)
+  }
 }
 
 module.exports = ApiScheme
