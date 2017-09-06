@@ -28,7 +28,19 @@ module.exports = function (Request, Config) {
    * before hook
    */
   Request.before(async (requestInstance) => {
-    const sessionFn = requestInstance.session.bind(requestInstance)
+    /**
+     * When writing API server, the session client is not required
+     * so we make sure only to use the session fn when it exists.
+     * Otherwise we give a substitute fn, which will throw
+     * exception when session authenticator is used to
+     * authenticate
+     */
+    const sessionFn = typeof (requestInstance.session) === 'function'
+    ? requestInstance.session.bind(requestInstance)
+    : function () {
+      throw new Error('Cannot set login session, since session client is not used for the test')
+    }
+
     const headerFn = requestInstance.header.bind(requestInstance)
 
     /**
