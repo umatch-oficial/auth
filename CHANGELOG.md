@@ -1,3 +1,19 @@
+<a name="2.0.6"></a>
+## [2.0.6](https://github.com/adonisjs/adonis-auth/compare/v2.0.5...v2.0.6) (2017-09-06)
+
+
+### Bug Fixes
+
+* **config:** add table column and api config ([d038205](https://github.com/adonisjs/adonis-auth/commit/d038205))
+
+
+### Features
+
+* **client:** add auth client for vow ([e18b02e](https://github.com/adonisjs/adonis-auth/commit/e18b02e))
+* **client:** add clientLogin method on api scheme ([b6e3767](https://github.com/adonisjs/adonis-auth/commit/b6e3767))
+
+
+
 <a name="2.0.5"></a>
 ## [2.0.5](https://github.com/adonisjs/adonis-auth/compare/v2.0.4...v2.0.5) (2017-08-22)
 
