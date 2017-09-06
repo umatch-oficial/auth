@@ -881,4 +881,33 @@ test.group('Schemes - Jwt', (group) => {
     const tokensList = await jwt.listTokens({ id: 1 }, 'jwt_refresh_token')
     assert.deepEqual(tokensList[0].token, payload.refreshToken)
   })
+
+  test('login as client', async (assert) => {
+    assert.plan(2)
+
+    const config = {
+      primaryKey: 'id',
+      table: 'users',
+      tokensTable: 'tokens',
+      uid: 'email',
+      foreignKey: 'user_id',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const database = new DatabaseSerializer(ioc.use('Hash'))
+    database.setConfig(config)
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, database)
+
+    const headerFn = function (key, value) {
+      assert.equal(key, 'authorization')
+      assert.include(value, 'Bearer')
+    }
+
+    await jwt.clientLogin(headerFn, null, { id: 1 })
+  })
 })

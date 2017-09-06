@@ -76,6 +76,24 @@ class BasicAuthScheme extends BaseScheme {
     await this.check()
     return this.user
   }
+
+  /**
+   * Login as a user by setting basic auth header
+   * before the request reaches the server.
+   *
+   * @param  {Function}    headerFn
+   * @param  {Function}    sessionFn
+   * @param  {String}      username
+   * @param  {String}      password
+   *
+   * @method clientLogin
+   * @async
+   *
+   * @return {void}
+   */
+  async clientLogin (headerFn, sessionFn, username, password) {
+    headerFn('authorization', `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`)
+  }
 }
 
 module.exports = BasicAuthScheme

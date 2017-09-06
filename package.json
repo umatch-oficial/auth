@@ -48,7 +48,7 @@
   },
   "nyc": {
     "exclude": [
-      "src/ExceptionHandler/*",
+      "src/Exceptions",
       "providers",
       "test",
       "bin"
@@ -57,6 +57,9 @@
   "standard": {
     "ignore": [
       "templates"
+    ],
+    "globals": [
+      "use"
     ]
   },
   "dependencies": {

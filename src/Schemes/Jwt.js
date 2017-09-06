@@ -417,6 +417,25 @@ class JwtScheme extends BaseScheme {
 
     return tokens
   }
+
+  /**
+   * Login a user as a client. This method will set the
+   * JWT token as a header on the request.
+   *
+   * @param  {Function}    headerFn
+   * @param  {Function}    sessionFn
+   * @param  {Object}      user
+   * @param  {Object}      jwtOptions
+   *
+   * @method clientLogin
+   * @async
+   *
+   * @return {void}
+   */
+  async clientLogin (headerFn, sessionFn, user) {
+    const { token } = await this.generate(user)
+    headerFn('authorization', `Bearer ${token}`)
+  }
 }
 
 module.exports = JwtScheme
