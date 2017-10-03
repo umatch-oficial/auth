@@ -1,3 +1,15 @@
+<a name="2.0.7"></a>
+## [2.0.7](https://github.com/adonisjs/adonis-auth/compare/v2.0.6...v2.0.7) (2017-10-03)
+
+
+### Bug Fixes
+
+* **middleware:** handle case when middleware scheme is not an array ([5364f40](https://github.com/adonisjs/adonis-auth/commit/5364f40)), closes [#61](https://github.com/adonisjs/adonis-auth/issues/61)
+* **package:** update debug to version 3.0.0 (#54) ([ef300bf](https://github.com/adonisjs/adonis-auth/commit/ef300bf))
+* **package:** update jsonwebtoken to version 8.0.0 (#57) ([8c4497b](https://github.com/adonisjs/adonis-auth/commit/8c4497b))
+
+
+
 <a name="2.0.6"></a>
 ## [2.0.6](https://github.com/adonisjs/adonis-auth/compare/v2.0.5...v2.0.6) (2017-09-06)
 
