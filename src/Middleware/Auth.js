@@ -9,6 +9,7 @@
  * file that was distributed with this source code.
 */
 
+const _ = require('lodash')
 const debug = require('debug')('adonis:auth')
 
 class Auth {
@@ -32,7 +33,7 @@ class Auth {
     let lastError = null
     let authenticatedScheme = null
 
-    schemes = schemes instanceof Array === true ? schemes : [this.scheme]
+    schemes = _.castArray(schemes || this.scheme)
     debug('attempting to authenticate via %j scheme(s)', schemes)
 
     /**
