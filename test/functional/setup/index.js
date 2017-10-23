@@ -18,6 +18,7 @@ const { Config } = require('@adonisjs/sink')
 const helpers = require('../../unit/helpers')
 
 class Context extends Macroable {
+  static onReady () {}
 }
 Context._getters = {}
 Context._macros = {}
@@ -25,6 +26,15 @@ Context._macros = {}
 module.exports = async () => {
   ioc.bind('Adonis/Src/HttpContext', () => {
     return Context
+  })
+
+  ioc.bind('Adonis/Src/View', () => {
+    return {
+      tag: function () {},
+      engine: {
+        BaseTag: class BaseTag {}
+      }
+    }
   })
 
   ioc.bind('Adonis/Src/Encryption', () => {

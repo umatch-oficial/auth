@@ -118,6 +118,28 @@ class AuthProvider extends ServiceProvider {
     Context.getter('auth', function () {
       return new Auth({ request: this.request, response: this.response, session: this.session }, Config)
     }, true)
+
+    /**
+     * Share current logged in user with view
+     */
+    Context.onReady(function (ctx) {
+      if (ctx.view && typeof (ctx.view.share) === 'function') {
+        ctx.view.share({
+          auth: {
+            user: (ctx.auth.current || ctx.auth.authenticatorInstance).user || null
+          }
+        })
+      }
+    })
+
+    /**
+     * Adding `loggedIn` tag to the view, only when view
+     * provider is registered
+     */
+    try {
+      const View = this.app.use('Adonis/Src/View')
+      require('../src/ViewBindings')(View)
+    } catch (error) {}
   }
 }
 
