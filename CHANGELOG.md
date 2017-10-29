@@ -1,3 +1,18 @@
+<a name="2.0.8"></a>
+## [2.0.8](https://github.com/adonisjs/adonis-auth/compare/v2.0.7...v2.0.8) (2017-10-29)
+
+
+### Bug Fixes
+
+* **package:** update basic-auth to version 2.0.0 (#59) ([244839b](https://github.com/adonisjs/adonis-auth/commit/244839b))
+
+
+### Features
+
+* **auth:** add loggedIn tag and share auth with view ([3382c8e](https://github.com/adonisjs/adonis-auth/commit/3382c8e))
+
+
+
 <a name="2.0.7"></a>
 ## [2.0.7](https://github.com/adonisjs/adonis-auth/compare/v2.0.6...v2.0.7) (2017-10-03)
 
