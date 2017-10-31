@@ -10,6 +10,11 @@
 */
 
 const { ServiceProvider } = require('@adonisjs/fold')
+const _ = require('lodash')
+const WRONG_ORDER_MESSAGE = `Make sure to register session trait after the auth trait. It should be in following order
+  trait('Auth/Client')
+  trait('Session/Client')
+`
 
 class AuthProvider extends ServiceProvider {
   /**
@@ -80,7 +85,17 @@ class AuthProvider extends ServiceProvider {
   _registerVowTrait () {
     this.app.bind('Adonis/Traits/Auth', (app) => {
       const Config = app.use('Adonis/Src/Config')
-      return ({ Request }) => {
+      return ({ Request, traits }) => {
+        const sessionIndex = _.findIndex(traits, (triat) => triat.action === 'Session/Client')
+        const authIndex = _.findIndex(traits, (triat) => triat.action === 'Auth/Client')
+
+        /**
+         * The auth/client should be registered before the `session/client` trait. So that
+         * session set by auth is sent as cookies.
+         */
+        if (sessionIndex > -1 && sessionIndex < authIndex) {
+          throw new Error(WRONG_ORDER_MESSAGE)
+        }
         require('../src/VowBindings/Request')(Request, Config)
       }
     })
