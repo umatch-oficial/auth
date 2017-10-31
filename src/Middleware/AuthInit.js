@@ -27,10 +27,22 @@ class AuthInit {
    *
    * @return {void}
    */
-  async handle ({ auth }, next) {
+  async handle ({ auth, view }, next) {
     if (this.scheme === 'session') {
       await auth.loginIfCan()
     }
+
+    /**
+     * Sharing user with the view
+     */
+    if (view && typeof (view.share) === 'function') {
+      view.share({
+        auth: {
+          user: auth.user
+        }
+      })
+    }
+
     await next()
   }
 }

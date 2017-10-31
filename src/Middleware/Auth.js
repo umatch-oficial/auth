@@ -29,7 +29,7 @@ class Auth {
    *
    * @return {void}
    */
-  async handle ({ auth }, next, schemes) {
+  async handle ({ auth, view }, next, schemes) {
     let lastError = null
     let authenticatedScheme = null
 
@@ -75,6 +75,17 @@ class Auth {
       auth.current = authenticatedScheme === this.scheme
       ? auth.authenticatorInstance
       : auth.authenticator(authenticatedScheme)
+    }
+
+    /**
+     * Sharing user with the view
+     */
+    if (view && typeof (view.share) === 'function') {
+      view.share({
+        auth: {
+          user: auth.current.user
+        }
+      })
     }
 
     await next()
