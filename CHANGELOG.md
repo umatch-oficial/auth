@@ -1,3 +1,13 @@
+<a name="2.0.9"></a>
+## [2.0.9](https://github.com/adonisjs/adonis-auth/compare/v2.0.8...v2.0.9) (2017-10-31)
+
+
+### Bug Fixes
+
+* **vow:trait:** throw exception when session trait is before auth ([cb462e2](https://github.com/adonisjs/adonis-auth/commit/cb462e2))
+
+
+
 <a name="2.0.8"></a>
 ## [2.0.8](https://github.com/adonisjs/adonis-auth/compare/v2.0.7...v2.0.8) (2017-10-29)
 
