@@ -135,19 +135,6 @@ class AuthProvider extends ServiceProvider {
     }, true)
 
     /**
-     * Share current logged in user with view
-     */
-    Context.onReady(function (ctx) {
-      if (ctx.view && typeof (ctx.view.share) === 'function') {
-        ctx.view.share({
-          auth: {
-            user: (ctx.auth.current || ctx.auth.authenticatorInstance).user || null
-          }
-        })
-      }
-    })
-
-    /**
      * Adding `loggedIn` tag to the view, only when view
      * provider is registered
      */

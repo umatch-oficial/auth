@@ -184,4 +184,45 @@ test.group('Middleware | Auth', (group) => {
     const userCredentials = Buffer.from('foo@bar.com:secret').toString('base64')
     await supertest(this.server).get('/').set('Authorization', `Basic ${userCredentials}`).expect(200)
   })
+
+  test('share logged in user with the view', async (assert) => {
+    assert.plan(2)
+
+    await ioc.use('App/Models/User').create({ email: 'foo@bar.com', password: 'secret' })
+
+    this.server.on('request', (req, res) => {
+      const Context = ioc.use('Adonis/Src/HttpContext')
+
+      const ctx = new Context()
+      ctx.request = helpers.getRequest(req)
+      ctx.response = helpers.getResponse(req, res)
+      ctx.session = helpers.getSession(req, res)
+      ctx.view = {
+        locals: null,
+        share: function (locals) {
+          this.locals = locals
+        }
+      }
+
+      const authMiddleware = ioc.use('Adonis/Middleware/Auth')
+
+      authMiddleware
+        .handle(ctx, function () {}, ['basic'])
+        .then((status) => {
+          res.writeHead(200)
+          assert.isDefined(ctx.view.locals)
+          assert.deepEqual(ctx.view.locals.auth.user.email, 'foo@bar.com')
+          res.end()
+        })
+        .catch(({ status, message }) => {
+          console.log(message)
+          res.writeHead(status || 500)
+          res.write(message)
+          res.end()
+        })
+    })
+
+    const userCredentials = Buffer.from('foo@bar.com:secret').toString('base64')
+    await supertest(this.server).get('/').set('Authorization', `Basic ${userCredentials}`).expect(200)
+  })
 })

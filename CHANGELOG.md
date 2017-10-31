@@ -1,3 +1,13 @@
+<a name="2.0.10"></a>
+## [2.0.10](https://github.com/adonisjs/adonis-auth/compare/v2.0.9...v2.0.10) (2017-10-31)
+
+
+### Bug Fixes
+
+* **view.auth:** share auth user with view from middleware ([3b4b081](https://github.com/adonisjs/adonis-auth/commit/3b4b081))
+
+
+
 <a name="2.0.9"></a>
 ## [2.0.9](https://github.com/adonisjs/adonis-auth/compare/v2.0.8...v2.0.9) (2017-10-31)
 
