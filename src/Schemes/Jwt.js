@@ -208,6 +208,17 @@ class JwtScheme extends BaseScheme {
   }
 
   /**
+   * @method login
+   *
+   * @throws {RuntimeException} If jwt secret is not defined or user doesn't have a primary key value
+   */
+  login () {
+    throw GE
+      .RuntimeException
+      .invoke('method not implemented, use generate() to retrieve jwt token', 500, 'E_CANNOT_LOGIN')
+  }
+
+  /**
    * Generates a jwt token for a user
    *
    * @method generate
