@@ -19,8 +19,16 @@ const GE = require('@adonisjs/generic-exceptions')
  * @class UserNotFoundException
  */
 class UserNotFoundException extends GE.LogicalException {
-  static invoke (message) {
-    return new this(message, 401, 'E_USER_NOT_FOUND')
+  static invoke (message, uidField, passwordField, authScheme) {
+    if (!uidField || !passwordField || !authScheme) {
+      throw new Error('Cannot invoke exception without uidField, passwordField or authScheme')
+    }
+
+    const error = new this(message, 401, 'E_USER_NOT_FOUND')
+    error.uidField = uidField
+    error.passwordField = passwordField
+    error.authScheme = authScheme
+    return error
   }
 
   /**
@@ -39,9 +47,9 @@ class UserNotFoundException extends GE.LogicalException {
    *
    * @return {void}
    */
-  async handle ({ status }, { request, response, session, auth }) {
+  async handle ({ status, uidField, passwordField, authScheme }, { request, response, session }) {
     const isJSON = request.accepts(['html', 'json']) === 'json'
-    const errorMessages = [{ field: auth.uidField, message: `Cannot find user with provided ${auth.uidField}` }]
+    const errorMessages = [{ field: uidField, message: `Cannot find user with provided ${uidField}` }]
 
     /**
      * If request is json then return a json response
@@ -55,8 +63,8 @@ class UserNotFoundException extends GE.LogicalException {
      * If auth scheme is session, then flash the data
      * back to the form
      */
-    if (auth.scheme === 'session') {
-      session.withErrors(errorMessages).flashExcept([auth.passwordField])
+    if (authScheme === 'session') {
+      session.withErrors(errorMessages).flashExcept([passwordField])
       await session.commit()
       response.redirect('back')
       return
@@ -66,7 +74,7 @@ class UserNotFoundException extends GE.LogicalException {
      * If using basic auth, then prompt user with a native
      * browser dialog
      */
-    if (auth.scheme === 'basic') {
+    if (authScheme === 'basic') {
       response.header('WWW-Authenticate', 'Basic realm="example"')
       response.status(status).send('Access denied')
       return
@@ -86,8 +94,15 @@ class UserNotFoundException extends GE.LogicalException {
  * @class PasswordMisMatchException
  */
 class PasswordMisMatchException extends GE.LogicalException {
-  static invoke (message) {
-    return new this(message, 401, 'E_PASSWORD_MISMATCH')
+  static invoke (message, passwordField, authScheme) {
+    if (!passwordField || !authScheme) {
+      throw new Error('Cannot invoke exception without passwordField or authScheme')
+    }
+    const error = new this(message, 401, 'E_PASSWORD_MISMATCH')
+    error.passwordField = passwordField
+    error.authScheme = authScheme
+
+    return error
   }
 
   /**
@@ -106,9 +121,9 @@ class PasswordMisMatchException extends GE.LogicalException {
    *
    * @return {void}
    */
-  async handle ({ status }, { request, response, session, auth }) {
+  async handle ({ status, passwordField, authScheme }, { request, response, session }) {
     const isJSON = request.accepts(['html', 'json']) === 'json'
-    const errorMessages = [{ field: auth.passwordField, message: 'Invalid user password' }]
+    const errorMessages = [{ field: passwordField, message: 'Invalid user password' }]
 
     /**
      * If request is json then return a json response
@@ -122,8 +137,8 @@ class PasswordMisMatchException extends GE.LogicalException {
      * If auth scheme is session, then flash the data
      * back to the form
      */
-    if (auth.scheme === 'session') {
-      session.withErrors(errorMessages).flashExcept([auth.passwordField])
+    if (authScheme === 'session') {
+      session.withErrors(errorMessages).flashExcept([passwordField])
       await session.commit()
       response.redirect('back')
       return
@@ -133,7 +148,7 @@ class PasswordMisMatchException extends GE.LogicalException {
      * If using basic auth, then prompt user with a native
      * browser dialog
      */
-    if (auth.scheme === 'basic') {
+    if (authScheme === 'basic') {
       response.header('WWW-Authenticate', 'Basic realm="example"')
       response.status(status).send('Access denied')
       return

@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
 */
 
+const CE = require('../Exceptions')
+
 /**
  * The base scheme is supposed to be extend by other
  * schemes.
@@ -177,6 +179,36 @@ class BaseScheme {
      * Fallback to `input` field
      */
     return request.input('token', null)
+  }
+
+  /**
+   * Raises UserNotFoundException exception and pass required data to it
+   *
+   * @method missingUserFor
+   *
+   * @param  {String|Number}    uidValue
+   * @param  {String}           [uid=this._config.uid]
+   * @param  {String}           [password=this._config.password]
+   *
+   * @return {UserNotFoundException}
+   */
+  missingUserFor (uidValue, uid = this._config.uid, password = this._config.password) {
+    const message = `Cannot find user with ${uid} as ${uidValue}`
+    return CE.UserNotFoundException.invoke(message, uid, password, this.scheme)
+  }
+
+  /**
+   * Raises PasswordMisMatchException exception and pass required data to it
+   *
+   * @method invalidPassword
+   *
+   * @param  {String}        message
+   * @param  {String}        [password=this._config.password]
+   *
+   * @return {PasswordMisMatchException}
+   */
+  invalidPassword (password = this._config.password) {
+    return CE.PasswordMisMatchException.invoke('Cannot verify user password', password, this.scheme)
   }
 }
 

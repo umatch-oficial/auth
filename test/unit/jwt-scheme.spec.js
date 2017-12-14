@@ -67,7 +67,8 @@ test.group('Schemes - Jwt', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'jwt'
     }
 
     const lucid = new LucidSerializer()
@@ -91,7 +92,8 @@ test.group('Schemes - Jwt', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'jwt'
     }
 
     const lucid = new LucidSerializer(ioc.use('Hash'))

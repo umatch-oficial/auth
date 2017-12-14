@@ -85,7 +85,8 @@ test.group('Schemes - Session', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'session'
     }
 
     const lucid = new LucidSerializer()
@@ -108,7 +109,8 @@ test.group('Schemes - Session', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'session'
     }
 
     const lucid = new LucidSerializer(ioc.use('Hash'))
@@ -416,7 +418,8 @@ test.group('Schemes - Session', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'session'
     }
 
     const lucid = new LucidSerializer(ioc.use('Hash'))
@@ -502,7 +505,8 @@ test.group('Schemes - Session', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'session'
     }
 
     const lucid = new LucidSerializer(ioc.use('Hash'))

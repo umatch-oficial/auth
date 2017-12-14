@@ -36,7 +36,8 @@ test.group('Schemes - BasicAuth', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'basic'
     }
 
     const lucid = new LucidSerializer()
@@ -65,7 +66,8 @@ test.group('Schemes - BasicAuth', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'basic'
     }
 
     const lucid = new LucidSerializer(ioc.use('Hash'))
@@ -154,7 +156,8 @@ test.group('Schemes - BasicAuth', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'basic'
     }
 
     const lucid = new LucidSerializer(ioc.use('Hash'))

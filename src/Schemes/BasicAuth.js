@@ -31,12 +31,12 @@ class BasicAuthScheme extends BaseScheme {
   async validate (uid, password, returnUser) {
     const user = await this._serializerInstance.findByUid(uid)
     if (!user) {
-      throw CE.UserNotFoundException.invoke(`Cannot find user with ${this._config.uid} as ${uid}`)
+      throw this.missingUserFor(uid)
     }
 
     const validated = await this._serializerInstance.validateCredentails(user, password)
     if (!validated) {
-      throw CE.PasswordMisMatchException.invoke('Cannot verify user password')
+      throw this.invalidPassword()
     }
 
     return returnUser ? user : !!user
