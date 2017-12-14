@@ -524,7 +524,7 @@ test.group('Schemes - Session', (group) => {
     await User.create({ email: 'foo@bar.com', password: 'supersecret' })
     try {
       await session.query((builder) => {
-        builder.where('active', true)
+        builder.where('is_active', true)
       }).attempt('foo@bar.com', 'supersecret')
     } catch ({ message }) {
       assert.equal(message, 'E_USER_NOT_FOUND: Cannot find user with email as foo@bar.com')
