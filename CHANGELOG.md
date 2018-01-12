@@ -1,3 +1,21 @@
+<a name="2.0.11"></a>
+## [2.0.11](https://github.com/adonisjs/adonis-auth/compare/v2.0.10...v2.0.11) (2018-01-12)
+
+
+### Bug Fixes
+
+* **auth middleware:** main instance of auth should point the valid user ([c0a0138](https://github.com/adonisjs/adonis-auth/commit/c0a0138))
+* **auth middleware:** use default scheme in case of no runtime scheme ([54a5de1](https://github.com/adonisjs/adonis-auth/commit/54a5de1))
+* **exceptions:** exceptions should use fields names of current authenticator ([9e53837](https://github.com/adonisjs/adonis-auth/commit/9e53837)), closes [#75](https://github.com/adonisjs/adonis-auth/issues/75)
+* **tokenschema:** generated tokens are bigger after encryption ([f85a4d2](https://github.com/adonisjs/adonis-auth/commit/f85a4d2)), closes [#77](https://github.com/adonisjs/adonis-auth/issues/77)
+
+
+### Features
+
+* **jwt:** add login() method to jwt scheme ([#72](https://github.com/adonisjs/adonis-auth/issues/72)) ([0466109](https://github.com/adonisjs/adonis-auth/commit/0466109))
+
+
+
 <a name="2.0.10"></a>
 ## [2.0.10](https://github.com/adonisjs/adonis-auth/compare/v2.0.9...v2.0.10) (2017-10-31)
 
