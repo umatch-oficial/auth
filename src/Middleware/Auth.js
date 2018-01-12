@@ -32,8 +32,8 @@ class Auth {
   async handle ({ auth, view }, next, schemes) {
     let lastError = null
     let authenticatedScheme = null
+    schemes = _.castArray(Array.isArray(schemes) && schemes.length ? schemes : this.scheme)
 
-    schemes = _.castArray(schemes || this.scheme)
     debug('attempting to authenticate via %j scheme(s)', schemes)
 
     /**

@@ -124,6 +124,36 @@ test.group('Middleware | Auth', (group) => {
     await supertest(this.server).get('/').set('Cookie', 'adonis-auth=1').expect(200)
   })
 
+  test('use default scheme when defined schemes are an empty array', async (assert) => {
+    await ioc.use('App/Models/User').create({ email: 'foo@bar.com', password: 'secret' })
+
+    this.server.on('request', (req, res) => {
+      const Context = ioc.use('Adonis/Src/HttpContext')
+
+      const ctx = new Context()
+      ctx.request = helpers.getRequest(req)
+      ctx.response = helpers.getResponse(req, res)
+      ctx.session = helpers.getSession(req, res)
+
+      const authMiddleware = ioc.use('Adonis/Middleware/Auth')
+
+      authMiddleware
+        .handle(ctx, function () {}, [])
+        .then((status) => {
+          res.writeHead(200)
+          assert.deepEqual(ctx.auth.current, ctx.auth.authenticatorInstance)
+          res.end()
+        })
+        .catch(({ status, message }) => {
+          res.writeHead(status || 500)
+          res.write(message)
+          res.end()
+        })
+    })
+
+    await supertest(this.server).get('/').set('Cookie', 'adonis-auth=1').expect(200)
+  })
+
   test('throw exception when all of the schemes fails to login the user', async (assert) => {
     this.server.on('request', (req, res) => {
       const Context = ioc.use('Adonis/Src/HttpContext')
