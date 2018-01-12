@@ -37,7 +37,7 @@ test.group('Serializers - Lucid', (group) => {
     lucid.setConfig(config)
     await lucid.findById(1)
 
-    assert.equal(authQuery.sql, 'select * from "users" where "id" = ? limit ?')
+    assert.equal(authQuery.sql, 'select * from `users` where `id` = ? limit ?')
     assert.deepEqual(authQuery.bindings, [1, 1])
   })
 
@@ -57,7 +57,7 @@ test.group('Serializers - Lucid', (group) => {
     lucid.setConfig(config)
     await lucid.findByUid('foo@bar.com')
 
-    assert.equal(authQuery.sql, 'select * from "users" where "email" = ? limit ?')
+    assert.equal(authQuery.sql, 'select * from `users` where `email` = ? limit ?')
     assert.deepEqual(authQuery.bindings, ['foo@bar.com', 1])
   })
 
@@ -143,7 +143,7 @@ test.group('Serializers - Lucid', (group) => {
       builder.where('is_active', true)
     }).findById(1)
 
-    assert.equal(authQuery.sql, 'select * from "users" where "is_active" = ? and "id" = ? limit ?')
+    assert.equal(authQuery.sql, 'select * from `users` where `is_active` = ? and `id` = ? limit ?')
   })
 
   test('make correct findByToken query', async (assert) => {
@@ -164,7 +164,7 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.findByToken('20', 'remember_token')
     assert.equal(
       authQuery.sql,
-      'select * from "users" where exists (select * from "tokens" where "token" = ? and "type" = ? and "is_revoked" = ? and users.id = tokens.user_id) limit ?'
+      'select * from `users` where exists (select * from `tokens` where `token` = ? and `type` = ? and `is_revoked` = ? and users.id = tokens.user_id) limit ?'
     )
     assert.deepEqual(authQuery.bindings, ['20', 'remember_token', false, 1])
   })
@@ -188,7 +188,7 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.saveToken(user, '20', 'remember_token')
     assert.equal(
       tokensQuery.sql,
-      'insert into "tokens" ("is_revoked", "token", "type", "user_id") values (?, ?, ?, ?)'
+      'insert into `tokens` (`is_revoked`, `token`, `type`, `user_id`) values (?, ?, ?, ?)'
     )
     assert.deepEqual(tokensQuery.bindings, [false, '20', 'remember_token', 1])
   })
@@ -212,7 +212,7 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.revokeTokens(user, '20')
     assert.equal(
       tokensQuery.sql,
-      'update "tokens" set "is_revoked" = ? where "token" in (?) and "user_id" = ?'
+      'update `tokens` set `is_revoked` = ? where `token` in (?) and `user_id` = ?'
     )
     assert.deepEqual(tokensQuery.bindings, [true, '20', 1])
   })
@@ -236,7 +236,7 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.revokeTokens(user)
     assert.equal(
       tokensQuery.sql,
-      'update "tokens" set "is_revoked" = ? where "user_id" = ?'
+      'update `tokens` set `is_revoked` = ? where `user_id` = ?'
     )
     assert.deepEqual(tokensQuery.bindings, [true, 1])
   })
@@ -260,7 +260,7 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.revokeTokens(user, ['20', '30'])
     assert.equal(
       tokensQuery.sql,
-      'update "tokens" set "is_revoked" = ? where "token" in (?, ?) and "user_id" = ?'
+      'update `tokens` set `is_revoked` = ? where `token` in (?, ?) and `user_id` = ?'
     )
     assert.deepEqual(tokensQuery.bindings, [true, '20', '30', 1])
   })
@@ -284,7 +284,7 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.revokeTokens(user, ['20', '30'], true)
     assert.equal(
       tokensQuery.sql,
-      'update "tokens" set "is_revoked" = ? where "token" not in (?, ?) and "user_id" = ?'
+      'update `tokens` set `is_revoked` = ? where `token` not in (?, ?) and `user_id` = ?'
     )
     assert.deepEqual(tokensQuery.bindings, [true, '20', '30', 1])
   })
@@ -308,7 +308,7 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.deleteTokens(user, '20')
     assert.equal(
       tokensQuery.sql,
-      'delete from "tokens" where "token" in (?) and "user_id" = ?'
+      'delete from `tokens` where `token` in (?) and `user_id` = ?'
     )
     assert.deepEqual(tokensQuery.bindings, ['20', 1])
   })
@@ -332,7 +332,7 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.deleteTokens(user)
     assert.equal(
       tokensQuery.sql,
-      'delete from "tokens" where "user_id" = ?'
+      'delete from `tokens` where `user_id` = ?'
     )
     assert.deepEqual(tokensQuery.bindings, [1])
   })
@@ -356,7 +356,7 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.deleteTokens(user, ['20', '30'])
     assert.equal(
       tokensQuery.sql,
-      'delete from "tokens" where "token" in (?, ?) and "user_id" = ?'
+      'delete from `tokens` where `token` in (?, ?) and `user_id` = ?'
     )
     assert.deepEqual(tokensQuery.bindings, ['20', '30', 1])
   })
@@ -380,7 +380,7 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.deleteTokens(user, ['20', '30'], true)
     assert.equal(
       tokensQuery.sql,
-      'delete from "tokens" where "token" not in (?, ?) and "user_id" = ?'
+      'delete from `tokens` where `token` not in (?, ?) and `user_id` = ?'
     )
     assert.deepEqual(tokensQuery.bindings, ['20', '30', 1])
   })
@@ -418,7 +418,7 @@ test.group('Serializers - Lucid', (group) => {
     user.tokens().RelatedModel.onQuery((query) => (tokensQuery = query))
 
     await lucid.listTokens(user, 'jwt_refresh_tokens')
-    assert.equal(tokensQuery.sql, 'select * from "tokens" where "type" = ? and "is_revoked" = ? and "user_id" = ?')
+    assert.equal(tokensQuery.sql, 'select * from `tokens` where `type` = ? and `is_revoked` = ? and `user_id` = ?')
     assert.deepEqual(tokensQuery.bindings, ['jwt_refresh_tokens', false, 1])
   })
 

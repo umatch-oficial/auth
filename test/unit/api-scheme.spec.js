@@ -34,14 +34,15 @@ test.group('Schemes - Api', (group) => {
   setup.hashHook(group)
 
   test('throw exception when unable to validate credentials', async (assert) => {
-    assert.plan(1)
+    assert.plan(2)
 
     const User = helpers.getUserModel()
 
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'api'
     }
 
     const lucid = new LucidSerializer()
@@ -52,8 +53,9 @@ test.group('Schemes - Api', (group) => {
 
     try {
       await api.validate('foo@bar.com', 'secret')
-    } catch ({ message }) {
+    } catch ({ message, uidField, password }) {
       assert.equal(message, 'E_USER_NOT_FOUND: Cannot find user with email as foo@bar.com')
+      assert.equal(uidField, 'email')
     }
   })
 
@@ -65,7 +67,8 @@ test.group('Schemes - Api', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'api'
     }
 
     const lucid = new LucidSerializer(ioc.use('Hash'))

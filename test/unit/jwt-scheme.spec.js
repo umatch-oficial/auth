@@ -67,7 +67,8 @@ test.group('Schemes - Jwt', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'jwt'
     }
 
     const lucid = new LucidSerializer()
@@ -91,7 +92,8 @@ test.group('Schemes - Jwt', (group) => {
     const config = {
       model: User,
       uid: 'email',
-      password: 'password'
+      password: 'password',
+      scheme: 'jwt'
     }
 
     const lucid = new LucidSerializer(ioc.use('Hash'))
@@ -777,6 +779,34 @@ test.group('Schemes - Jwt', (group) => {
     const { token } = await jwt.generate(user, {}, { issuer: 'adonisjs' })
     const { iss } = await verifyToken(token)
     assert.equal(iss, 'adonisjs')
+  })
+
+  test('throw exception when calling login()', async (assert) => {
+    assert.plan(1)
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+
+    try {
+      jwt.login(user)
+    } catch ({ message }) {
+      assert.equal(message, 'E_CANNOT_LOGIN: method not implemented, use generate() to retrieve jwt token')
+    }
   })
 
   test('list refresh tokens', async (assert) => {

@@ -86,8 +86,8 @@ class AuthProvider extends ServiceProvider {
     this.app.bind('Adonis/Traits/Auth', (app) => {
       const Config = app.use('Adonis/Src/Config')
       return ({ Request, traits }) => {
-        const sessionIndex = _.findIndex(traits, (triat) => triat.action === 'Session/Client')
-        const authIndex = _.findIndex(traits, (triat) => triat.action === 'Auth/Client')
+        const sessionIndex = _.findIndex(traits, (trait) => trait.action === 'Session/Client')
+        const authIndex = _.findIndex(traits, (trait) => trait.action === 'Auth/Client')
 
         /**
          * The auth/client should be registered before the `session/client` trait. So that

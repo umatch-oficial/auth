@@ -31,9 +31,8 @@ class Auth {
    */
   async handle ({ auth, view }, next, schemes) {
     let lastError = null
-    let authenticatedScheme = null
+    schemes = _.castArray(Array.isArray(schemes) && schemes.length ? schemes : this.scheme)
 
-    schemes = _.castArray(schemes || this.scheme)
     debug('attempting to authenticate via %j scheme(s)', schemes)
 
     /**
@@ -42,9 +41,17 @@ class Auth {
      */
     for (const scheme of schemes) {
       try {
-        await auth.authenticator(scheme).check()
+        const authenticator = auth.authenticator(scheme)
+        await authenticator.check()
+
         debug('authenticated using %s scheme', scheme)
-        authenticatedScheme = scheme
+
+        /**
+         * Swapping the main authentication instance with the one using which user
+         * logged in.
+         */
+        auth.authenticatorInstance = authenticator
+
         lastError = null
         break
       } catch (error) {
@@ -62,20 +69,9 @@ class Auth {
     }
 
     /**
-     * If user got logged then set the `current` property
-     * on auth, which is reference to the scheme via
-     * which user got authenticated.
+     * For compatibility with the old API
      */
-    if (authenticatedScheme) {
-      /**
-       * If logged in scheme is same as the default scheme, the reference
-       * the actual authenticator instance, otherwise create a new
-       * one for the scheme via which user got authenticated
-       */
-      auth.current = authenticatedScheme === this.scheme
-      ? auth.authenticatorInstance
-      : auth.authenticator(authenticatedScheme)
-    }
+    auth.current = auth.authenticatorInstance
 
     /**
      * Sharing user with the view

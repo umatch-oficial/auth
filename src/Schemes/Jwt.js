@@ -177,12 +177,12 @@ class JwtScheme extends BaseScheme {
   async validate (uid, password, returnUser) {
     const user = await this._serializerInstance.findByUid(uid)
     if (!user) {
-      throw CE.UserNotFoundException.invoke(`Cannot find user with ${this._config.uid} as ${uid}`)
+      throw this.missingUserFor(uid)
     }
 
     const validated = await this._serializerInstance.validateCredentails(user, password)
     if (!validated) {
-      throw CE.PasswordMisMatchException.invoke('Cannot verify user password')
+      throw this.invalidPassword()
     }
 
     return returnUser ? user : !!user
@@ -205,6 +205,17 @@ class JwtScheme extends BaseScheme {
   async attempt (uid, password, jwtPayload, jwtOptions) {
     const user = await this.validate(uid, password, true)
     return this.generate(user, jwtPayload, jwtOptions)
+  }
+
+  /**
+   * @method login
+   *
+   * @throws {RuntimeException} If jwt secret is not defined or user doesn't have a primary key value
+   */
+  login () {
+    throw GE
+      .RuntimeException
+      .invoke('method not implemented, use generate() to retrieve jwt token', 500, 'E_CANNOT_LOGIN')
   }
 
   /**
