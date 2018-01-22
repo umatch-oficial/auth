@@ -239,7 +239,7 @@ class JwtScheme extends BaseScheme {
      * jwt secret
      */
     if (!this.jwtSecret) {
-      throw GE.RuntimeException.incompleteConfig('jwt', ['secret'], 'config/auth.js')
+      throw GE.RuntimeException.incompleteConfig(['secret'], 'config/auth.js', 'jwt')
     }
 
     /**

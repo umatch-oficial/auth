@@ -96,7 +96,7 @@ class Auth {
      * missing
      */
     if (!_.every([config.serializer, config.scheme])) {
-      throw GE.RuntimeException.incompleteConfig(`auth.${name}`, ['serializer', 'scheme'], 'config/auth.js')
+      throw GE.RuntimeException.incompleteConfig(['serializer', 'scheme'], 'config/auth.js', `auth.${name}`)
     }
 
     /**

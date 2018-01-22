@@ -618,7 +618,7 @@ test.group('Schemes - Jwt', (group) => {
       await jwt.generate({})
     } catch ({ name, message }) {
       assert.equal(name, 'RuntimeException')
-      assert.equal(message, 'E_INCOMPLETE_CONFIG: Make sure to define secret on jwt inside config/auth.js')
+      assert.match(message, /^E_INCOMPLETE_CONFIG: Make sure to define secret on jwt inside config\/auth.js/)
     }
   })
 
@@ -645,7 +645,7 @@ test.group('Schemes - Jwt', (group) => {
       await jwt.generate({})
     } catch ({ name, message }) {
       assert.equal(name, 'RuntimeException')
-      assert.equal(message, 'E_RUNTIME_ERROR: Primary key value is missing for user')
+      assert.match(message, /^E_RUNTIME_ERROR: Primary key value is missing for user/)
     }
   })
 
@@ -805,7 +805,7 @@ test.group('Schemes - Jwt', (group) => {
     try {
       jwt.login(user)
     } catch ({ message }) {
-      assert.equal(message, 'E_CANNOT_LOGIN: method not implemented, use generate() to retrieve jwt token')
+      assert.match(message, /^E_CANNOT_LOGIN: method not implemented, use generate\(\) to retrieve jwt token/)
     }
   })
 

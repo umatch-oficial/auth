@@ -50,11 +50,11 @@ test.group('AuthManager', (group) => {
 
   test('throw exception when scheme is not found', (assert) => {
     const fn = () => AuthManager.getScheme('foo')
-    assert.throw(fn, 'E_INCOMPLETE_CONFIG: Make sure to define foo scheme on auth inside config/auth.js')
+    assert.throw(fn, /E_INCOMPLETE_CONFIG: Make sure to define foo scheme on auth inside config\/auth\.js/)
   })
 
   test('throw exception when serializer is not found', (assert) => {
     const fn = () => AuthManager.getSerializer('foo')
-    assert.throw(fn, 'E_INCOMPLETE_CONFIG: Make sure to define foo serializer on auth inside config/auth.js')
+    assert.throw(fn, /E_INCOMPLETE_CONFIG: Make sure to define foo serializer on auth inside config\/auth\.js/)
   })
 })

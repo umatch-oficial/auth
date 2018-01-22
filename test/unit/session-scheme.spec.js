@@ -376,7 +376,7 @@ test.group('Schemes - Session', (group) => {
     try {
       await session.attempt('foo@bar.com', 'supersecret')
     } catch ({ message }) {
-      assert.equal(message, 'E_CANNOT_LOGIN: Cannot login multiple users at once, since a user is already logged in')
+      assert.match(message, /^E_CANNOT_LOGIN: Cannot login multiple users at once, since a user is already logged in/)
     }
   })
 
@@ -407,7 +407,7 @@ test.group('Schemes - Session', (group) => {
     try {
       await session.login(user)
     } catch ({ message }) {
-      assert.equal(message, 'E_CANNOT_LOGIN: Cannot login user, since user id is not defined')
+      assert.match(message, /^E_CANNOT_LOGIN: Cannot login user, since user id is not defined/)
     }
   })
 
