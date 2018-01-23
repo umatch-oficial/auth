@@ -13,15 +13,30 @@ const Resetable = require('resetable')
 const jwt = require('jsonwebtoken')
 const uuid = require('uuid')
 const _ = require('lodash')
-const BaseScheme = require('./Base')
+const util = require('util')
+// const debug = require('debug')('adonis:auth')
 const GE = require('@adonisjs/generic-exceptions')
+
 const CE = require('../Exceptions')
+const BaseScheme = require('./Base')
+
+const signToken = util.promisify(jwt.sign)
+const verifyToken = util.promisify(jwt.verify)
 
 /**
- * Jwt scheme for adonis auth provider
+ * This scheme allows to make use of JWT tokens to authenticate the user.
+ *
+ * The user sends a token inside the `Authorization` header as following.
+ *
+ * ```
+ * Authorization=Bearer JWT-TOKEN
+ * ```
+ *
+ * ### Note
+ * Token will be encrypted using `EncryptionProvider` before sending it to the user.
  *
  * @class JwtScheme
- * @constructor
+ * @extends BaseScheme
  */
 class JwtScheme extends BaseScheme {
   constructor (Encryption) {
@@ -34,9 +49,10 @@ class JwtScheme extends BaseScheme {
   /**
    * IoC container injections
    *
-   * @method inject
+   * @attribute inject
+   * @ignore
    *
-   * @return {Array}
+   * @type {Array}
    */
   static get inject () {
     return ['Adonis/Src/Encryption']
@@ -80,16 +96,8 @@ class JwtScheme extends BaseScheme {
    * @throws {Error} If unable to sign payload and generate token
    */
   _signToken (payload, options) {
-    return new Promise((resolve, reject) => {
-      options = _.size(options) && _.isPlainObject(options) ? options : _.omit(this.jwtOptions, 'secret')
-      jwt.sign(payload, this.jwtSecret, options, (error, token) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve(token)
-        }
-      })
-    })
+    options = _.size(options) && _.isPlainObject(options) ? options : _.omit(this.jwtOptions, 'secret')
+    return signToken(payload, this.jwtSecret, options)
   }
 
   /**
@@ -105,16 +113,8 @@ class JwtScheme extends BaseScheme {
    * @private
    */
   _verifyToken (token) {
-    return new Promise((resolve, reject) => {
-      const options = _.omit(this.jwtOptions, 'secret')
-      jwt.verify(token, this.jwtSecret, options, (error, payload) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve(payload)
-        }
-      })
-    })
+    const options = _.omit(this.jwtOptions, 'secret')
+    return verifyToken(token, this.jwtSecret, options)
   }
 
   /**
@@ -161,46 +161,39 @@ class JwtScheme extends BaseScheme {
   }
 
   /**
-   * Validate user credentials
-   *
-   * @method validate
-   *
-   * @param  {String} uid
-   * @param  {String} password
-   * @param  {Boolean} returnUser
-   *
-   * @return {Object}
-   *
-   * @throws {UserNotFoundException} If unable to find user with uid
-   * @throws {PasswordMisMatchException} If password mismatches
-   */
-  async validate (uid, password, returnUser) {
-    const user = await this._serializerInstance.findByUid(uid)
-    if (!user) {
-      throw this.missingUserFor(uid)
-    }
-
-    const validated = await this._serializerInstance.validateCredentails(user, password)
-    if (!validated) {
-      throw this.invalidPassword()
-    }
-
-    return returnUser ? user : !!user
-  }
-
-  /**
    * Attempt to valid the user credentials and then
    * generates a new token for it.
    *
    * @method attempt
+   * @async
    *
    * @param  {String} uid
    * @param  {String} password
-   * @param  {Object|Boolean} [jwtPayload] Pass true when want to attach user object in the payload
-   *                                       or set a custom object
-   * @param  {Object} [jwtOptions = null]
+   * @param  {Object|Boolean} [jwtPayload]  Pass true when want to attach user object in the payload
+   *                                        or set a custom object.
+   * @param  {Object}         [jwtOptions]  Passed directly to https://www.npmjs.com/package/jsonwebtoken
    *
-   * @return {String}
+   * @return {Object}
+   * - `{ type: 'bearer', token: '...' }`
+   *
+   * @example
+   * ```js
+   * try {
+   *   const token = auth.attempt(username, password)
+   * } catch (error) {
+   *    // Invalid credentials
+   * }
+   * ```
+   *
+   * Attach user to the JWT payload
+   * ```
+   * auth.attempt(username, password, true)
+   * ```
+   *
+   * Attach custom data object to the JWT payload
+   * ```
+   * auth.attempt(username, password, { ipAddress: '...' })
+   * ```
    */
   async attempt (uid, password, jwtPayload, jwtOptions) {
     const user = await this.validate(uid, password, true)
@@ -208,30 +201,39 @@ class JwtScheme extends BaseScheme {
   }
 
   /**
-   * @method login
-   *
-   * @throws {RuntimeException} If jwt secret is not defined or user doesn't have a primary key value
-   */
-  login () {
-    throw GE
-      .RuntimeException
-      .invoke('method not implemented, use generate() to retrieve jwt token', 500, 'E_CANNOT_LOGIN')
-  }
-
-  /**
-   * Generates a jwt token for a user
+   * Generates a jwt token for a given user. This method doesn't check the existence
+   * of the user in the database.
    *
    * @method generate
    * @async
    *
    * @param  {Object} user
-   * @param  {Object|Boolean} [jwtPayload] Pass true when want to attach user object in the payload
-   *                                       or set a custom object
-   * @param  {Object} [jwtOptions = null]
+   * @param  {Object|Boolean} [jwtPayload]  Pass true when want to attach user object in the payload
+   *                                        or set a custom object.
+   * @param  {Object}         [jwtOptions]  Passed directly to https://www.npmjs.com/package/jsonwebtoken
    *
    * @return {Object}
    *
    * @throws {RuntimeException} If jwt secret is not defined or user doesn't have a primary key value
+   *
+   * @example
+   * ```js
+   * try {
+   *   await auth.generate(user)
+   * } catch (error) {
+   *   // Unexpected error
+   * }
+   * ```
+   *
+   * Attach user to the JWT payload
+   * ```
+   * auth.auth.generate(user, true)
+   * ```
+   *
+   * Attach custom data object to the JWT payload
+   * ```
+   * auth.generate(user, { ipAddress: '...' })
+   * ```
    */
   async generate (user, jwtPayload, jwtOptions) {
     /**
@@ -259,16 +261,16 @@ class JwtScheme extends BaseScheme {
     const payload = { uid: userId }
 
     if (jwtPayload === true) {
-    /**
-     * Attach user as data object only when
-     * jwtPayload is true
-     */
+      /**
+       * Attach user as data object only when
+       * jwtPayload is true
+       */
       const data = typeof (user.toJSON) === 'function' ? user.toJSON() : user
 
       /**
        * Remove password from jwt data
        */
-      payload.data = _.omit(data, 'password')
+      payload.data = _.omit(data, this._config.password)
     } else if (_.isPlainObject(jwtPayload)) {
       /**
        * Attach payload as it is when it's an object
@@ -307,12 +309,7 @@ class JwtScheme extends BaseScheme {
    * @return {Object}
    */
   async generateForRefreshToken (refreshToken, jwtPayload, jwtOptions) {
-    /**
-     * Decrypting the token before finding it in the db
-     */
-    const plainRefreshToken = refreshToken ? this.Encryption.decrypt(refreshToken) : refreshToken
-
-    const user = await this._serializerInstance.findByToken(plainRefreshToken, 'jwt_refresh_token')
+    const user = await this._serializerInstance.findByToken(this.Encryption.decrypt(refreshToken), 'jwt_refresh_token')
     if (!user) {
       throw CE.InvalidRefreshToken.invoke(refreshToken)
     }
@@ -320,7 +317,7 @@ class JwtScheme extends BaseScheme {
     const token = await this.generate(user, jwtPayload)
 
     /**
-     * If user generated a new refresh token, in that we
+     * If user generated a new refresh token, in that case we
      * should revoke the old one, otherwise we should
      * set the refreshToken as the existing refresh
      * token in the return payload
@@ -399,34 +396,14 @@ class JwtScheme extends BaseScheme {
   async listTokens (forUser) {
     forUser = forUser || this.user
     if (!forUser) {
-      return this._serializerInstance.fakeResult()
+      return []
     }
 
     const tokens = await this._serializerInstance.listTokens(forUser, 'jwt_refresh_token')
-
-    /**
-     * We need to pull the `rows` when serializer is lucid, otherwise
-     * we use the array as it is.
-     *
-     * @type {Array}
-     */
-    const tokensArray = _.isArray(tokens) ? tokens : tokens.rows
-
-    /**
-     * If tokens array is empty then return the fake response
-     */
-    if (!_.isArray(tokensArray) || !_.size(tokensArray)) {
-      return this._serializerInstance.fakeResult()
-    }
-
-    /**
-     * Encrypt the tokens
-     */
-    tokensArray.forEach((token) => {
+    return tokens.toJSON().map((token) => {
       token.token = this.Encryption.encrypt(token.token)
+      return token
     })
-
-    return tokens
   }
 
   /**

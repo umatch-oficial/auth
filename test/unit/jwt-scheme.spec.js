@@ -788,6 +788,7 @@ test.group('Schemes - Jwt', (group) => {
     const config = {
       model: User,
       uid: 'email',
+      scheme: 'jwt',
       password: 'password',
       options: {
         secret: SECRET
@@ -805,7 +806,7 @@ test.group('Schemes - Jwt', (group) => {
     try {
       jwt.login(user)
     } catch ({ message }) {
-      assert.match(message, /^E_CANNOT_LOGIN: method not implemented, use generate\(\) to retrieve jwt token/)
+      assert.match(message, /^E_INVALID_METHOD: login method is not implemented by jwt scheme/)
     }
   })
 
@@ -831,11 +832,11 @@ test.group('Schemes - Jwt', (group) => {
 
     const payload = await jwt.withRefreshToken().generate(user)
     const tokensList = await jwt.listTokens(user)
-    assert.equal(tokensList.size(), 1)
-    assert.equal(tokensList.first().token, payload.refreshToken)
+    assert.equal(tokensList.length, 1)
+    assert.equal(tokensList[0].token, payload.refreshToken)
   })
 
-  test('return fake response when no tokens exists', async (assert) => {
+  test('return empty array when tokens doesn\'t exists', async (assert) => {
     const User = helpers.getUserModel()
 
     const config = {
@@ -856,10 +857,10 @@ test.group('Schemes - Jwt', (group) => {
     jwt.setOptions(config, lucid)
 
     const tokensList = await jwt.listTokens(user)
-    assert.equal(tokensList.size(), 0)
+    assert.lengthOf(tokensList, 0)
   })
 
-  test('return fake response when user has not been defined', async (assert) => {
+  test('return empty array when user has not been defined', async (assert) => {
     const User = helpers.getUserModel()
 
     const config = {
@@ -881,7 +882,7 @@ test.group('Schemes - Jwt', (group) => {
     await jwt.withRefreshToken().generate(user)
 
     const tokensList = await jwt.listTokens()
-    assert.equal(tokensList.size(), 0)
+    assert.lengthOf(tokensList, 0)
   })
 
   test('return encrypted tokens via database serializer', async (assert) => {

@@ -13,35 +13,11 @@ const auth = require('basic-auth')
 const BaseScheme = require('./Base')
 const CE = require('../Exceptions')
 
+/**
+ * @class BasicAuthScheme
+ * @extends {BaseScheme}
+ */
 class BasicAuthScheme extends BaseScheme {
-  /**
-   * Validate user credentials
-   *
-   * @method validate
-   *
-   * @param  {String} uid
-   * @param  {String} password
-   * @param  {Boolean} returnUser
-   *
-   * @return {Object}
-   *
-   * @throws {UserNotFoundException} If unable to find user with uid
-   * @throws {PasswordMisMatchException} If password mismatches
-   */
-  async validate (uid, password, returnUser) {
-    const user = await this._serializerInstance.findByUid(uid)
-    if (!user) {
-      throw this.missingUserFor(uid)
-    }
-
-    const validated = await this._serializerInstance.validateCredentails(user, password)
-    if (!validated) {
-      throw this.invalidPassword()
-    }
-
-    return returnUser ? user : !!user
-  }
-
   /**
    * Check whether a user is logged in or
    * not.

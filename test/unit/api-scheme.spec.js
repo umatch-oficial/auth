@@ -307,11 +307,11 @@ test.group('Schemes - Api', (group) => {
     api.setOptions(config, lucid)
     const payload = await api.generate(user)
     const tokensList = await api.listTokens(user)
-    assert.equal(tokensList.size(), 1)
-    assert.equal(tokensList.first().token, payload.token)
+    assert.lengthOf(tokensList, 1)
+    assert.equal(tokensList[0].token, payload.token)
   })
 
-  test('return fake response when no tokens exists', async (assert) => {
+  test('return empty array when no tokens exists', async (assert) => {
     const User = helpers.getUserModel()
 
     const config = {
@@ -327,10 +327,10 @@ test.group('Schemes - Api', (group) => {
     const api = new Api(Encryption)
     api.setOptions(config, lucid)
     const tokensList = await api.listTokens(user)
-    assert.equal(tokensList.size(), 0)
+    assert.lengthOf(tokensList, 0)
   })
 
-  test('return fake response when user is not defined', async (assert) => {
+  test('return empty array when user is not defined', async (assert) => {
     const User = helpers.getUserModel()
 
     const config = {
@@ -347,7 +347,7 @@ test.group('Schemes - Api', (group) => {
     api.setOptions(config, lucid)
     await api.generate(user)
     const tokensList = await api.listTokens()
-    assert.equal(tokensList.size(), 0)
+    assert.lengthOf(tokensList, 0)
   })
 
   test('return a list of tokens via database serializer', async (assert) => {

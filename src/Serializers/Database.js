@@ -306,19 +306,14 @@ class DatabaseSerializer {
     const foreignKeyValue = user[this.primaryKey]
 
     const query = this._getQuery(this.tokensTable)
-    query.where({ type, is_revoked: false }).where(this.foreignKey, foreignKeyValue)
-    return query
-  }
+    const rows = await query.where({ type, is_revoked: false }).where(this.foreignKey, foreignKeyValue)
 
-  /**
-   * Returns an empty array as the fake results
-   *
-   * @method fakeResult
-   *
-   * @return {Array}
-   */
-  fakeResult () {
-    return []
+    return {
+      rows: rows,
+      toJSON () {
+        return this.rows || []
+      }
+    }
   }
 }
 

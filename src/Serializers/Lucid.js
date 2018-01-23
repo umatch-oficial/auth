@@ -246,18 +246,6 @@ class LucidSerializer {
   async listTokens (user, type) {
     return user.tokens().where({ type, is_revoked: false }).fetch()
   }
-
-  /**
-   * A fake instance of serializer with empty set
-   * of array
-   *
-   * @method fakeResult
-   *
-   * @return {Object}
-   */
-  fakeResult () {
-    return new this._Model.Serializer([])
-  }
 }
 
 module.exports = LucidSerializer

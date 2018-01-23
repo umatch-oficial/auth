@@ -415,19 +415,4 @@ test.group('Serializers - Database', (group) => {
     )
     assert.deepEqual(tokensQuery.bindings, ['20', '30', 1])
   })
-
-  test('make fake response', async (assert) => {
-    const config = {
-      uid: 'email',
-      password: 'password',
-      table: 'users',
-      primaryKey: 'id',
-      tokensTable: 'tokens',
-      foreignKey: 'user_id'
-    }
-
-    const db = new DatabaseSerializer()
-    db.setConfig(config)
-    assert.deepEqual(db.fakeResult(), [])
-  })
 })

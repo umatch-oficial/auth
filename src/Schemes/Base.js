@@ -9,7 +9,9 @@
  * file that was distributed with this source code.
 */
 
+const GE = require('@adonisjs/generic-exceptions')
 const CE = require('../Exceptions')
+const unimplementedMethods = ['login', 'logout', 'loginViaId']
 
 /**
  * The base scheme is supposed to be extend by other
@@ -27,96 +29,88 @@ class BaseScheme {
   }
 
   /**
-   * The uid field name
+   * The uid field name. Reads the `uid` from the config object
    *
-   * @method uidField
-   *
-   * @return {String}
+   * @attribute uidField
+   * @readOnly
+   * @type {String}
    */
   get uidField () {
     return this._config.uid
   }
 
   /**
-   * The password field name
+   * The password field name. Reads the `password` from the config object
    *
-   * @method passwordField
-   *
-   * @return {String}
+   * @attribute passwordField
+   * @readOnly
+   * @type {String}
    */
   get passwordField () {
     return this._config.password
   }
 
   /**
-   * The scheme in use
+   * The scheme field name. Reads the `scheme` from the config object
    *
-   * @method scheme
-   *
-   * @return {String}
+   * @attribute scheme
+   * @readOnly
+   * @type {String}
    */
   get scheme () {
     return this._config.scheme
   }
 
   /**
-   * The primary key value for a given
-   * user
+   * The primary key to be used to fetch the unique identifier value
+   * for the current user.
    *
    * @attribute primaryKey
-   *
-   * @return {String}
+   * @readOnly
+   * @type {String}
    */
   get primaryKey () {
     return this._serializerInstance.primaryKey
   }
 
   /**
-   * Returns primary key value for the logged
-   * in user.
+   * The unique identifier value for the current user. The value relies on
+   * primaryKey.
    *
    * @attribute primaryKeyValue
-   *
-   * @return {String|Number}
+   * @readOnly
+   * @type {String|Number}
    */
   get primaryKeyValue () {
     return this._instanceUser[this.primaryKey]
   }
 
   /**
-   * The authenticated user
+   * Reference to the current user instance. The output value relies
+   * on the serializer in use.
    *
    * @attribute user
-   *
-   * @return {Object}
+   * @return {Mixed}
    */
   get user () {
     return this._instanceUser
   }
 
-  /**
-   * Update reference to user object
-   *
-   * @attribute user
-   *
-   * @param  {Object} user
-   *
-   * @return {void}
-   */
   set user (user) {
     this._instanceUser = user
   }
 
   /**
-   * Set options on the scheme instance. This method is
-   * called automatically by the auth class.
+   * Set the config and the serializer instance on scheme. This method
+   * is invoked by the `Auth` facade to feed the current config and
+   * serializer in use.
    *
    * @method setOptions
    *
    * @param  {Object}   config
    * @param  {Object}   serializerInstance
    *
-   * @return {void}
+   * @chainable
    */
   setOptions (config, serializerInstance) {
     this._config = config
@@ -126,8 +120,8 @@ class BaseScheme {
 
   /**
    * Set http context on the scheme instance. This
-   * method is called automatically by auth
-   * class.
+   * method is called automatically by `Auth`
+   * facade.
    *
    * @method setCtx
    *
@@ -156,8 +150,50 @@ class BaseScheme {
   }
 
   /**
+   * Validates the user credentials.
+   *
+   * **Note:** This method will never login the user.
+   *
+   * @method validate
+   *
+   * @param  {String}  uid
+   * @param  {String}  password
+   * @param  {Boolean} [returnUser = false]
+   *
+   * @return {Object|Boolean} - User object is returned when `returnUser` is set to true.
+   *
+   * @throws {UserNotFoundException}     If unable to find user with uid
+   * @throws {PasswordMisMatchException} If password mismatches
+   *
+   * @example
+   * ```js
+   * try {
+   *   await auth.validate(username, password)
+   * } catch (error) {
+   *   // Invalid credentials
+   * }
+   * ```
+   */
+  async validate (uid, password, returnUser = false) {
+    const user = await this._serializerInstance.findByUid(uid)
+    if (!user) {
+      throw this.missingUserFor(uid)
+    }
+
+    const validated = await this._serializerInstance.validateCredentails(user, password)
+    if (!validated) {
+      throw this.invalidPassword()
+    }
+
+    return returnUser ? user : !!user
+  }
+
+  /**
    * Returns the value of authorization header
-   * or request payload token key value
+   * or request payload token key value.
+   *
+   * This method will read the value of `Authorization` header, falling
+   * back to `token` input field.
    *
    * @method getAuthHeader
    *
@@ -211,5 +247,11 @@ class BaseScheme {
     return CE.PasswordMisMatchException.invoke('Cannot verify user password', password, this.scheme)
   }
 }
+
+unimplementedMethods.forEach((method) => {
+  BaseScheme.prototype[method] = function () {
+    throw GE.RuntimeException.invoke(`${method} method is not implemented by ${this.scheme} scheme`, 500, 'E_INVALID_METHOD')
+  }
+})
 
 module.exports = BaseScheme
