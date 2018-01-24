@@ -509,7 +509,7 @@ test.group('Schemes - Jwt', (group) => {
     assert.equal(firstToken.is_revoked, 0)
   })
 
-  test('on generating token with refreshToken revoke the old one', async (assert) => {
+  test('on generating token with refreshToken remove the old one', async (assert) => {
     const User = helpers.getUserModel()
 
     const config = {
@@ -537,7 +537,7 @@ test.group('Schemes - Jwt', (group) => {
     assert.equal(payload.uid, 1)
     assert.notEqual(refreshToken, '20')
     const firstToken = await user.tokens().where('token', '20').first()
-    assert.equal(firstToken.is_revoked, 1)
+    assert.isNull(firstToken)
   })
 
   test('generate token using credentials', async (assert) => {
