@@ -19,6 +19,7 @@ const unimplementedMethods = ['login', 'logout', 'loginViaId']
  *
  * @class BaseScheme
  * @constructor
+ * @module Lucid
  */
 class BaseScheme {
   constructor () {
@@ -143,6 +144,13 @@ class BaseScheme {
    * @param  {Function} callback
    *
    * @chainable
+   *
+   * @example
+   * ```js
+   * auth.query((builder) => {
+   *   builder.status('active')
+   * }).attempt()
+   * ```
    */
   query (callback) {
     this._serializerInstance.query(callback)
@@ -152,9 +160,10 @@ class BaseScheme {
   /**
    * Validates the user credentials.
    *
-   * **Note:** This method will never login the user.
+   * This method will never login the user.
    *
    * @method validate
+   * @async
    *
    * @param  {String}  uid
    * @param  {String}  password
@@ -186,6 +195,25 @@ class BaseScheme {
     }
 
     return returnUser ? user : !!user
+  }
+
+  /**
+   * Returns the user logged in for the current request. This method will
+   * call the `check` method internally.
+   *
+   * @method getUser
+   * @async
+   *
+   * @return {Object}
+   *
+   * @example
+   * ```js
+ *   await auth.getUser()
+   * ```
+   */
+  async getUser () {
+    await this.check()
+    return this.user
   }
 
   /**

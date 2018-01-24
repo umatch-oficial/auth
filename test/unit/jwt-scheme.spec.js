@@ -831,7 +831,7 @@ test.group('Schemes - Jwt', (group) => {
     jwt.setOptions(config, lucid)
 
     const payload = await jwt.withRefreshToken().generate(user)
-    const tokensList = await jwt.listTokens(user)
+    const tokensList = await jwt.listTokensForUser(user)
     assert.equal(tokensList.length, 1)
     assert.equal(tokensList[0].token, payload.refreshToken)
   })
@@ -909,7 +909,7 @@ test.group('Schemes - Jwt', (group) => {
     jwt.setOptions(config, database)
     const payload = await jwt.withRefreshToken().generate(user)
 
-    const tokensList = await jwt.listTokens({ id: 1 }, 'jwt_refresh_token')
+    const tokensList = await jwt.listTokensForUser({ id: 1 }, 'jwt_refresh_token')
     assert.deepEqual(tokensList[0].token, payload.refreshToken)
   })
 
@@ -940,5 +940,107 @@ test.group('Schemes - Jwt', (group) => {
     }
 
     await jwt.clientLogin(headerFn, null, { id: 1 })
+  })
+
+  test('revoke tokens for a given user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    await user.tokens().create({ type: 'jwt_refresh_token', token: '22', is_revoked: false })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+    await jwt.revokeTokensForUser(user, ['22'])
+
+    const token = await user.tokens().first()
+    assert.equal(token.is_revoked, true)
+    assert.equal(token.token, '22')
+  })
+
+  test('revoke all tokens for the current user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+
+    const payload = await jwt.withRefreshToken().generate(user)
+
+    jwt.setCtx({
+      request: {
+        header (key) {
+          return `Bearer ${payload.token}`
+        }
+      }
+    })
+
+    await jwt.check()
+    await jwt.revokeTokens()
+
+    const token = await user.tokens().first()
+    assert.equal(token.is_revoked, true)
+    assert.equal(`e${token.token}`, payload.refreshToken)
+  })
+
+  test('delete tokens instead of revoking it', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+
+    const payload = await jwt.generate(user)
+
+    jwt.setCtx({
+      request: {
+        header (key) {
+          return `Bearer ${payload.token}`
+        }
+      }
+    })
+
+    await jwt.check()
+    await jwt.revokeTokens(null, true)
+
+    const token = await user.tokens().first()
+    assert.isNull(token)
   })
 })

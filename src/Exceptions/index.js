@@ -32,18 +32,16 @@ class UserNotFoundException extends GE.LogicalException {
   }
 
   /**
-   * Handle user not found exception, this method does a
+   * Handle user not found exception, this method does all
    * lot of work to find the correct way to handle the
    * exception. Try reading the code to understand
    * it.
    *
    * @method handle
    *
-   * @param  {Number} options.status
-   * @param  {Object} options.request
-   * @param  {Object} options.response
-   * @param  {Object} options.session
-   * @param  {Object} options.auth
+   * @param  {Object} error
+   * - `{ status: 500, uidField: 'id', passwordField: 'password', authScheme: 'session' }`
+   * @param {Object} ctx
    *
    * @return {void}
    */
@@ -113,11 +111,9 @@ class PasswordMisMatchException extends GE.LogicalException {
    *
    * @method handle
    *
-   * @param  {Number} options.status
-   * @param  {Object} options.request
-   * @param  {Object} options.response
-   * @param  {Object} options.session
-   * @param  {Object} options.auth
+   * @param  {Object} error
+   * - `{ status: 500, passwordField: 'password', authScheme: 'session' }`
+   * @param {Object} ctx
    *
    * @return {void}
    */
@@ -184,9 +180,9 @@ class InvalidBasicAuthException extends GE.LogicalException {
    *
    * @method handle
    *
-   * @param  {Number} options.status
-   * @param  {Object} options.response
-   * @param  {Object} options.request
+   * @param  {Object} error
+   * - `{ status: 500, passwordField: 'password', authScheme: 'session' }`
+   * @param {Object} ctx
    *
    * @return {void}
    */
@@ -208,7 +204,6 @@ class InvalidBasicAuthException extends GE.LogicalException {
  * This exception is raised when user session is invalid
  *
  * @class InvalidSessionException
- * @constructor
  */
 class InvalidSessionException extends GE.LogicalException {
   static invoke () {
@@ -254,7 +249,7 @@ class ExpiredJwtToken extends GE.LogicalException {
 /**
  * This exception is raised when API token is invalid
  *
- * @constructor InvalidApiToken
+ * @class InvalidApiToken
  */
 class InvalidApiToken extends GE.LogicalException {
   static invoke () {

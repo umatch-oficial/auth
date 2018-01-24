@@ -10,10 +10,10 @@
 */
 
 const uuid = require('uuid')
-const BaseScheme = require('./Base')
 const GE = require('@adonisjs/generic-exceptions')
+
+const BaseTokenScheme = require('./BaseToken')
 const CE = require('../Exceptions')
-const debug = require('debug')('adonis:auth')
 
 /**
  * This scheme allows to make use of Github style personal API tokens
@@ -32,30 +32,13 @@ const debug = require('debug')('adonis:auth')
  * @class ApiScheme
  * @extends BaseScheme
  */
-class ApiScheme extends BaseScheme {
-  constructor (Encryption) {
-    super()
-    this.Encryption = Encryption
-  }
-
-  /* istanbul ignore next */
-  /**
-   * IoC container injections
-   *
-   * @attribute inject
-   * @ignore
-   *
-   * @type {Array}
-   */
-  static get inject () {
-    return ['Adonis/Src/Encryption']
-  }
-
+class ApiScheme extends BaseTokenScheme {
   /**
    * Attempt to valid the user credentials and then
    * generates a new token for it.
    *
-   * The token is also saved inside the database.
+   * This method invokes the `generate` method by passing
+   * the user found with given credentials.
    *
    * @method attempt
    * @async
@@ -64,7 +47,6 @@ class ApiScheme extends BaseScheme {
    * @param  {String} password
    *
    * @return {Object}
-   *         {String} type - Bearer
    *
    * @example
    * ```js
@@ -90,12 +72,13 @@ class ApiScheme extends BaseScheme {
    * @param  {Object} user
    *
    * @return {Object}
+   * - `{ type: 'bearer', token: 'xxxxxxxx' }`
    *
    * @example
    * ```js
    * try {
    *   const user = await User.find(1)
-   *   const token = auth.generate(user)
+   *   const token = await auth.generate(user)
    * } catch (error) {
    *   // Unexpected error
    * }
@@ -118,7 +101,6 @@ class ApiScheme extends BaseScheme {
      * Encrypting the token before giving it to the
      * user.
      */
-    debug('encrypting api token before')
     const token = this.Encryption.encrypt(plainToken)
     return { type: 'bearer', token }
   }
@@ -126,6 +108,9 @@ class ApiScheme extends BaseScheme {
   /**
    * Validates the API token by reading it from the request
    * header or using `token` input field as the fallback.
+   *
+   * Consider user as successfully authenticated, if this
+   * method doesn't throws an exception.
    *
    * @method check
    * @async
@@ -162,8 +147,6 @@ class ApiScheme extends BaseScheme {
      * the db.
      */
     const plainToken = this.Encryption.decrypt(token)
-    debug('decrypted api token')
-
     this.user = await this._serializerInstance.findByToken(plainToken, 'api_token')
 
     /**
@@ -177,48 +160,21 @@ class ApiScheme extends BaseScheme {
   }
 
   /**
-   * Makes sure the user is loggedin and then returns
-   * the logged in user instance.
+   * List all API tokens for a given user
    *
-   * @method getUser
+   * @method listTokensForUser
    * @async
    *
-   * @return {Object}
-   *
-   * @throws {InvalidApiToken} If token is missing or is invalid
-   *
-   * @example
-   * ```js
-   * try {
-   *   const user = await auth.getUser()
-   * } catch (error) {
-   *   // Invalid token
-   * }
-   * ```
-   */
-  async getUser () {
-    await this.check()
-    return this.user
-  }
-
-  /**
-   * List tokens for a given user for the
-   * currently logged in user.
-   *
-   * @method listTokens
-   * @async
-   *
-   * @param  {Object} forUser
+   * @param {Object} user
    *
    * @return {Array}
    */
-  async listTokens (forUser) {
-    forUser = forUser || this.user
-    if (!forUser) {
+  async listTokensForUser (user) {
+    if (!user) {
       return []
     }
 
-    const tokens = await this._serializerInstance.listTokens(forUser, 'api_token')
+    const tokens = await this._serializerInstance.listTokens(user, 'api_token')
     return tokens.toJSON().map((token) => {
       token.token = this.Encryption.encrypt(token.token)
       return token
@@ -232,6 +188,7 @@ class ApiScheme extends BaseScheme {
    * Adonis testing engine uses this method.
    *
    * @method clientLogin
+   * @async
    *
    * @param  {Function}    headerFn     - Method to set the header
    * @param  {Function}    sessionFn    - Method to set the session
@@ -239,7 +196,7 @@ class ApiScheme extends BaseScheme {
    *
    * @return {void}
    */
-  clientLogin (headerFn, sessionFn, token) {
+  async clientLogin (headerFn, sessionFn, token) {
     headerFn('authorization', `Bearer ${token}`)
   }
 }

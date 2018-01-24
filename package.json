@@ -56,9 +56,6 @@
     ]
   },
   "standard": {
-    "ignore": [
-      "templates"
-    ],
     "globals": [
       "use"
     ]

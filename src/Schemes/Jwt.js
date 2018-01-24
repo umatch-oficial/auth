@@ -14,11 +14,10 @@ const jwt = require('jsonwebtoken')
 const uuid = require('uuid')
 const _ = require('lodash')
 const util = require('util')
-// const debug = require('debug')('adonis:auth')
 const GE = require('@adonisjs/generic-exceptions')
 
 const CE = require('../Exceptions')
-const BaseScheme = require('./Base')
+const BaseTokenScheme = require('./BaseToken')
 
 const signToken = util.promisify(jwt.sign)
 const verifyToken = util.promisify(jwt.verify)
@@ -38,24 +37,10 @@ const verifyToken = util.promisify(jwt.verify)
  * @class JwtScheme
  * @extends BaseScheme
  */
-class JwtScheme extends BaseScheme {
+class JwtScheme extends BaseTokenScheme {
   constructor (Encryption) {
-    super()
-    this.Encryption = Encryption
+    super(Encryption)
     this._generateRefreshToken = new Resetable(false)
-  }
-
-  /* istanbul ignore next */
-  /**
-   * IoC container injections
-   *
-   * @attribute inject
-   * @ignore
-   *
-   * @type {Array}
-   */
-  static get inject () {
-    return ['Adonis/Src/Encryption']
   }
 
   /**
@@ -63,8 +48,8 @@ class JwtScheme extends BaseScheme {
    * passed to `jsonwebtoken` library
    *
    * @attribute jwtOptions
-   *
-   * @return {Object|Null}
+   * @type {Object|Null}
+   * @readOnly
    */
   get jwtOptions () {
     return _.get(this._config, 'options', null)
@@ -74,26 +59,24 @@ class JwtScheme extends BaseScheme {
    * The jwt secret
    *
    * @attribute jwtSecret
-   *
-   * @return {String|Null}
+   * @type {String|Null}
+   * @readOnly
    */
   get jwtSecret () {
     return _.get(this.jwtOptions, 'secret', null)
   }
 
   /**
-   * Signs payload with jwtSecret and options
+   * Signs payload with jwtSecret using {{#crossLink "JwtScheme/jwtOptions:attribute"}}{{/crossLink}}
    *
    * @method _signToken
    * @async
    *
    * @param  {Object}   payload
    *
-   * @return {String}
+   * @returns  {String}
    *
    * @private
-   *
-   * @throws {Error} If unable to sign payload and generate token
    */
   _signToken (payload, options) {
     options = _.size(options) && _.isPlainObject(options) ? options : _.omit(this.jwtOptions, 'secret')
@@ -136,11 +119,23 @@ class JwtScheme extends BaseScheme {
 
   /**
    * Instruct class to generate a refresh token
-   * when generate jwt token
+   * when generating the jwt token.
    *
    * @method withRefreshToken
    *
    * @chainable
+   *
+   * @example
+   * ```js
+   * await auth
+   *   .withRefreshToken()
+   *   .generate(user)
+   *
+   * // or
+   * await auth
+   *   .withRefreshToken()
+   *   .attempt(username, password)
+   * ```
    */
   withRefreshToken () {
     this._generateRefreshToken.set(true)
@@ -148,21 +143,29 @@ class JwtScheme extends BaseScheme {
   }
 
   /**
-   * Same as withRefreshToken but a better alias
-   * to map with `generateForRefreshToken`
+   * When issuing a new JWT token from the refresh token, this class will
+   * re-use the old refresh token.
+   *
+   * If you want, you can instruct the class to generate a new refresh token
+   * as well and remove the existing one from the DB.
    *
    * @method newRefreshToken
    *
    * @chainable
+   *
+   * @example
+   * ```js
+   * await auth
+   *   .newRefreshToken()
+   *   .generateForRefreshToken(token)
+   * ```
    */
   newRefreshToken () {
-    this._generateRefreshToken.set(true)
-    return this
+    return this.withRefreshToken()
   }
 
   /**
-   * Attempt to valid the user credentials and then
-   * generates a new token for it.
+   * Attempt to valid the user credentials and then generate a JWT token.
    *
    * @method attempt
    * @async
@@ -174,7 +177,7 @@ class JwtScheme extends BaseScheme {
    * @param  {Object}         [jwtOptions]  Passed directly to https://www.npmjs.com/package/jsonwebtoken
    *
    * @return {Object}
-   * - `{ type: 'bearer', token: '...' }`
+   * - `{ type: 'bearer', token: 'xxxx', refreshToken: 'xxxx' }`
    *
    * @example
    * ```js
@@ -213,6 +216,7 @@ class JwtScheme extends BaseScheme {
    * @param  {Object}         [jwtOptions]  Passed directly to https://www.npmjs.com/package/jsonwebtoken
    *
    * @return {Object}
+   * - `{ type: 'bearer', token: 'xxxx', refreshToken: 'xxxx' }`
    *
    * @throws {RuntimeException} If jwt secret is not defined or user doesn't have a primary key value
    *
@@ -295,18 +299,31 @@ class JwtScheme extends BaseScheme {
   }
 
   /**
-   * Generate a new token using the refresh token.
-   * This method will revoke the existing token
-   * and issues a new refresh token
+   * Generate a new JWT token using the refresh token.
    *
-   * @param {String} refreshToken
-   * @param  {Object|Boolean} [jwtPayload] Pass true when want to attach user object in the payload
-   *                                       or set a custom object
-   * @param  {Object}         [jwtOptions = null]
+   * If chained with {{#crossLink "JwtScheme/newRefreshToken"}}{{/crossLink}},
+   * this method will remove the existing refresh token from database and issues a new one.
    *
    * @method generateForRefreshToken
+   * @async
+   *
+   * @param {String} refreshToken
+   * @param  {Object|Boolean} [jwtPayload]  Pass true when want to attach user object in the payload
+   *                                        or set a custom object.
+   * @param  {Object}         [jwtOptions]  Passed directly to https://www.npmjs.com/package/jsonwebtoken
    *
    * @return {Object}
+   * - `{ type: 'bearer', token: 'xxxx', refreshToken: 'xxxx' }`
+   *
+   * @example
+   * ```js
+   * await auth.generateForRefreshToken(refreshToken)
+   *
+   * // create a new refresh token too
+   * await auth
+   *   .newRefreshToken()
+   *   .generateForRefreshToken(refreshToken)
+   * ```
    */
   async generateForRefreshToken (refreshToken, jwtPayload, jwtOptions) {
     const user = await this._serializerInstance.findByToken(this.Encryption.decrypt(refreshToken), 'jwt_refresh_token')
@@ -332,26 +349,40 @@ class JwtScheme extends BaseScheme {
   }
 
   /**
-   * Check whether a user is logged in or
-   * not. Also this method will re-login
-   * the user when remember me token
-   * is defined
+   * Check if user is authenticated for the current HTTP request or not. This
+   * method will read the token from the `Authorization` header or fallbacks
+   * to the `token` input field.
+   *
+   * Consider user as successfully authenticated, if this
+   * method doesn't throws an exception.
    *
    * @method check
+   * @async
    *
    * @return {Boolean}
+   *
+   * @example
+   * ```js
+   * try {
+   *   await auth.check()
+   * } catch (error) {
+   *   // invalid jwt token
+   * }
+   * ```
    */
   async check () {
     if (this.user) {
       return true
     }
 
+    const token = this.getAuthHeader()
+
     /**
      * Verify jwt token and wrap exception inside custom
      * exception classes
      */
     try {
-      this.jwtPayload = await this._verifyToken(this.getAuthHeader())
+      this.jwtPayload = await this._verifyToken(token)
     } catch ({ name, message }) {
       if (name === 'TokenExpiredError') {
         throw CE.ExpiredJwtToken.invoke()
@@ -367,39 +398,26 @@ class JwtScheme extends BaseScheme {
     if (!this.user) {
       throw CE.InvalidJwtToken.invoke()
     }
+
     return true
   }
 
   /**
-   * Makes sure user is loggedin and then
-   * returns the user back
+   * List all refresh tokens for a given user.
    *
-   * @method getUser
+   * @method listTokensForUser
+   * @async
    *
-   * @return {Object}
+   * @param  {Object} user
+   *
+   * @return {Array}
    */
-  async getUser () {
-    await this.check()
-    return this.user
-  }
-
-  /**
-   * List tokens for a given user for the
-   * currently logged in user.
-   *
-   * @method listTokens
-   *
-   * @param  {Object} forUser
-   *
-   * @return {Object}
-   */
-  async listTokens (forUser) {
-    forUser = forUser || this.user
-    if (!forUser) {
+  async listTokensForUser (user) {
+    if (!user) {
       return []
     }
 
-    const tokens = await this._serializerInstance.listTokens(forUser, 'jwt_refresh_token')
+    const tokens = await this._serializerInstance.listTokens(user, 'jwt_refresh_token')
     return tokens.toJSON().map((token) => {
       token.token = this.Encryption.encrypt(token.token)
       return token
@@ -410,10 +428,10 @@ class JwtScheme extends BaseScheme {
    * Login a user as a client. This method will set the
    * JWT token as a header on the request.
    *
-   * @param  {Function}    headerFn
-   * @param  {Function}    sessionFn
-   * @param  {Object}      user
-   * @param  {Object}      jwtOptions
+   * @param  {Function}    headerFn     - Method to set the header
+   * @param  {Function}    sessionFn    - Method to set the session
+   * @param  {Object}      user         - User to login
+   * @param  {Object}      [jwtOptions] - Passed directly to https://www.npmjs.com/package/jsonwebtoken
    *
    * @method clientLogin
    * @async

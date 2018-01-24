@@ -10,10 +10,14 @@
 */
 
 const { ioc } = require('@adonisjs/fold')
-const Serializers = require('../Serializers')
-const Schemes = require('../Schemes')
 const GE = require('@adonisjs/generic-exceptions')
 
+const Serializers = require('../Serializers')
+const Schemes = require('../Schemes')
+
+/**
+ * Auth manager manages the schemes and serializers
+ */
 class AuthManager {
   constructor () {
     this._serializers = {}

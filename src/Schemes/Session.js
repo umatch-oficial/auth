@@ -137,6 +137,7 @@ class SessionScheme extends BaseScheme {
    * if password mis-matches.
    *
    * @method attempt
+   * @async
    *
    * @param  {String} uid
    * @param  {String} password
@@ -170,6 +171,7 @@ class SessionScheme extends BaseScheme {
    * @method login
    *
    * @param  {Object} user
+   * @async
    *
    * @return {Object}
    *
@@ -218,6 +220,7 @@ class SessionScheme extends BaseScheme {
    * Login a user with their unique id.
    *
    * @method loginViaId
+   * @async
    *
    * @param  {Number|String}   id
    *
@@ -248,8 +251,14 @@ class SessionScheme extends BaseScheme {
    * me token will be deleted from the tokens table.
    *
    * @method logout
+   * @async
    *
    * @return {void}
+   *
+   * @example
+   * ```js
+   * await auth.logout()
+   * ```
    */
   async logout () {
     if (this.user) {
@@ -264,10 +273,11 @@ class SessionScheme extends BaseScheme {
 
   /**
    * Check whether the user is logged in or not. If the user session
-   * has been expired, but `rememberMe` token exists, this method
-   * will re-login the user.
+   * has been expired, but a valid `rememberMe` token exists, this
+   * method will re-login the user.
    *
    * @method check
+   * @async
    *
    * @return {Boolean}
    *
@@ -321,10 +331,12 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * Same as `check`, but doesn't throw any exceptions. This method is
-   * useful for routes, where login is optional.
+   * Same as {{#crossLink "SessionScheme/check:method"}}{{/crossLink}},
+   * but doesn't throw any exceptions. This method is useful for
+   * routes, where login is optional.
    *
    * @method loginIfCan
+   * @async
    *
    * @return {void}
    *
@@ -360,24 +372,6 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * Ensures the user is logged in for the current request and
-   * then returns the user instance back.
-   *
-   * @method getUser
-   *
-   * @return {Object}
-   *
-   * @example
-   * ```js
- *   await auth.getUser()
-   * ```
-   */
-  async getUser () {
-    await this.check()
-    return this.user
-  }
-
-  /**
    * Login a user as a client. This is required when
    * you want to set the session on a request that
    * will reach the Adonis server.
@@ -385,6 +379,7 @@ class SessionScheme extends BaseScheme {
    * Adonis testing engine uses this method.
    *
    * @method clientLogin
+   * @async
    *
    * @param  {Function}    headerFn     - Method to set the header
    * @param  {Function}    sessionFn    - Method to set the session

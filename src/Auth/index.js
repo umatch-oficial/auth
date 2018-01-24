@@ -47,11 +47,18 @@ const proxyHandler = {
 }
 
 /**
- * Auth class is used to set instance of a given
- * authenticator.
+ * The auth class is used to authenticate users using a pre-defined
+ * authenticator in the auth config.
+ *
+ * This class proxies all the methods of the `scheme` that is currently
+ * in use. So do make sure to refer the schemes API.
  *
  * @class Auth
+ * @module Lucid
  * @constructor
+ *
+ * @param {Context} ctx     Request context
+ * @param {Config}  Config  Reference to config provider
  */
 class Auth {
   constructor (ctx, Config) {
@@ -63,8 +70,8 @@ class Auth {
   }
 
   /**
-   * Returns an instance of a given scheme with
-   * serializer instance
+   * Newup an authenticator instance for a given name. The names must be a
+   * reference for the `keys` inside the `config/auth.js` file.
    *
    * @method authenticator
    *
