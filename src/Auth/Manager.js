@@ -10,10 +10,14 @@
 */
 
 const { ioc } = require('@adonisjs/fold')
-const Serializers = require('../Serializers')
-const Schemes = require('../Schemes')
 const GE = require('@adonisjs/generic-exceptions')
 
+const Serializers = require('../Serializers')
+const Schemes = require('../Schemes')
+
+/**
+ * Auth manager manages the schemes and serializers
+ */
 class AuthManager {
   constructor () {
     this._serializers = {}
@@ -60,7 +64,7 @@ class AuthManager {
   getSerializer (name) {
     const serializer = Serializers[name] || this._serializers[name]
     if (!serializer) {
-      throw GE.RuntimeException.incompleteConfig('auth', [`${name} serializer`], 'config/auth.js')
+      throw GE.RuntimeException.incompleteConfig([`${name} serializer`], 'config/auth.js', 'auth')
     }
     return ioc.make(serializer)
   }
@@ -77,7 +81,7 @@ class AuthManager {
   getScheme (name) {
     const scheme = Schemes[name] || this._schemes[name]
     if (!scheme) {
-      throw GE.RuntimeException.incompleteConfig('auth', [`${name} scheme`], 'config/auth.js')
+      throw GE.RuntimeException.incompleteConfig([`${name} scheme`], 'config/auth.js', 'auth')
     }
     return ioc.make(scheme)
   }

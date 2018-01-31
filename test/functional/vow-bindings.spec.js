@@ -111,7 +111,7 @@ test.group('Vow Request', (group) => {
     try {
       await Request._hooks[0](request)
     } catch ({ message }) {
-      assert.equal(message, 'E_MISSING_CONFIG: auth.foo is not defined inside config/auth.js file')
+      assert.match(message, /E_MISSING_CONFIG: auth.foo is not defined inside config\/auth\.js file/)
     }
   })
 })

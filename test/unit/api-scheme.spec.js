@@ -106,6 +106,30 @@ test.group('Schemes - Api', (group) => {
     assert.isTrue(validated)
   })
 
+  test('throw exception when user doesn\'t have an id', async (assert) => {
+    assert.plan(2)
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+
+    try {
+      await api.generate({})
+    } catch ({ name, message }) {
+      assert.equal(name, 'RuntimeException')
+      assert.match(message, /^E_RUNTIME_ERROR: Primary key value is missing for user/)
+    }
+  })
+
   test('generate token for user', async (assert) => {
     const User = helpers.getUserModel()
 
@@ -306,12 +330,13 @@ test.group('Schemes - Api', (group) => {
     const api = new Api(Encryption)
     api.setOptions(config, lucid)
     const payload = await api.generate(user)
-    const tokensList = await api.listTokens(user)
-    assert.equal(tokensList.size(), 1)
-    assert.equal(tokensList.first().token, payload.token)
+    const tokensList = await api.listTokensForUser(user)
+
+    assert.lengthOf(tokensList, 1)
+    assert.equal(tokensList[0].token, payload.token)
   })
 
-  test('return fake response when no tokens exists', async (assert) => {
+  test('return empty array when no tokens exists', async (assert) => {
     const User = helpers.getUserModel()
 
     const config = {
@@ -326,11 +351,11 @@ test.group('Schemes - Api', (group) => {
     const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
     const api = new Api(Encryption)
     api.setOptions(config, lucid)
-    const tokensList = await api.listTokens(user)
-    assert.equal(tokensList.size(), 0)
+    const tokensList = await api.listTokensForUser(user)
+    assert.lengthOf(tokensList, 0)
   })
 
-  test('return fake response when user is not defined', async (assert) => {
+  test('return empty array when user is not defined', async (assert) => {
     const User = helpers.getUserModel()
 
     const config = {
@@ -346,8 +371,8 @@ test.group('Schemes - Api', (group) => {
     const api = new Api(Encryption)
     api.setOptions(config, lucid)
     await api.generate(user)
-    const tokensList = await api.listTokens()
-    assert.equal(tokensList.size(), 0)
+    const tokensList = await api.listTokensForUser()
+    assert.lengthOf(tokensList, 0)
   })
 
   test('return a list of tokens via database serializer', async (assert) => {
@@ -369,9 +394,47 @@ test.group('Schemes - Api', (group) => {
     const api = new Api(Encryption)
     api.setOptions(config, database)
     const payload = await api.generate(user)
-    const tokensList = await api.listTokens(user)
+    const tokensList = await api.listTokensForUser(user)
     assert.lengthOf(tokensList, 1)
     assert.equal(tokensList[0].token, payload.token)
+  })
+
+  test('return a list of tokens for currently logged in user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      primaryKey: 'id',
+      table: 'users',
+      tokensTable: 'tokens',
+      uid: 'email',
+      foreignKey: 'user_id',
+      password: 'password'
+    }
+
+    const database = new DatabaseSerializer(ioc.use('Hash'))
+    database.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    await user.tokens().create({ token: '22', type: 'api_token', is_revoked: false })
+
+    const api = new Api(Encryption)
+
+    api.setOptions(config, database)
+    api.setCtx({
+      request: {
+        header () {
+          return null
+        },
+        input () {
+          return Encryption.encrypt('22')
+        }
+      }
+    })
+
+    await api.check()
+
+    const tokensList = await api.listTokens()
+    assert.lengthOf(tokensList, 1)
   })
 
   test('generate token via user credentials', async (assert) => {
@@ -394,5 +457,122 @@ test.group('Schemes - Api', (group) => {
 
     assert.isDefined(tokenPayload.token)
     assert.equal(tokenPayload.type, 'bearer')
+  })
+
+  test('login as client', async (assert) => {
+    assert.plan(2)
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const database = new DatabaseSerializer(ioc.use('Hash'))
+    database.setConfig(config)
+
+    const api = new Api(Encryption)
+    api.setOptions(config, database)
+
+    const headerFn = function (key, value) {
+      assert.equal(key, 'authorization')
+      assert.include(value, 'Bearer')
+    }
+
+    await api.clientLogin(headerFn, null, { id: 1 })
+  })
+
+  test('revoke tokens for a given user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    await user.tokens().create({ type: 'api_token', token: '22', is_revoked: false })
+
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+    await api.revokeTokensForUser(user, ['22'])
+
+    const token = await user.tokens().first()
+    assert.equal(token.is_revoked, true)
+    assert.equal(token.token, '22')
+  })
+
+  test('revoke all tokens for the current user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+
+    const payload = await api.generate(user)
+
+    api.setCtx({
+      request: {
+        header (key) {
+          return `Bearer ${payload.token}`
+        }
+      }
+    })
+
+    await api.check()
+    await api.revokeTokens()
+
+    const token = await user.tokens().first()
+    assert.equal(token.is_revoked, true)
+    assert.equal(`e${token.token}`, payload.token)
+  })
+
+  test('delete tokens instead of revoking it', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+
+    const payload = await api.generate(user)
+
+    api.setCtx({
+      request: {
+        header (key) {
+          return `Bearer ${payload.token}`
+        }
+      }
+    })
+
+    await api.check()
+    await api.revokeTokens(null, true)
+
+    const token = await user.tokens().first()
+    assert.isNull(token)
   })
 })

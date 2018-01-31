@@ -9,15 +9,19 @@
  * file that was distributed with this source code.
 */
 
+const _ = require('lodash')
 const { ioc } = require('@adonisjs/fold')
 const debug = require('debug')('adonis:auth')
 
 /**
- * Lucid serializers uses lucid model to validate
- * and fetch user details.
+ * Database serializer uses the Lucid models provider to fetch
+ * user and tokens from the database.
  *
  * @class LucidSerializer
  * @constructor
+ * @module Lucid
+ *
+ * @param {Object} Hash Hash provider
  */
 class LucidSerializer {
   constructor (Hash) {
@@ -32,8 +36,11 @@ class LucidSerializer {
    * Dependencies to be injected by Ioc container
    *
    * @attribute inject
+   * @type {Array}
+   * @readOnly
    *
-   * @return {Array}
+   * @ignore
+   * @static
    */
   static get inject () {
     return ['Adonis/Src/Hash']
@@ -43,6 +50,8 @@ class LucidSerializer {
    * Returns an instance of the model query
    *
    * @method _getQuery
+   *
+   * @param  {String} [table = this.table]
    *
    * @return {Object}
    *
@@ -58,13 +67,55 @@ class LucidSerializer {
   }
 
   /**
-   * Setup config on the serializer instance. It
-   * is import and needs to be done as the
-   * first step before using the serializer.
+   * Returns a query by selecting the right set of tokens
+   * for a given user.
+   *
+   * @method _selectTokens
+   *
+   * @param  {Object}        user
+   * @param  {Array}         [tokens]             - Scope to given tokens only
+   * @param  {Boolean}       [inverse = false]    - Inverse the scope
+   *
+   * @return {Object}
+   *
+   * @private
+   */
+  _selectTokens (user, tokens, inverse) {
+    const query = user.tokens()
+    const method = inverse ? 'whereNotIn' : 'whereIn'
+
+    const tokensList = _.compact(_.castArray(tokens))
+    if (!_.size(tokensList)) {
+      return query
+    }
+
+    debug('creating query: tokens.query.%s(\'token\', %j)', method, tokensList)
+    query[method]('token', tokensList)
+
+    return query
+  }
+
+  /**
+   * Reference to the primary key used for fetching the unique value
+   * for a given user.
+   *
+   * @attribute primaryKey
+   * @type {String}
+   * @readOnly
+   */
+  get primaryKey () {
+    return this._Model.primaryKey
+  }
+
+  /**
+   * Sets the config based upon the authenticator in use. The Auth
+   * facade calls this method and passes the config.
    *
    * @method setConfig
    *
    * @param  {Object}  config
+   *
+   * @return {void}
    */
   setConfig (config) {
     this._config = config
@@ -72,27 +123,25 @@ class LucidSerializer {
   }
 
   /**
-   * Returns the primary key for the
-   * model. It is used to set the
-   * session key
-   *
-   * @method primaryKey
-   *
-   * @return {String}
-   */
-  get primaryKey () {
-    return this._Model.primaryKey
-  }
-
-  /**
    * Add runtime constraints to the query builder. It
-   * is helpful when auth has extra constraints too
+   * is helpful when auth has extra constraints too.
+   *
+   * The `query` method called directly on the auth instance, which
+   * internally calls this method on the serializer.
    *
    * @method query
    *
    * @param  {Function} callback
    *
    * @chainable
+   *
+   * @example
+   *
+   * ```js
+   * auth.query((builder) => {
+   *   builder.status('active')
+   * }).attempt()
+   * ```
    */
   query (callback) {
     this._queryCallback = callback
@@ -104,10 +153,11 @@ class LucidSerializer {
    * key
    *
    * @method findById
+   * @async
    *
    * @param  {Number|String} id
    *
-   * @return {User|Null}  The model instance or `null`
+   * @return {User|Null}
    */
   async findById (id) {
     debug('finding user with primary key as %s', id)
@@ -118,6 +168,7 @@ class LucidSerializer {
    * Finds a user using the uid field
    *
    * @method findByUid
+   * @async
    *
    * @param  {String}  uid
    *
@@ -132,9 +183,10 @@ class LucidSerializer {
    * Validates the password field on the user model instance
    *
    * @method validateCredentails
+   * @async
    *
    * @param  {Model}            user
-   * @param  {String}            password
+   * @param  {String}           password
    *
    * @return {Boolean}
    */
@@ -149,6 +201,7 @@ class LucidSerializer {
    * Finds a user with token
    *
    * @method findByToken
+   * @async
    *
    * @param  {String}    token
    * @param  {String}    type
@@ -157,6 +210,7 @@ class LucidSerializer {
    */
   async findByToken (token, type) {
     debug('finding user for %s token', token)
+
     return this
       ._getQuery()
       .whereHas('tokens', function (builder) {
@@ -170,6 +224,7 @@ class LucidSerializer {
    * expired
    *
    * @method saveToken
+   * @async
    *
    * @param  {Object}  user
    * @param  {String}  token
@@ -178,12 +233,9 @@ class LucidSerializer {
    * @return {void}
    */
   async saveToken (user, token, type) {
-    const tokenInstance = new (user.tokens()).RelatedModel()
-    tokenInstance.token = token
-    tokenInstance.type = type
-    tokenInstance.is_revoked = false
-    debug('saving token for %s user with %j payload', user.primaryKeyValue, tokenInstance)
-    await user.tokens().save(tokenInstance)
+    const insertPayload = { token, type, is_revoked: false }
+    debug('saving token for %s user with %j payload', user.primaryKeyValue, insertPayload)
+    await user.tokens().create(insertPayload)
   }
 
   /**
@@ -192,20 +244,13 @@ class LucidSerializer {
    * @method revokeTokens
    *
    * @param  {Object}           user
-   * @param  {Array|String}     [tokens = null]
-   * @param  {Boolean}          [inverse = false]
+   * @param  {Array|String}     [tokens = null] - If defined all these tokens are taken into account
+   * @param  {Boolean}          [inverse = false] - If `true`, all tokens except the given tokens will be revoked
    *
    * @return {Number}           Number of impacted rows
    */
   async revokeTokens (user, tokens = null, inverse = false) {
-    const query = user.tokens()
-    if (tokens) {
-      tokens = tokens instanceof Array === true ? tokens : [tokens]
-      inverse ? query.whereNotIn('token', tokens) : query.whereIn('token', tokens)
-      debug('revoking %j tokens for %s user', tokens, user.primaryKeyValue)
-    } else {
-      debug('revoking all tokens for %s user', user.primaryKeyValue)
-    }
+    const query = this._selectTokens(user, tokens, inverse)
     return query.update({ is_revoked: true })
   }
 
@@ -215,20 +260,13 @@ class LucidSerializer {
    * @method deleteTokens
    *
    * @param  {Object}           user
-   * @param  {Array|String}     [tokens = null]
-   * @param  {Boolean}          [inverse = false]
+   * @param  {Array|String}     [tokens = null] - If defined all these tokens are taken into account
+   * @param  {Boolean}          [inverse = false] - If `true`, all tokens except the given tokens will be removed
    *
    * @return {Number}           Number of impacted rows
    */
   async deleteTokens (user, tokens = null, inverse = false) {
-    const query = user.tokens()
-    if (tokens) {
-      tokens = tokens instanceof Array === true ? tokens : [tokens]
-      inverse ? query.whereNotIn('token', tokens) : query.whereIn('token', tokens)
-      debug('deleting %j tokens for %s user', tokens, user.primaryKeyValue)
-    } else {
-      debug('deleting all tokens for %s user', user.primaryKeyValue)
-    }
+    const query = this._selectTokens(user, tokens, inverse)
     return query.delete()
   }
 
@@ -245,18 +283,6 @@ class LucidSerializer {
    */
   async listTokens (user, type) {
     return user.tokens().where({ type, is_revoked: false }).fetch()
-  }
-
-  /**
-   * A fake instance of serializer with empty set
-   * of array
-   *
-   * @method fakeResult
-   *
-   * @return {Object}
-   */
-  fakeResult () {
-    return new this._Model.Serializer([])
   }
 }
 

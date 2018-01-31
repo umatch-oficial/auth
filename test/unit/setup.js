@@ -11,6 +11,7 @@ module.exports = {
   databaseHook (group) {
     group.before(async () => {
       await fs.ensureDir(path.join(__dirname, './tmp'))
+
       ioc.bind('Adonis/Src/Database', () => {
         const config = new Config()
         config.set('database', {
@@ -32,6 +33,7 @@ module.exports = {
     group.after(async () => {
       await helpers.dropTables(ioc.use('Database'))
       ioc.use('Database').close()
+
       try {
         await fs.remove(path.join(__dirname, './tmp'))
       } catch (error) {

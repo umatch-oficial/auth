@@ -10,67 +10,52 @@
 */
 
 const uuid = require('uuid')
-const _ = require('lodash')
-const BaseScheme = require('./Base')
 const GE = require('@adonisjs/generic-exceptions')
+
+const BaseTokenScheme = require('./BaseToken')
 const CE = require('../Exceptions')
 
-class ApiScheme extends BaseScheme {
-  constructor (Encryption) {
-    super()
-    this.Encryption = Encryption
-  }
-
-  /* istanbul ignore next */
-  /**
-   * IoC container injections
-   *
-   * @method inject
-   *
-   * @return {Array}
-   */
-  static get inject () {
-    return ['Adonis/Src/Encryption']
-  }
-
-  /**
-   * Validate user credentials
-   *
-   * @method validate
-   *
-   * @param  {String} uid
-   * @param  {String} password
-   * @param  {Boolean} returnUser
-   *
-   * @return {Object}
-   *
-   * @throws {UserNotFoundException} If unable to find user with uid
-   * @throws {PasswordMisMatchException} If password mismatches
-   */
-  async validate (uid, password, returnUser) {
-    const user = await this._serializerInstance.findByUid(uid)
-    if (!user) {
-      throw this.missingUserFor(uid)
-    }
-
-    const validated = await this._serializerInstance.validateCredentails(user, password)
-    if (!validated) {
-      throw this.invalidPassword()
-    }
-
-    return returnUser ? user : !!user
-  }
-
+/**
+ * This scheme allows to make use of Github style personal API tokens
+ * to authenticate a user.
+ *
+ * The tokens for a give user are stored inside the database and user sends
+ * a token inside the `Authorization` header as following.
+ *
+ * ```
+ * Authorization=Bearer TOKEN
+ * ```
+ *
+ * ### Note
+ * Token will be encrypted using `EncryptionProvider` before sending it to the user.
+ *
+ * @class ApiScheme
+ * @extends BaseScheme
+ */
+class ApiScheme extends BaseTokenScheme {
   /**
    * Attempt to valid the user credentials and then
    * generates a new token for it.
    *
+   * This method invokes the `generate` method by passing
+   * the user found with given credentials.
+   *
    * @method attempt
+   * @async
    *
    * @param  {String} uid
    * @param  {String} password
    *
-   * @return {String}
+   * @return {Object}
+   *
+   * @example
+   * ```js
+   * try {
+   *   const token = auth.attempt(username, password)
+   * } catch (error) {
+   *   // Invalid credentials
+   * }
+   * ```
    */
   async attempt (uid, password) {
     const user = await this.validate(uid, password, true)
@@ -78,7 +63,8 @@ class ApiScheme extends BaseScheme {
   }
 
   /**
-   * Generates a personal API token for a user
+   * Generates a personal API token for a user. The user payload must
+   * be valid as per the serializer in use.
    *
    * @method generate
    * @async
@@ -86,6 +72,17 @@ class ApiScheme extends BaseScheme {
    * @param  {Object} user
    *
    * @return {Object}
+   * - `{ type: 'bearer', token: 'xxxxxxxx' }`
+   *
+   * @example
+   * ```js
+   * try {
+   *   const user = await User.find(1)
+   *   const token = await auth.generate(user)
+   * } catch (error) {
+   *   // Unexpected error
+   * }
+   * ```
    */
   async generate (user) {
     /**
@@ -105,20 +102,37 @@ class ApiScheme extends BaseScheme {
      * user.
      */
     const token = this.Encryption.encrypt(plainToken)
-
     return { type: 'bearer', token }
   }
 
   /**
-   * Check whether the api token has been passed
-   * in the request header and is it valid or
-   * not.
+   * Validates the API token by reading it from the request
+   * header or using `token` input field as the fallback.
+   *
+   * Consider user as successfully authenticated, if this
+   * method doesn't throws an exception.
    *
    * @method check
+   * @async
    *
-   * @return {Boolean}
+   * @return {void}
+   *
+   * @throws {InvalidApiToken} If token is missing or is invalid
+   *
+   * @example
+   * ```js
+   * try {
+   *   await auth.check()
+   * } catch (error) {
+   *   // Invalid token
+   * }
+   * ```
    */
   async check () {
+    /**
+     * User already exists for this request, so there is
+     * no need to re-pull them from the database
+     */
     if (this.user) {
       return true
     }
@@ -133,7 +147,6 @@ class ApiScheme extends BaseScheme {
      * the db.
      */
     const plainToken = this.Encryption.decrypt(token)
-
     this.user = await this._serializerInstance.findByToken(plainToken, 'api_token')
 
     /**
@@ -142,75 +155,44 @@ class ApiScheme extends BaseScheme {
     if (!this.user) {
       throw CE.InvalidApiToken.invoke()
     }
+
     return true
   }
 
   /**
-   * Makes sure user is loggedin and then
-   * returns the user back
+   * List all API tokens for a given user
    *
-   * @method getUser
+   * @method listTokensForUser
+   * @async
    *
-   * @return {Object}
+   * @param {Object} user
+   *
+   * @return {Array}
    */
-  async getUser () {
-    await this.check()
-    return this.user
-  }
-
-  /**
-   * List tokens for a given user for the
-   * currently logged in user.
-   *
-   * @method listTokens
-   *
-   * @param  {Object} forUser
-   *
-   * @return {Object}
-   */
-  async listTokens (forUser) {
-    forUser = forUser || this.user
-    if (!forUser) {
-      return this._serializerInstance.fakeResult()
+  async listTokensForUser (user) {
+    if (!user) {
+      return []
     }
 
-    const tokens = await this._serializerInstance.listTokens(forUser, 'api_token')
-
-    /**
-     * We need to pull the `rows` when serializer is lucid, otherwise
-     * we use the array as it is.
-     *
-     * @type {Array}
-     */
-    const tokensArray = _.isArray(tokens) ? tokens : tokens.rows
-
-    /**
-     * If tokens array is empty then return the fake response
-     */
-    if (!_.isArray(tokensArray) || !_.size(tokensArray)) {
-      return this._serializerInstance.fakeResult()
-    }
-
-    /**
-     * Encrypt the tokens
-     */
-    tokensArray.forEach((token) => {
+    const tokens = await this._serializerInstance.listTokens(user, 'api_token')
+    return tokens.toJSON().map((token) => {
       token.token = this.Encryption.encrypt(token.token)
+      return token
     })
-
-    return tokens
   }
 
   /**
    * Login a user as a client. This method will set the
    * API token as a header on the request.
    *
-   * @param  {Function}    headerFn
-   * @param  {Function}    sessionFn
-   * @param  {Object}      token
+   * Adonis testing engine uses this method.
    *
    * @method clientLogin
    * @async
+   *
+   * @param  {Function}    headerFn     - Method to set the header
+   * @param  {Function}    sessionFn    - Method to set the session
+   * @param  {Object}      user         - User to login
    *
    * @return {void}
    */

@@ -12,6 +12,29 @@
 const _ = require('lodash')
 const debug = require('debug')('adonis:auth')
 
+/**
+ * Auth middleware protects the Routes ensuring a user is loggedin
+ * before the request reaches the controller.
+ *
+ * ```
+ * Route
+ * .get('...')
+ * .middleware('auth')
+ * ```
+ *
+ * You can define one or multiple schemes to be tried.
+ * ```
+ * Route
+ * .get('...')
+ * .middleware('auth:basic,jwt')
+ * ```
+ *
+ * @class AuthMiddleware
+ * @constructor
+ * @module Lucid
+ *
+ * @param {Config} Config - Reference to config provider
+ */
 class Auth {
   constructor (Config) {
     const authenticator = Config.get('auth.authenticator')
@@ -23,9 +46,12 @@ class Auth {
    * schemes or the default scheme
    *
    * @method handle
+   * @async
    *
-   * @param  {Object}   options.auth
-   * @param  {Function} next
+   * @param {Object}   ctx       Request context
+   * @param {Function} next
+   * @param {Array}    schemes   Schemes for which the user must be validated.
+   *                             If no scheme is defined, then default scheme from config is used.
    *
    * @return {void}
    */

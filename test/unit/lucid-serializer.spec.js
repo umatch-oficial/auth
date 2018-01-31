@@ -164,7 +164,7 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.findByToken('20', 'remember_token')
     assert.equal(
       authQuery.sql,
-      'select * from `users` where exists (select * from `tokens` where `token` = ? and `type` = ? and `is_revoked` = ? and users.id = tokens.user_id) limit ?'
+      'select * from `users` where exists (select * from `tokens` where `token` = ? and `type` = ? and `is_revoked` = ? and `users`.`id` = `tokens`.`user_id`) limit ?'
     )
     assert.deepEqual(authQuery.bindings, ['20', 'remember_token', false, 1])
   })
@@ -420,19 +420,5 @@ test.group('Serializers - Lucid', (group) => {
     await lucid.listTokens(user, 'jwt_refresh_tokens')
     assert.equal(tokensQuery.sql, 'select * from `tokens` where `type` = ? and `is_revoked` = ? and `user_id` = ?')
     assert.deepEqual(tokensQuery.bindings, ['jwt_refresh_tokens', false, 1])
-  })
-
-  test('make a fake response', async (assert) => {
-    const User = helpers.getUserModel()
-
-    const config = {
-      model: User,
-      uid: 'email',
-      password: 'password'
-    }
-
-    const lucid = new LucidSerializer(ioc.use('Hash'))
-    lucid.setConfig(config)
-    assert.deepEqual(lucid.fakeResult().rows, [])
   })
 })

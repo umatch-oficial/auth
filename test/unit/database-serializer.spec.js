@@ -172,9 +172,7 @@ test.group('Serializers - Database', (group) => {
     db.setConfig(config)
 
     let tokensQuery = null
-    db.query((builder) => {
-      builder.on('query', (query) => (tokensQuery = query))
-    })
+    db._Db.on('query', (query) => (tokensQuery = query))
 
     await ioc.use('Database').table('users').insert({ email: 'foo@bar.com', password: 'secret' })
     await db.saveToken({ id: 1 }, '20', 'remember_token')
@@ -199,16 +197,14 @@ test.group('Serializers - Database', (group) => {
     db.setConfig(config)
 
     let tokensQuery = null
-    db.query((builder) => {
-      builder.on('query', (query) => (tokensQuery = query))
-    })
+    db._Db.on('query', (query) => (tokensQuery = query))
 
     await db.revokeTokens({ id: 1 }, '20')
     assert.equal(
       tokensQuery.sql,
-      'update `tokens` set `is_revoked` = ? where `token` in (?) and `user_id` = ?'
+      'update `tokens` set `is_revoked` = ? where `user_id` = ? and `token` in (?)'
     )
-    assert.deepEqual(tokensQuery.bindings, [true, '20', 1])
+    assert.deepEqual(tokensQuery.bindings, [true, 1, '20'])
   })
 
   test('remove all tokens for a given user', async (assert) => {
@@ -225,9 +221,7 @@ test.group('Serializers - Database', (group) => {
     db.setConfig(config)
 
     let tokensQuery = null
-    db.query((builder) => {
-      builder.on('query', (query) => (tokensQuery = query))
-    })
+    db._Db.on('query', (query) => (tokensQuery = query))
 
     await db.revokeTokens({ id: 1 })
     assert.equal(
@@ -251,16 +245,14 @@ test.group('Serializers - Database', (group) => {
     db.setConfig(config)
 
     let tokensQuery = null
-    db.query((builder) => {
-      builder.on('query', (query) => (tokensQuery = query))
-    })
+    db._Db.on('query', (query) => (tokensQuery = query))
 
     await db.revokeTokens({ id: 1 }, ['20', '30'])
     assert.equal(
       tokensQuery.sql,
-      'update `tokens` set `is_revoked` = ? where `token` in (?, ?) and `user_id` = ?'
+      'update `tokens` set `is_revoked` = ? where `user_id` = ? and `token` in (?, ?)'
     )
-    assert.deepEqual(tokensQuery.bindings, [true, '20', '30', 1])
+    assert.deepEqual(tokensQuery.bindings, [true, 1, '20', '30'])
   })
 
   test('remove all but not mentioned tokens', async (assert) => {
@@ -277,16 +269,14 @@ test.group('Serializers - Database', (group) => {
     db.setConfig(config)
 
     let tokensQuery = null
-    db.query((builder) => {
-      builder.on('query', (query) => (tokensQuery = query))
-    })
+    db._Db.on('query', (query) => (tokensQuery = query))
 
     await db.revokeTokens({ id: 1 }, ['20', '30'], true)
     assert.equal(
       tokensQuery.sql,
-      'update `tokens` set `is_revoked` = ? where `token` not in (?, ?) and `user_id` = ?'
+      'update `tokens` set `is_revoked` = ? where `user_id` = ? and `token` not in (?, ?)'
     )
-    assert.deepEqual(tokensQuery.bindings, [true, '20', '30', 1])
+    assert.deepEqual(tokensQuery.bindings, [true, 1, '20', '30'])
   })
 
   test('query for user tokens', async (assert) => {
@@ -303,9 +293,7 @@ test.group('Serializers - Database', (group) => {
     db.setConfig(config)
 
     let tokensQuery = null
-    db.query((builder) => {
-      builder.on('query', (query) => (tokensQuery = query))
-    })
+    db._Db.on('query', (query) => (tokensQuery = query))
 
     await db.listTokens({ id: 1 }, 'api_tokens')
     assert.equal(tokensQuery.sql, 'select * from `tokens` where `type` = ? and `is_revoked` = ? and `user_id` = ?')
@@ -326,16 +314,14 @@ test.group('Serializers - Database', (group) => {
     db.setConfig(config)
 
     let tokensQuery = null
-    db.query((builder) => {
-      builder.on('query', (query) => (tokensQuery = query))
-    })
+    db._Db.on('query', (query) => (tokensQuery = query))
 
     await db.deleteTokens({ id: 1 }, '20')
     assert.equal(
       tokensQuery.sql,
-      'delete from `tokens` where `token` in (?) and `user_id` = ?'
+      'delete from `tokens` where `user_id` = ? and `token` in (?)'
     )
-    assert.deepEqual(tokensQuery.bindings, ['20', 1])
+    assert.deepEqual(tokensQuery.bindings, [1, '20'])
   })
 
   test('delete all tokens for a given user', async (assert) => {
@@ -352,9 +338,7 @@ test.group('Serializers - Database', (group) => {
     db.setConfig(config)
 
     let tokensQuery = null
-    db.query((builder) => {
-      builder.on('query', (query) => (tokensQuery = query))
-    })
+    db._Db.on('query', (query) => (tokensQuery = query))
 
     await db.deleteTokens({ id: 1 })
     assert.equal(
@@ -378,16 +362,14 @@ test.group('Serializers - Database', (group) => {
     db.setConfig(config)
 
     let tokensQuery = null
-    db.query((builder) => {
-      builder.on('query', (query) => (tokensQuery = query))
-    })
+    db._Db.on('query', (query) => (tokensQuery = query))
 
     await db.deleteTokens({ id: 1 }, ['20', '30'])
     assert.equal(
       tokensQuery.sql,
-      'delete from `tokens` where `token` in (?, ?) and `user_id` = ?'
+      'delete from `tokens` where `user_id` = ? and `token` in (?, ?)'
     )
-    assert.deepEqual(tokensQuery.bindings, ['20', '30', 1])
+    assert.deepEqual(tokensQuery.bindings, [1, '20', '30'])
   })
 
   test('delete all but not mentioned tokens', async (assert) => {
@@ -404,30 +386,13 @@ test.group('Serializers - Database', (group) => {
     db.setConfig(config)
 
     let tokensQuery = null
-    db.query((builder) => {
-      builder.on('query', (query) => (tokensQuery = query))
-    })
+    db._Db.on('query', (query) => (tokensQuery = query))
 
     await db.deleteTokens({ id: 1 }, ['20', '30'], true)
     assert.equal(
       tokensQuery.sql,
-      'delete from `tokens` where `token` not in (?, ?) and `user_id` = ?'
+      'delete from `tokens` where `user_id` = ? and `token` not in (?, ?)'
     )
-    assert.deepEqual(tokensQuery.bindings, ['20', '30', 1])
-  })
-
-  test('make fake response', async (assert) => {
-    const config = {
-      uid: 'email',
-      password: 'password',
-      table: 'users',
-      primaryKey: 'id',
-      tokensTable: 'tokens',
-      foreignKey: 'user_id'
-    }
-
-    const db = new DatabaseSerializer()
-    db.setConfig(config)
-    assert.deepEqual(db.fakeResult(), [])
+    assert.deepEqual(tokensQuery.bindings, [1, '20', '30'])
   })
 })

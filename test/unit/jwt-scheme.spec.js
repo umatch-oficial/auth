@@ -509,7 +509,7 @@ test.group('Schemes - Jwt', (group) => {
     assert.equal(firstToken.is_revoked, 0)
   })
 
-  test('on generating token with refreshToken revoke the old one', async (assert) => {
+  test('on generating token with refreshToken remove the old one', async (assert) => {
     const User = helpers.getUserModel()
 
     const config = {
@@ -537,7 +537,7 @@ test.group('Schemes - Jwt', (group) => {
     assert.equal(payload.uid, 1)
     assert.notEqual(refreshToken, '20')
     const firstToken = await user.tokens().where('token', '20').first()
-    assert.equal(firstToken.is_revoked, 1)
+    assert.isNull(firstToken)
   })
 
   test('generate token using credentials', async (assert) => {
@@ -618,7 +618,7 @@ test.group('Schemes - Jwt', (group) => {
       await jwt.generate({})
     } catch ({ name, message }) {
       assert.equal(name, 'RuntimeException')
-      assert.equal(message, 'E_INCOMPLETE_CONFIG: Make sure to define secret on jwt inside config/auth.js')
+      assert.match(message, /^E_INCOMPLETE_CONFIG: Make sure to define secret on jwt inside config\/auth.js/)
     }
   })
 
@@ -645,7 +645,7 @@ test.group('Schemes - Jwt', (group) => {
       await jwt.generate({})
     } catch ({ name, message }) {
       assert.equal(name, 'RuntimeException')
-      assert.equal(message, 'E_RUNTIME_ERROR: Primary key value is missing for user')
+      assert.match(message, /^E_RUNTIME_ERROR: Primary key value is missing for user/)
     }
   })
 
@@ -788,6 +788,7 @@ test.group('Schemes - Jwt', (group) => {
     const config = {
       model: User,
       uid: 'email',
+      scheme: 'jwt',
       password: 'password',
       options: {
         secret: SECRET
@@ -805,7 +806,7 @@ test.group('Schemes - Jwt', (group) => {
     try {
       jwt.login(user)
     } catch ({ message }) {
-      assert.equal(message, 'E_CANNOT_LOGIN: method not implemented, use generate() to retrieve jwt token')
+      assert.match(message, /^E_INVALID_METHOD: login method is not implemented by jwt scheme/)
     }
   })
 
@@ -830,12 +831,12 @@ test.group('Schemes - Jwt', (group) => {
     jwt.setOptions(config, lucid)
 
     const payload = await jwt.withRefreshToken().generate(user)
-    const tokensList = await jwt.listTokens(user)
-    assert.equal(tokensList.size(), 1)
-    assert.equal(tokensList.first().token, payload.refreshToken)
+    const tokensList = await jwt.listTokensForUser(user)
+    assert.equal(tokensList.length, 1)
+    assert.equal(tokensList[0].token, payload.refreshToken)
   })
 
-  test('return fake response when no tokens exists', async (assert) => {
+  test('return empty array when tokens doesn\'t exists', async (assert) => {
     const User = helpers.getUserModel()
 
     const config = {
@@ -856,10 +857,10 @@ test.group('Schemes - Jwt', (group) => {
     jwt.setOptions(config, lucid)
 
     const tokensList = await jwt.listTokens(user)
-    assert.equal(tokensList.size(), 0)
+    assert.lengthOf(tokensList, 0)
   })
 
-  test('return fake response when user has not been defined', async (assert) => {
+  test('return empty array when user has not been defined', async (assert) => {
     const User = helpers.getUserModel()
 
     const config = {
@@ -881,7 +882,7 @@ test.group('Schemes - Jwt', (group) => {
     await jwt.withRefreshToken().generate(user)
 
     const tokensList = await jwt.listTokens()
-    assert.equal(tokensList.size(), 0)
+    assert.lengthOf(tokensList, 0)
   })
 
   test('return encrypted tokens via database serializer', async (assert) => {
@@ -908,7 +909,7 @@ test.group('Schemes - Jwt', (group) => {
     jwt.setOptions(config, database)
     const payload = await jwt.withRefreshToken().generate(user)
 
-    const tokensList = await jwt.listTokens({ id: 1 }, 'jwt_refresh_token')
+    const tokensList = await jwt.listTokensForUser({ id: 1 }, 'jwt_refresh_token')
     assert.deepEqual(tokensList[0].token, payload.refreshToken)
   })
 
@@ -939,5 +940,107 @@ test.group('Schemes - Jwt', (group) => {
     }
 
     await jwt.clientLogin(headerFn, null, { id: 1 })
+  })
+
+  test('revoke tokens for a given user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    await user.tokens().create({ type: 'jwt_refresh_token', token: '22', is_revoked: false })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+    await jwt.revokeTokensForUser(user, ['22'])
+
+    const token = await user.tokens().first()
+    assert.equal(token.is_revoked, true)
+    assert.equal(token.token, '22')
+  })
+
+  test('revoke all tokens for the current user', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+
+    const payload = await jwt.withRefreshToken().generate(user)
+
+    jwt.setCtx({
+      request: {
+        header (key) {
+          return `Bearer ${payload.token}`
+        }
+      }
+    })
+
+    await jwt.check()
+    await jwt.revokeTokens()
+
+    const token = await user.tokens().first()
+    assert.equal(token.is_revoked, true)
+    assert.equal(`e${token.token}`, payload.refreshToken)
+  })
+
+  test('delete tokens instead of revoking it', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+
+    const payload = await jwt.generate(user)
+
+    jwt.setCtx({
+      request: {
+        header (key) {
+          return `Bearer ${payload.token}`
+        }
+      }
+    })
+
+    await jwt.check()
+    await jwt.revokeTokens(null, true)
+
+    const token = await user.tokens().first()
+    assert.isNull(token)
   })
 })

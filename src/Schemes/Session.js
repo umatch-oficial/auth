@@ -12,10 +12,21 @@
 const Resetable = require('resetable')
 const ms = require('ms')
 const uuid = require('uuid')
-const BaseScheme = require('./Base')
 const GE = require('@adonisjs/generic-exceptions')
+
+const BaseScheme = require('./Base')
 const CE = require('../Exceptions')
 
+/**
+ * This scheme allows to make use of `sessions` to authenticate
+ * a user.
+ *
+ * The authentication is stateful and logged in user `id` is saved inside
+ * cookies to maintain the state across multiple requests.
+ *
+ * @class SessionScheme
+ * @extends BaseScheme
+ */
 class SessionScheme extends BaseScheme {
   constructor () {
     super()
@@ -23,10 +34,11 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * The key used for storing session
+   * Reference to the value of `sessionKey` inside the config block.
+   * Defaults to `adonis-auth`
    *
    * @attribute sessionKey
-   *
+   * @readOnly
    * @return {String}
    */
   get sessionKey () {
@@ -34,10 +46,11 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * The key used for remember me token
+   * Reference to the value of `rememberMeToken` inside the config block.
+   * Defaults to `adonis-remember-token`
    *
    * @attribute remeberTokenKey
-   *
+   * @readOnly
    * @return {String}
    */
   get remeberTokenKey () {
@@ -45,7 +58,8 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * Set authentication session on user instance
+   * Set authentication session on user instance. Remember me cookie
+   * will be saved if `rememberToken` and `duration` are provided.
    *
    * @method _setSession
    *
@@ -72,12 +86,13 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * Removes the session value from the store
-   * and clears the remember cookie
+   * Removes the login session and remember me cookie.
    *
    * @method _removeSession
    *
    * @return {void}
+   *
+   * @private
    */
   _removeSession () {
     this._ctx.session.forget(this.sessionKey)
@@ -85,13 +100,25 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * Remeber the user login
+   * Instruct login API to remember the user for a given
+   * duration. Defaults to `5years`.
+   *
+   * This method must be called before `login`, `loginViaId` or
+   * `attempt` method.
    *
    * @method remember
    *
    * @param  {String|Number} [duration = 5y]
    *
    * @chainable
+   *
+   * @example
+   * ```js
+   * await auth.remember(true).login()
+   *
+   * // custom durating
+   * await auth.remember('2y').login()
+   * ```
    */
   remember (duration) {
     if (duration === true || duration === 1) {
@@ -105,42 +132,29 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * Validate user credentials
-   *
-   * @method validate
-   *
-   * @param  {String} uid
-   * @param  {String} password
-   * @param  {Boolean} returnUser
-   *
-   * @return {Object}
-   *
-   * @throws {UserNotFoundException} If unable to find user with uid
-   * @throws {PasswordMisMatchException} If password mismatches
-   */
-  async validate (uid, password, returnUser) {
-    const user = await this._serializerInstance.findByUid(uid)
-    if (!user) {
-      throw this.missingUserFor(uid)
-    }
-
-    const validated = await this._serializerInstance.validateCredentails(user, password)
-    if (!validated) {
-      throw this.invalidPassword()
-    }
-
-    return returnUser ? user : !!user
-  }
-
-  /**
-   * Attempt to login the user
+   * Attempt to login the user using `username` and `password`. An
+   * exception will be raised when unable to find the user or
+   * if password mis-matches.
    *
    * @method attempt
+   * @async
    *
    * @param  {String} uid
    * @param  {String} password
    *
    * @return {Object}
+   *
+   * @throws {UserNotFoundException}     If unable to find user with uid
+   * @throws {PasswordMisMatchException} If password mismatches
+   *
+   * @example
+   * ```js
+   * try {
+   *   await auth.attempt(username, password)
+   * } catch (error) {
+   *   // Invalid credentials
+   * }
+   * ```
    */
   async attempt (uid, password) {
     const user = await this.validate(uid, password, true)
@@ -148,15 +162,27 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * Login a user using the user object. Make sure
-   * the user exists in database, since this
-   * method doesn't verify that
+   * Login the user using the user object. An exception will be
+   * raised if the same user is already logged in.
+   *
+   * The exception is raised to improve your code flow, since your code
+   * should never try to login a same user twice.
    *
    * @method login
    *
    * @param  {Object} user
+   * @async
    *
    * @return {Object}
+   *
+   * @example
+   * ```js
+   * try {
+   *   await auth.login(user)
+   * } catch (error) {
+   *   // Unexpected error
+   * }
+   * ```
    */
   async login (user) {
     if (this.user) {
@@ -191,13 +217,25 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * Login a user using it's id
+   * Login a user with their unique id.
    *
    * @method loginViaId
+   * @async
    *
    * @param  {Number|String}   id
    *
    * @return {Object}
+   *
+   * @throws {UserNotFoundException}     If unable to find user with id
+   *
+   * @example
+   * ```js
+   * try {
+   *   await auth.loginViaId(1)
+   * } catch (error) {
+   *   // Unexpected error
+   * }
+   * ```
    */
   async loginViaId (id) {
     const user = await this._serializerInstance.findById(id)
@@ -209,12 +247,18 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * Logout a user by removing the required
-   * cookies.
+   * Logout a user by removing the required cookies. Also remember
+   * me token will be deleted from the tokens table.
    *
    * @method logout
+   * @async
    *
    * @return {void}
+   *
+   * @example
+   * ```js
+   * await auth.logout()
+   * ```
    */
   async logout () {
     if (this.user) {
@@ -228,14 +272,25 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * Check whether a user is logged in or
-   * not. Also this method will re-login
-   * the user when remember me token
-   * is defined
+   * Check whether the user is logged in or not. If the user session
+   * has been expired, but a valid `rememberMe` token exists, this
+   * method will re-login the user.
    *
    * @method check
+   * @async
    *
    * @return {Boolean}
+   *
+   * @throws {InvalidSessionException} If session is not valid anymore
+   *
+   * @example
+   * ```js
+   * try {
+   *   await auth.check()
+   * } catch (error) {
+   *   // user is not logged
+   * }
+   * ```
    */
   async check () {
     if (this.user) {
@@ -276,16 +331,19 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * This method tries to login the user if it
-   * finds a session id but doesn't throw
-   * exceptions.
-   *
-   * It is used on requests which should have user
-   * instance due to peristant login flow.
+   * Same as {{#crossLink "SessionScheme/check:method"}}{{/crossLink}},
+   * but doesn't throw any exceptions. This method is useful for
+   * routes, where login is optional.
    *
    * @method loginIfCan
+   * @async
    *
    * @return {void}
+   *
+   * @example
+   * ```js
+ *   await auth.loginIfCan()
+   * ```
    */
   async loginIfCan () {
     if (this.user) {
@@ -314,28 +372,18 @@ class SessionScheme extends BaseScheme {
   }
 
   /**
-   * Makes sure user is loggedin and then
-   * returns the user back
-   *
-   * @method getUser
-   *
-   * @return {Object}
-   */
-  async getUser () {
-    await this.check()
-    return this.user
-  }
-
-  /**
    * Login a user as a client. This is required when
    * you want to set the session on a request that
    * will reach the Adonis server.
    *
-   * @method clientLogin
+   * Adonis testing engine uses this method.
    *
-   * @param  {Function}    headerFn
-   * @param  {Function}    sessionFn
-   * @param  {Object}    user
+   * @method clientLogin
+   * @async
+   *
+   * @param  {Function}    headerFn     - Method to set the header
+   * @param  {Function}    sessionFn    - Method to set the session
+   * @param  {Object}      user         - User to login
    *
    * @return {void}
    */

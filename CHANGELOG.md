@@ -1,3 +1,19 @@
+<a name="3.0.0"></a>
+# [3.0.0](https://github.com/adonisjs/adonis-auth/compare/v2.0.11...v3.0.0) (2018-01-31)
+
+
+### Bug Fixes
+
+* **auth:** authorization header bearer is not case insensitive ([2c5ab9e](https://github.com/adonisjs/adonis-auth/commit/2c5ab9e))
+* **config:** remove deprecated self call ([#90](https://github.com/adonisjs/adonis-auth/issues/90)) ([30fd632](https://github.com/adonisjs/adonis-auth/commit/30fd632))
+
+
+### Features
+
+* **jwt,api:** add revokeToken(s) method ([5e5757d](https://github.com/adonisjs/adonis-auth/commit/5e5757d))
+
+
+
 <a name="2.0.11"></a>
 ## [2.0.11](https://github.com/adonisjs/adonis-auth/compare/v2.0.10...v2.0.11) (2018-01-12)
 
