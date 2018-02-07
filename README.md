@@ -86,9 +86,9 @@ Now since the `add` method has a bug, it will return `6` instead of `4`. But the
 [npm-image]: https://img.shields.io/npm/v/@adonisjs/auth.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/@adonisjs/auth
 
-[travis-image]: https://img.shields.io/travis/poppinss/adonis-auth/master.svg?style=flat-square
-[travis-url]: https://travis-ci.org/poppinss/adonis-auth
+[travis-image]: https://img.shields.io/travis/adonisjs/adonis-auth/master.svg?style=flat-square
+[travis-url]: https://travis-ci.org/adonisjs/adonis-auth
 
-[coveralls-image]: https://img.shields.io/coveralls/poppinss/adonis-auth/develop.svg?style=flat-square
+[coveralls-image]: https://img.shields.io/coveralls/adonisjs/adonis-auth/develop.svg?style=flat-square
 
-[coveralls-url]: https://coveralls.io/github/poppinss/adonis-auth
+[coveralls-url]: https://coveralls.io/github/adonisjs/adonis-auth
