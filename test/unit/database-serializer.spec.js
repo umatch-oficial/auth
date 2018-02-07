@@ -153,7 +153,7 @@ test.group('Serializers - Database', (group) => {
     await db.findByToken('20', 'remember_token')
     assert.equal(
       authQuery.sql,
-      'select * from `users` where exists (select * from `tokens` where `token` = ? and `type` = ? and `is_revoked` = ? and users.id = tokens.user_id) limit ?'
+      'select * from `users` where exists (select * from `tokens` where `token` = ? and `type` = ? and `is_revoked` = ? and `users`.`id` = `tokens`.`user_id`) limit ?'
     )
     assert.deepEqual(authQuery.bindings, ['20', 'remember_token', false, 1])
   })

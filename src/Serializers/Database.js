@@ -273,17 +273,18 @@ class DatabaseSerializer {
    */
   async findByToken (token, type) {
     debug('finding user for %s token', token)
-    const self = this
+    const query = this._getQuery()
 
-    return this
-      ._getQuery()
+    const lhs = query.client.formatter().columnize(`${this._config.table}.${this.primaryKey}`)
+    const rhs = query.client.formatter().columnize(`${this.tokensTable}.${this.foreignKey}`)
+    const tokensTable = this.tokensTable
+
+    return query
       .whereExists(function () {
         this
-          .from(self.tokensTable)
+          .from(tokensTable)
           .where({ token, type, is_revoked: false })
-          .whereRaw(
-            `${self._config.table}.${self.primaryKey} = ${self.tokensTable}.${self.foreignKey}`
-          )
+          .whereRaw(`${lhs} = ${rhs}`)
       }).first()
   }
 
