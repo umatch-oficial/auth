@@ -23,6 +23,13 @@
   ],
   "author": "adonisjs",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adonisjs/adonis-auth"
+  },
+  "bugs": {
+    "url": "https://github.com/adonisjs/adonis-auth/issues"
+  }
   "devDependencies": {
     "@adonisjs/fold": "^4.0.5",
     "@adonisjs/lucid": "^5.0.1",
