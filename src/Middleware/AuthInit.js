@@ -61,6 +61,26 @@ class AuthInit {
 
     await next()
   }
+
+  /**
+   * Attempt to login the user on each request ( if scheme is session )
+   *
+   * @method wsHandle
+   *
+   * @async
+   *
+   * @param {Object}   ctx - Request context
+   * @param {Function} next
+   *
+   * @return {void}
+   */
+  async wsHandle ({ auth }, next) {
+    if (this.scheme === 'session') {
+      await auth.loginIfCan()
+    }
+
+    await next()
+  }
 }
 
 module.exports = AuthInit

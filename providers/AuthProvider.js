@@ -135,6 +135,17 @@ class AuthProvider extends ServiceProvider {
     }, true)
 
     /**
+     * Try adding auth to the websocket context. Since websocket is
+     * optional, we need to wrap binding inside a try catch
+     */
+    try {
+      const WsContext = this.app.use('Adonis/Src/WsContext')
+      WsContext.getter('auth', function () {
+        return new Auth({ request: this.request, response: this.response, session: this.session }, Config)
+      }, true)
+    } catch (error) {}
+
+    /**
      * Adding `loggedIn` tag to the view, only when view
      * provider is registered
      */

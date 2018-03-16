@@ -9,7 +9,6 @@
  * file that was distributed with this source code.
 */
 
-const _ = require('lodash')
 const debug = require('debug')('adonis:auth')
 
 /**
@@ -41,23 +40,9 @@ class Auth {
     this.scheme = Config.get(`auth.${authenticator}.scheme`, null)
   }
 
-  /**
-   * Authenticate the user using one of the defined
-   * schemes or the default scheme
-   *
-   * @method handle
-   * @async
-   *
-   * @param {Object}   ctx       Request context
-   * @param {Function} next
-   * @param {Array}    schemes   Schemes for which the user must be validated.
-   *                             If no scheme is defined, then default scheme from config is used.
-   *
-   * @return {void}
-   */
-  async handle ({ auth, view }, next, schemes) {
+  async _authenticate (auth, schemes) {
     let lastError = null
-    schemes = _.castArray(Array.isArray(schemes) && schemes.length ? schemes : this.scheme)
+    schemes = Array.isArray(schemes) && schemes.length ? schemes : [this.scheme]
 
     debug('attempting to authenticate via %j scheme(s)', schemes)
 
@@ -93,6 +78,24 @@ class Auth {
     if (lastError) {
       throw lastError
     }
+  }
+
+  /**
+   * Authenticate the user using one of the defined
+   * schemes or the default scheme
+   *
+   * @method handle
+   * @async
+   *
+   * @param {Object}   ctx       Request context
+   * @param {Function} next
+   * @param {Array}    schemes   Schemes for which the user must be validated.
+   *                             If no scheme is defined, then default scheme from config is used.
+   *
+   * @return {void}
+   */
+  async handle ({ auth, view }, next, schemes) {
+    await this._authenticate(auth, schemes)
 
     /**
      * For compatibility with the old API
@@ -109,6 +112,29 @@ class Auth {
         }
       })
     }
+
+    await next()
+  }
+
+  /**
+   * Called when authenticating user for websocket request
+   *
+   * @method wsHandle
+   *
+   * @param {Object}   ctx       Request context
+   * @param {Function} next
+   * @param {Array}    schemes   Schemes for which the user must be validated.
+   *                             If no scheme is defined, then default scheme from config is used.
+   *
+   * @return {void}
+   */
+  async wsHandle ({ auth }, next, schemes) {
+    await this._authenticate(auth, schemes)
+
+    /**
+     * For compatibility with the old API
+     */
+    auth.current = auth.authenticatorInstance
 
     await next()
   }
