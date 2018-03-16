@@ -139,7 +139,7 @@ class AuthProvider extends ServiceProvider {
      * optional, we need to wrap binding inside a try catch
      */
     try {
-      const WsContext = this.app.use('Adonis/Src/WsContext')
+      const WsContext = this.app.use('Adonis/Addons/WsContext')
       WsContext.getter('auth', function () {
         return new Auth({ request: this.request, response: this.response, session: this.session }, Config)
       }, true)
