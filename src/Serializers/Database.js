@@ -275,8 +275,8 @@ class DatabaseSerializer {
     debug('finding user for %s token', token)
     const query = this._getQuery()
 
-    const lhs = query.client.formatter().columnize(`${this._config.table}.${this.primaryKey}`)
-    const rhs = query.client.formatter().columnize(`${this.tokensTable}.${this.foreignKey}`)
+    const lhs = query.client.formatter(query).columnize(`${this._config.table}.${this.primaryKey}`)
+    const rhs = query.client.formatter(query).columnize(`${this.tokensTable}.${this.foreignKey}`)
     const tokensTable = this.tokensTable
 
     return query
