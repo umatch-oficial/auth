@@ -1,3 +1,21 @@
+<a name="3.0.3"></a>
+## [3.0.3](https://github.com/adonisjs/adonis-auth/compare/v3.0.1...v3.0.3) (2018-03-16)
+
+
+### Bug Fixes
+
+* **databaseSerializer:** fix serializer after knex upgrade ([d88d2a8](https://github.com/adonisjs/adonis-auth/commit/d88d2a8))
+* **package:** add comma ([b9a456f](https://github.com/adonisjs/adonis-auth/commit/b9a456f))
+* **provider:** use correct namespace for WsContext ([d28698c](https://github.com/adonisjs/adonis-auth/commit/d28698c))
+
+
+### Features
+
+* **basicauth:** allow basic auth string via request body ([0466ed8](https://github.com/adonisjs/adonis-auth/commit/0466ed8))
+* **middleware:** add methods on middleware to be used with Websocket ([1afb942](https://github.com/adonisjs/adonis-auth/commit/1afb942))
+
+
+
 <a name="3.0.2"></a>
 ## [3.0.2](https://github.com/adonisjs/adonis-auth/compare/v3.0.1...v3.0.2) (2018-02-16)
 
