@@ -50,7 +50,9 @@ class BasicAuthScheme extends BaseScheme {
       return true
     }
 
-    const credentials = auth(this._ctx.request.request)
+    const authString = this._ctx.request.header('authorization') || this._ctx.request.input('basic')
+    const credentials = auth.parse(authString)
+
     if (!credentials) {
       throw CE.InvalidBasicAuthException.invoke()
     }

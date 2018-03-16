@@ -36,10 +36,10 @@ module.exports = function (Request, Config) {
      * authenticate
      */
     const sessionFn = typeof (requestInstance.session) === 'function'
-    ? requestInstance.session.bind(requestInstance)
-    : function () {
-      throw new Error('Cannot set login session, since session client is not used for the test')
-    }
+      ? requestInstance.session.bind(requestInstance)
+      : function () {
+        throw new Error('Cannot set login session, since session client is not used for the test')
+      }
 
     const headerFn = requestInstance.header.bind(requestInstance)
 

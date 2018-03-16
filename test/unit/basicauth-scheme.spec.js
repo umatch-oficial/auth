@@ -132,10 +132,42 @@ test.group('Schemes - BasicAuth', (group) => {
     const basic = new BasicAuth()
     basic.setOptions(config, lucid)
     basic.setCtx({ request: {
-      request: {
-        headers: {
-          authorization: `Basic ${Buffer.from('foo@bar.com:secret').toString('base64')}`
-        }
+      header (key) {
+        return `Basic ${Buffer.from('foo@bar.com:secret').toString('base64')}`
+      }
+    } })
+
+    const isLogged = await basic.check()
+    assert.isTrue(isLogged)
+  })
+
+  test('valid user credentials via request input', async (assert) => {
+    class User extends Model {
+      static get makePlain () {
+        return true
+      }
+    }
+    User._bootIfNotBooted()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const basic = new BasicAuth()
+    basic.setOptions(config, lucid)
+    basic.setCtx({ request: {
+      header () {
+        return null
+      },
+      input () {
+        return `Basic ${Buffer.from('foo@bar.com:secret').toString('base64')}`
       }
     } })
 
@@ -168,10 +200,8 @@ test.group('Schemes - BasicAuth', (group) => {
     const basic = new BasicAuth()
     basic.setOptions(config, lucid)
     basic.setCtx({ request: {
-      request: {
-        headers: {
-          authorization: `Basic ${Buffer.from('foo@bar.com:supersecret').toString('base64')}`
-        }
+      header () {
+        return `Basic ${Buffer.from('foo@bar.com:supersecret').toString('base64')}`
       }
     } })
 
@@ -205,10 +235,8 @@ test.group('Schemes - BasicAuth', (group) => {
     const basic = new BasicAuth()
     basic.setOptions(config, lucid)
     basic.setCtx({ request: {
-      request: {
-        headers: {
-          authorization: `Basic ${Buffer.from('foo@bar.com:secret').toString('base64')}`
-        }
+      header () {
+        return `Basic ${Buffer.from('foo@bar.com:secret').toString('base64')}`
       }
     } })
 
