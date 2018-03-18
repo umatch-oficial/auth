@@ -1,3 +1,8 @@
+<a name="3.0.4"></a>
+## [3.0.4](https://github.com/adonisjs/adonis-auth/compare/v3.0.3...v3.0.4) (2018-03-18)
+
+
+
 <a name="3.0.3"></a>
 ## [3.0.3](https://github.com/adonisjs/adonis-auth/compare/v3.0.1...v3.0.3) (2018-03-16)
 
