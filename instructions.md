@@ -23,6 +23,8 @@ const globalMiddleware = [
 ]
 ```
 
+**For Websocket, register the middleware inside `start/wsKernel.js` file.**
+
 ## Register named middleware
 
 The named middleware is used to authenticate selected routes by applying the middleware on them and is registered within the same `start/kernel.js` file.
@@ -40,6 +42,7 @@ Route
   .get('/profile', 'UserController.profile')
   .middleware('auth')
 ```
+**For Websocket, register the middleware inside `start/wsKernel.js` file.**
 
 Also you can instruct the middleware to use a different `authenticator`
 
@@ -48,7 +51,6 @@ Route
   .get('/profile', 'UserController.profile')
   .middleware('auth:basic')
 ```
-
 
 ## Testing
 
