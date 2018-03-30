@@ -480,7 +480,7 @@ test.group('Schemes - Api', (group) => {
       assert.include(value, 'Bearer')
     }
 
-    await api.clientLogin(headerFn, null, { id: 1 })
+    await api.clientLogin(headerFn, null, '1')
   })
 
   test('revoke tokens for a given user', async (assert) => {
