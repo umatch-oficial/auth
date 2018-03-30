@@ -83,6 +83,13 @@ module.exports = async () => {
         options: {
           secret: 'SECRET'
         }
+      },
+      api: {
+        model: 'App/Models/User',
+        scheme: 'api',
+        serializer: 'lucid',
+        uid: 'email',
+        password: 'password'
       }
     })
 

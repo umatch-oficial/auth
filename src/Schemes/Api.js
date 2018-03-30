@@ -190,14 +190,18 @@ class ApiScheme extends BaseTokenScheme {
    * @method clientLogin
    * @async
    *
-   * @param  {Function}    headerFn     - Method to set the header
-   * @param  {Function}    sessionFn    - Method to set the session
-   * @param  {Object}      user         - User to login
+   * @param  {Function}    headerFn       - Method to set the header
+   * @param  {Function}    sessionFn      - Method to set the session
+   * @param  {Object}      tokenOrUser    - Pass the token or the user directly
    *
    * @return {void}
    */
-  async clientLogin (headerFn, sessionFn, token) {
-    headerFn('authorization', `Bearer ${token}`)
+  async clientLogin (headerFn, sessionFn, tokenOrUser) {
+    if (typeof (tokenOrUser) !== 'string') {
+      const { token } = await this.generate(tokenOrUser)
+      tokenOrUser = token
+    }
+    headerFn('authorization', `Bearer ${tokenOrUser}`)
   }
 }
 
