@@ -20,41 +20,43 @@ class View {
   }
 }
 
-test('skip code inside loggedIn block when auth is not defined', (assert) => {
-  ViewBindings(new View())
+test.group('ViewBindings', () => {
+  test('skip code inside loggedIn block when auth is not defined', (assert) => {
+    ViewBindings(new View())
 
-  const template = `
-  @loggedIn
-  <h2> You are logged in </h2>
-  @endloggedIn
-  `
-  assert.equal(edge.renderString(template).trim(), '')
-})
-
-test('render code inside loggedIn block when auth user is defined', (assert) => {
-  ViewBindings(new View())
-
-  const template = `
-  @loggedIn
-  <h2> You are logged in </h2>
-  @endloggedIn
-  `
-
-  const data = { auth: { user: 'virk' } }
-  assert.equal(edge.renderString(template, data).trim(), '<h2> You are logged in </h2>')
-})
-
-test('render code inside else block when not auth is not defined', (assert) => {
-  ViewBindings(new View())
-
-  const template = `
-  @loggedIn
+    const template = `
+    @loggedIn
     <h2> You are logged in </h2>
-  @else
-    <h2> You are not logged in </h2>
-  @endloggedIn
-  `
+    @endloggedIn
+    `
+    assert.equal(edge.renderString(template).trim(), '')
+  })
 
-  const data = { auth: { user: null } }
-  assert.equal(edge.renderString(template, data).trim(), '<h2> You are not logged in </h2>')
+  test('render code inside loggedIn block when auth user is defined', (assert) => {
+    ViewBindings(new View())
+
+    const template = `
+    @loggedIn
+    <h2> You are logged in </h2>
+    @endloggedIn
+    `
+
+    const data = { auth: { user: 'virk' } }
+    assert.equal(edge.renderString(template, data).trim(), '<h2> You are logged in </h2>')
+  })
+
+  test('render code inside else block when not auth is not defined', (assert) => {
+    ViewBindings(new View())
+
+    const template = `
+    @loggedIn
+      <h2> You are logged in </h2>
+    @else
+      <h2> You are not logged in </h2>
+    @endloggedIn
+    `
+
+    const data = { auth: { user: null } }
+    assert.equal(edge.renderString(template, data).trim(), '<h2> You are not logged in </h2>')
+  })
 })
