@@ -1,3 +1,15 @@
+<a name="3.0.6"></a>
+## [3.0.6](https://github.com/adonisjs/adonis-auth/compare/v3.0.5...v3.0.6) (2018-07-15)
+
+
+### Bug Fixes
+
+* **jwt:** use option jwtOptions in generateForRefreshToken ([#107](https://github.com/adonisjs/adonis-auth/issues/107)) ([019dfbf](https://github.com/adonisjs/adonis-auth/commit/019dfbf))
+* **session:** use cookie options for rememberme token ([4cdaf87](https://github.com/adonisjs/adonis-auth/commit/4cdaf87)), closes [#117](https://github.com/adonisjs/adonis-auth/issues/117)
+* ensure uid in always a string in validate calls ([fb07728](https://github.com/adonisjs/adonis-auth/commit/fb07728)), closes [#118](https://github.com/adonisjs/adonis-auth/issues/118)
+
+
+
 <a name="3.0.5"></a>
 ## [3.0.5](https://github.com/adonisjs/adonis-auth/compare/v3.0.4...v3.0.5) (2018-03-30)
 
