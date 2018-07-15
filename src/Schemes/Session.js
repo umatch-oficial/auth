@@ -28,9 +28,22 @@ const CE = require('../Exceptions')
  * @extends BaseScheme
  */
 class SessionScheme extends BaseScheme {
-  constructor () {
+  constructor (Config) {
     super()
+
+    this._cookieOptions = Config.get('session.cookie', {})
     this._rememberTokenDuration = new Resetable(0)
+  }
+
+  /**
+   * Injections via IoC container
+   *
+   * @method inject
+   *
+   * @return {Array}
+   */
+  static get inject () {
+    return ['Adonis/Src/Config']
   }
 
   /**
@@ -79,9 +92,9 @@ class SessionScheme extends BaseScheme {
      * defined
      */
     if (rememberToken && duration) {
-      this._ctx.response.cookie(this.rememberTokenKey, rememberToken, {
+      this._ctx.response.cookie(this.rememberTokenKey, rememberToken, Object.assign(this._cookieOptions, {
         expires: new Date(Date.now() + duration)
-      })
+      }))
     }
   }
 

@@ -13,6 +13,7 @@ require('@adonisjs/lucid/lib/iocResolver').setFold(require('@adonisjs/fold'))
 
 const test = require('japa')
 const { ioc } = require('@adonisjs/fold')
+const { Config } = require('@adonisjs/sink')
 
 const { session: Session } = require('../../src/Schemes')
 const { lucid: LucidSerializer } = require('../../src/Serializers')
@@ -36,7 +37,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer()
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
     session.setOptions(config, lucid)
     assert.equal(session.uidField, 'email')
   })
@@ -54,7 +55,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer()
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
     session.setOptions(config, lucid)
     assert.equal(session.passwordField, 'password')
   })
@@ -73,7 +74,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer()
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
     session.setOptions(config, lucid)
     assert.equal(session.scheme, 'session')
   })
@@ -92,7 +93,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer()
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
     session.setOptions(config, lucid)
     try {
       await session.validate('foo@bar.com', 'secret')
@@ -116,7 +117,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
     session.setOptions(config, lucid)
     await User.create({ email: 'foo@bar.com', password: 'supersecret' })
 
@@ -139,7 +140,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
     session.setOptions(config, lucid)
     await User.create({ email: 'foo@bar.com', password: 'supersecret' })
     const validated = await session.validate('foo@bar.com', 'supersecret')
@@ -158,7 +159,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
     session.setOptions(config, lucid)
     await User.create({ email: 'foo@bar.com', password: 'supersecret' })
     const user = await session.validate('foo@bar.com', 'supersecret', true)
@@ -179,7 +180,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
 
@@ -209,7 +210,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
 
@@ -247,7 +248,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
 
@@ -287,7 +288,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
 
@@ -322,7 +323,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
 
@@ -361,7 +362,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({
@@ -393,7 +394,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({
@@ -425,7 +426,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({
@@ -455,7 +456,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({
@@ -483,7 +484,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({
@@ -512,7 +513,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({
@@ -544,7 +545,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({
@@ -579,7 +580,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({
@@ -616,7 +617,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({
@@ -655,7 +656,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({
@@ -682,7 +683,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({
@@ -726,7 +727,7 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({})
@@ -751,12 +752,55 @@ test.group('Schemes - Session', (group) => {
     const lucid = new LucidSerializer(ioc.use('Hash'))
     lucid.setConfig(config)
 
-    const session = new Session()
+    const session = new Session(new Config())
 
     session.setOptions(config, lucid)
     session.setCtx({})
 
     const fn = () => session.clientLogin(null, function () {}, {})
     assert.throw(fn, 'Cannot login user, since value for id is missing')
+  })
+
+  test('use session cookie options for remember me token', async (assert) => {
+    let rememberMeToken = null
+
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const configInstance = new Config()
+    configInstance.set('session.cookie', {
+      path: '/'
+    })
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const session = new Session(configInstance)
+
+    session.setOptions(config, lucid)
+
+    session.setCtx({
+      session: {
+        put () {}
+      },
+      response: {
+        cookie (key, value, options) {
+          rememberMeToken = { key, value, options }
+        }
+      }
+    })
+
+    await User.create({ email: 'foo@bar.com', password: 'supersecret' })
+    const user = await session.remember(true).attempt('foo@bar.com', 'supersecret')
+    assert.instanceOf(user, User)
+    assert.equal(rememberMeToken.key, 'adonis-remember-token')
+    assert.isDefined(rememberMeToken.value)
+    assert.property(rememberMeToken.options, 'path')
+    assert.equal(rememberMeToken.options.path, '/')
   })
 })
