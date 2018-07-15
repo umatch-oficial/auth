@@ -184,7 +184,7 @@ class BaseScheme {
    * ```
    */
   async validate (uid, password, returnUser = false) {
-    const user = await this._serializerInstance.findByUid(uid)
+    const user = await this._serializerInstance.findByUid(typeof (uid) === 'string' ? uid : null)
     if (!user) {
       throw this.missingUserFor(uid)
     }

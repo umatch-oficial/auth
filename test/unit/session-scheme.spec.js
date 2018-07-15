@@ -803,4 +803,36 @@ test.group('Schemes - Session', (group) => {
     assert.property(rememberMeToken.options, 'path')
     assert.equal(rememberMeToken.options.path, '/')
   })
+
+  test('return error when user uid is not a string', async (assert) => {
+    assert.plan(1)
+
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      scheme: 'session'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const session = new Session(new Config())
+
+    session.setOptions(config, lucid)
+
+    session.setCtx({ session: {
+      put (key, value) {
+      }
+    } })
+
+    await User.create({ email: 'foo@bar.com', password: 'supersecret' })
+    try {
+      await session.attempt(false, 'supersecret')
+    } catch (error) {
+      assert.equal(error.message, 'E_USER_NOT_FOUND: Cannot find user with email as false')
+    }
+  })
 })
