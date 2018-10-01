@@ -1,3 +1,19 @@
+<a name="3.0.7"></a>
+## [3.0.7](https://github.com/adonisjs/adonis-auth/compare/v3.0.6...v3.0.7) (2018-10-01)
+
+
+### Bug Fixes
+
+* **schemes:** add loginIfCan method to all schemes ([3de0a82](https://github.com/adonisjs/adonis-auth/commit/3de0a82))
+
+
+### Features
+
+* **api-scheme:** allow auth header type to be `token` alongside with `bearer` ([56621d0](https://github.com/adonisjs/adonis-auth/commit/56621d0))
+* **middleware:** add AllowGuestOnly ([#125](https://github.com/adonisjs/adonis-auth/issues/125)) ([76e918b](https://github.com/adonisjs/adonis-auth/commit/76e918b))
+
+
+
 <a name="3.0.6"></a>
 ## [3.0.6](https://github.com/adonisjs/adonis-auth/compare/v3.0.5...v3.0.6) (2018-07-15)
 
