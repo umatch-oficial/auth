@@ -351,7 +351,7 @@ class SessionScheme extends BaseScheme {
    * @method loginIfCan
    * @async
    *
-   * @return {void}
+   * @return {Boolean}
    *
    * @example
    * ```js
@@ -360,7 +360,7 @@ class SessionScheme extends BaseScheme {
    */
   async loginIfCan () {
     if (this.user) {
-      return
+      return true
     }
 
     /**
@@ -374,13 +374,13 @@ class SessionScheme extends BaseScheme {
      * value and no remember token
      */
     if (!sessionValue && !rememberMeToken) {
-      return
+      return false
     }
 
     try {
       return await this.check()
     } catch (error) {
-      // swallow exception
+      return false
     }
   }
 

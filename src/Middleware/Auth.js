@@ -40,6 +40,17 @@ class Auth {
     this.scheme = Config.get(`auth.${authenticator}.scheme`, null)
   }
 
+  /**
+   * Attempts to authenticate the user using defined multiple schemes and
+   * stops on the first one
+   *
+   * @method _authenticate
+   *
+   * @param  {Object}      auth
+   * @param  {Array}      schemes
+   *
+   * @return {void}
+   */
   async _authenticate (auth, schemes) {
     let lastError = null
     schemes = Array.isArray(schemes) && schemes.length ? schemes : [this.scheme]

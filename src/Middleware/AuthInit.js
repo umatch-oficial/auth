@@ -44,9 +44,7 @@ class AuthInit {
    * @return {void}
    */
   async handle ({ auth, view }, next) {
-    if (this.scheme === 'session') {
-      await auth.loginIfCan()
-    }
+    await auth.loginIfCan()
 
     /**
      * Sharing user with the view

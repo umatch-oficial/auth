@@ -575,4 +575,98 @@ test.group('Schemes - Api', (group) => {
     const token = await user.tokens().first()
     assert.isNull(token)
   })
+
+  test('set user property when token exists', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    await user.tokens().create({ type: 'api_token', token: '22', is_revoked: false })
+
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+    api.setCtx({
+      request: {
+        header (key) {
+          return `Bearer e22`
+        }
+      }
+    })
+
+    const isLoggedIn = await api.loginIfCan()
+    assert.isTrue(isLoggedIn)
+    assert.instanceOf(api.user, User)
+  })
+
+  test('silently ignore when token header is missing', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    await user.tokens().create({ type: 'api_token', token: '22', is_revoked: false })
+
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+    api.setCtx({
+      request: {
+        header (key) {
+          return null
+        },
+
+        input () {
+          return null
+        }
+      }
+    })
+
+    const isLoggedIn = await api.loginIfCan()
+    assert.isFalse(isLoggedIn)
+    assert.isNull(api.user, null)
+  })
+
+  test('silently ignore when token exists but is invalid', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    await user.tokens().create({ type: 'api_token', token: '22', is_revoked: false })
+
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+    api.setCtx({
+      request: {
+        header (key) {
+          return 'Bearer 40'
+        }
+      }
+    })
+
+    const isLoggedIn = await api.loginIfCan()
+    assert.isFalse(isLoggedIn)
+    assert.isNull(api.user, null)
+  })
 })

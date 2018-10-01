@@ -62,6 +62,46 @@ class BasicAuthScheme extends BaseScheme {
   }
 
   /**
+   * Same as {{#crossLink "BasicAuthScheme/check:method"}}{{/crossLink}},
+   * but doesn't throw any exceptions. This method is useful for
+   * routes, where login is optional.
+   *
+   * @method loginIfCan
+   * @async
+   *
+   * @return {Boolean}
+   *
+   * @example
+   * ```js
+ *   await auth.loginIfCan()
+   * ```
+   */
+  async loginIfCan () {
+    if (this.user) {
+      return true
+    }
+
+    /**
+     * Don't do anything when there is no session
+     */
+    const authString = this._ctx.request.header('authorization') || this._ctx.request.input('basic')
+
+    /**
+     * Don't attempt for anything when there is no session
+     * value and no remember token
+     */
+    if (!authString) {
+      return false
+    }
+
+    try {
+      return await this.check()
+    } catch (error) {
+      return false
+    }
+  }
+
+  /**
    * Login as a user by setting basic auth header
    * before the request reaches the server.
    *

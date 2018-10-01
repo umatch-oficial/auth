@@ -403,6 +403,43 @@ class JwtScheme extends BaseTokenScheme {
   }
 
   /**
+   * Same as {{#crossLink "JwtScheme/check:method"}}{{/crossLink}},
+   * but doesn't throw any exceptions. This method is useful for
+   * routes, where login is optional.
+   *
+   * @method loginIfCan
+   * @async
+   *
+   * @return {Boolean}
+   *
+   * @example
+   * ```js
+ *   await auth.loginIfCan()
+   * ```
+   */
+  async loginIfCan () {
+    if (this.user) {
+      return true
+    }
+
+    const token = this.getAuthHeader()
+
+    /**
+     * Do not attempt to check, when token itself is missing
+     */
+    if (!token) {
+      return false
+    }
+
+    try {
+      return await this.check()
+    } catch (error) {
+      return false
+      // swallow exception
+    }
+  }
+
+  /**
    * List all refresh tokens for a given user.
    *
    * @method listTokensForUser

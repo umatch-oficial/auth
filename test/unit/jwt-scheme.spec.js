@@ -1044,4 +1044,104 @@ test.group('Schemes - Jwt', (group) => {
     const token = await user.tokens().first()
     assert.isNull(token)
   })
+
+  test('set user property when token exists', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    await User.create({ email: 'foo@bar.com', password: 'secret' })
+    const token = await generateToken({ uid: 1 }, { expiresIn: 1 })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+    jwt.setCtx({
+      request: {
+        header () {
+          return `Bearer ${token}`
+        }
+      }
+    })
+
+    const isLogged = await jwt.loginIfCan()
+    assert.isTrue(isLogged)
+    assert.instanceOf(jwt.user, User)
+  })
+
+  test('silently ignore when token header is missing', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+    jwt.setCtx({
+      request: {
+        header () {
+          return null
+        },
+        input () {
+          return null
+        }
+      }
+    })
+
+    const isLogged = await jwt.loginIfCan()
+    assert.isFalse(isLogged)
+    assert.isNull(jwt.user)
+  })
+
+  test('silently ignore when token is invalid', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password',
+      options: {
+        secret: SECRET
+      }
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const jwt = new Jwt(Encryption)
+    jwt.setOptions(config, lucid)
+    jwt.setCtx({
+      request: {
+        header () {
+          return '30'
+        }
+      }
+    })
+
+    const isLogged = await jwt.loginIfCan()
+    assert.isFalse(isLogged)
+    assert.isNull(jwt.user)
+  })
 })

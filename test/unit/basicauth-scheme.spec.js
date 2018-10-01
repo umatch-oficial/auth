@@ -273,4 +273,106 @@ test.group('Schemes - BasicAuth', (group) => {
 
     await basic.clientLogin(headerFn, null, 'foo', 'secret')
   })
+
+  test('set user property when credentials exists', async (assert) => {
+    class User extends Model {
+      static get makePlain () {
+        return true
+      }
+    }
+    User._bootIfNotBooted()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const basic = new BasicAuth()
+    basic.setOptions(config, lucid)
+    basic.setCtx({ request: {
+      header () {
+        return `Basic ${Buffer.from('foo@bar.com:secret').toString('base64')}`
+      }
+    } })
+
+    const isLogged = await basic.loginIfCan()
+    assert.isTrue(isLogged)
+    assert.instanceOf(basic.user, User)
+  })
+
+  test('silently ignore when basic auth headers are missing', async (assert) => {
+    class User extends Model {
+      static get makePlain () {
+        return true
+      }
+    }
+    User._bootIfNotBooted()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const basic = new BasicAuth()
+    basic.setOptions(config, lucid)
+    basic.setCtx({ request: {
+      header () {
+        return null
+      },
+      input () {
+        return null
+      }
+    } })
+
+    const isLogged = await basic.loginIfCan()
+    assert.isFalse(isLogged)
+    assert.isNull(basic.user)
+  })
+
+  test('silently ignore when credentials exists but are invalid', async (assert) => {
+    class User extends Model {
+      static get makePlain () {
+        return true
+      }
+    }
+    User._bootIfNotBooted()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    await User.create({ email: 'foo@bar.com', password: 'secret' })
+
+    const basic = new BasicAuth()
+    basic.setOptions(config, lucid)
+    basic.setCtx({ request: {
+      header () {
+        return `Basic ${Buffer.from('foo@bar.com:invalidsecret').toString('base64')}`
+      },
+      input () {
+        return null
+      }
+    } })
+
+    const isLogged = await basic.loginIfCan()
+    assert.isFalse(isLogged)
+    assert.isNull(basic.user)
+  })
 })
