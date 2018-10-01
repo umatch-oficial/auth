@@ -137,7 +137,7 @@ class ApiScheme extends BaseTokenScheme {
       return true
     }
 
-    const token = this.getAuthHeader()
+    const token = this.getAuthHeader(['bearer', 'token'])
     if (!token) {
       throw CE.InvalidApiToken.invoke()
     }
@@ -179,7 +179,7 @@ class ApiScheme extends BaseTokenScheme {
       return true
     }
 
-    const token = this.getAuthHeader()
+    const token = this.getAuthHeader(['bearer', 'token'])
 
     /**
      * Do not attempt to check, when token itself is missing

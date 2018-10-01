@@ -669,4 +669,34 @@ test.group('Schemes - Api', (group) => {
     assert.isFalse(isLoggedIn)
     assert.isNull(api.user, null)
   })
+
+  test('verify user token from when type is token and not bearer', async (assert) => {
+    const User = helpers.getUserModel()
+
+    const config = {
+      model: User,
+      uid: 'email',
+      password: 'password'
+    }
+
+    const lucid = new LucidSerializer(ioc.use('Hash'))
+    lucid.setConfig(config)
+
+    const user = await User.create({ email: 'foo@bar.com', password: 'secret' })
+    await user.tokens().create({ type: 'api_token', token: '22', is_revoked: false })
+
+    const api = new Api(Encryption)
+    api.setOptions(config, lucid)
+    api.setCtx({
+      request: {
+        header (key) {
+          return `Token e22`
+        }
+      }
+    })
+
+    const isLoggedIn = await api.check()
+    assert.isTrue(isLoggedIn)
+    assert.instanceOf(api.user, User)
+  })
 })

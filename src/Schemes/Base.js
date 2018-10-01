@@ -225,9 +225,13 @@ class BaseScheme {
    *
    * @method getAuthHeader
    *
+   * @param {Array} authTypes
+   *
    * @return {String|Null}
    */
-  getAuthHeader () {
+  getAuthHeader (authTypes) {
+    authTypes = Array.isArray(authTypes) ? authTypes : ['bearer']
+
     const { request } = this._ctx
 
     /**
@@ -236,7 +240,7 @@ class BaseScheme {
     let token = request.header('authorization')
     if (token) {
       token = token.split(' ')
-      return (token.length === 2 && token[0].toLowerCase() === 'bearer') ? token[1] : null
+      return (token.length === 2 && authTypes.indexOf(token[0].toLowerCase()) > -1) ? token[1] : null
     }
 
     /**
