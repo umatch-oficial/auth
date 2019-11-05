@@ -1,3 +1,12 @@
+# [3.1.0](https://github.com/adonisjs/adonis-auth/compare/v3.0.7...v3.1.0) (2019-11-05)
+
+
+### Features
+
+* add support for jwt public key ([d9f1ad9](https://github.com/adonisjs/adonis-auth/commit/d9f1ad9))
+
+
+
 <a name="3.0.7"></a>
 ## [3.0.7](https://github.com/adonisjs/adonis-auth/compare/v3.0.6...v3.0.7) (2018-10-01)
 
