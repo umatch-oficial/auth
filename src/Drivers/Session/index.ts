@@ -9,6 +9,7 @@
 
 import { JWS } from 'jose'
 import { randomBytes } from 'crypto'
+import { Exception } from '@poppinss/utils'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import {
@@ -17,6 +18,7 @@ import {
   SessionDriverConfig,
   SessionDriverContract,
   SessionLoginEventData,
+  SessionAuthenticateEventData,
 } from '@ioc:Adonis/Addons/Auth'
 
 import {
@@ -39,8 +41,23 @@ export class SessionDriver<
     public provider: ProvidersList[Provider]['implementation'],
     private ctx: HttpContextContract,
   ) {
+    this.ensureAppKey()
   }
 
+  /**
+   * Ensures that app key exists.
+   */
+  private ensureAppKey () {
+    if (this.appKey) {
+      return
+    }
+
+    throw new Exception('"app.appKey" is required to initiate auth session driver', 500, 'E_MISSING_APP_KEY')
+  }
+
+  /**
+   * Algorithm for the JWS remember me token
+   */
   private jwsAlg = 'HS256'
 
   /**
@@ -142,6 +159,18 @@ export class SessionDriver<
    */
   private getLoginEventData (user: any, token?: string): SessionLoginEventData<any> {
     return [this.config.identifier || this.name, user, this.ctx, token]
+  }
+
+  /**
+   * Returns data packet for the authenticate event. Arguments are
+   *
+   * - The mapping identifier
+   * - Logged in user
+   * - HTTP context
+   * - A boolean to tell if logged in viaRemember or not
+   */
+  private getAuthenticateEventData (user: any, viaRemember: boolean): SessionAuthenticateEventData<any> {
+    return [this.config.identifier || this.name, user, this.ctx, viaRemember]
   }
 
   /**
@@ -277,6 +306,7 @@ export class SessionDriver<
     if (sessionId) {
       this.user = await this.getUserForSessionId(sessionId)
       this.isAuthenticated = true
+      this.emitter.emit('auth:session:authenticate', this.getAuthenticateEventData(this.user, false))
       return
     }
 
@@ -299,6 +329,7 @@ export class SessionDriver<
     this.user = await this.getUserForRememberMeToken(id, token)
     this.isAuthenticated = true
     this.viaRemember = true
+    this.emitter.emit('auth:session:authenticate', this.getAuthenticateEventData(this.user, true))
 
     /**
      * Update the session to re-login the user
@@ -307,11 +338,14 @@ export class SessionDriver<
   }
 
   /**
-   * Same as [[authenicate]] but swallows the exceptions
+   * Same as [[authenicate]] but returns a boolean over raising exceptions
    */
-  public async authenticateSilently (): Promise<void> {
+  public async check (): Promise<boolean> {
     try {
       await this.authenticate()
-    } catch {}
+      return true
+    } catch {
+      return false
+    }
   }
 }

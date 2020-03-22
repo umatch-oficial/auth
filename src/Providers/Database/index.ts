@@ -8,7 +8,6 @@
 */
 
 import { Hooks } from '@poppinss/hooks'
-import { inject } from '@adonisjs/fold'
 import { Exception } from '@poppinss/utils'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
@@ -21,7 +20,6 @@ import {
 /**
  * Database provider to lookup users
  */
-@inject([null, 'Adonis/Lucid/Database'])
 export class DatabaseProvider implements DatabaseProviderContract<DatabaseProviderUser> {
   /**
    * Hooks reference

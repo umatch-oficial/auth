@@ -9,6 +9,17 @@ declare module '@ioc:Adonis/Addons/Auth' {
       implementation: DatabaseProviderContract<any>,
     },
   }
+
+  interface AuthenticatorsList {
+    session: {
+      implementation: SessionDriverContract<'lucid'>,
+      config: SessionDriverConfig<'lucid'>,
+    },
+    sessionDb: {
+      implementation: SessionDriverContract<'database'>,
+      config: SessionDriverConfig<'database'>,
+    },
+  }
 }
 
 declare module '@ioc:Adonis/Core/Hash' {

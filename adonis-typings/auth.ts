@@ -8,6 +8,7 @@
 */
 
 declare module '@ioc:Adonis/Addons/Auth' {
+  import { IocContract } from '@adonisjs/fold'
   import { HasMany } from '@ioc:Adonis/Lucid/Orm'
   import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
   import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
@@ -228,6 +229,13 @@ declare module '@ioc:Adonis/Addons/Auth' {
   ]
 
   /**
+   * Shape of data emitted by the authenticate event
+   */
+  export type SessionAuthenticateEventData<Provider extends keyof ProvidersList> = [
+    string, GetProviderUser<Provider>, HttpContextContract, boolean,
+  ]
+
+  /**
    * Shape of the session driver
    */
   export interface SessionDriverContract<Provider extends keyof ProvidersList> {
@@ -294,9 +302,9 @@ declare module '@ioc:Adonis/Addons/Auth' {
 
     /**
      * Attempts to authenticate the user for the current HTTP request and supresses
-     * exceptions raised by the [[authenticate]] method.
+     * exceptions raised by the [[authenticate]] method and returns a boolean
      */
-    authenticateSilently (): Promise<void>
+    check (): Promise<boolean>
   }
 
   /*
@@ -341,14 +349,13 @@ declare module '@ioc:Adonis/Addons/Auth' {
 
   /*
   |--------------------------------------------------------------------------
-  | Auth Manager
+  | Auth
   |--------------------------------------------------------------------------
   */
 
   /**
-   * Shape of the auth manager. We do not use `@poppinss/maanger` here, since in case
-   * auth, we need extendible API for both "providers" and "drivers" and poppinss
-   * manager cannot handle it
+   * Instance of the auth contract. The `use` method can be used to obtain
+   * an instance of a given authenticator mapping
    */
   export interface AuthContract<
     DefaultAuthenticator = AuthenticatorsList[AuthConfig['authenticator']]['implementation'],
@@ -360,6 +367,54 @@ declare module '@ioc:Adonis/Addons/Auth' {
     use<K extends keyof Authenticators> (authenticator: K): Authenticators[K]
   }
 
-  const Auth: AuthContract
-  export default Auth
+  /*
+  |--------------------------------------------------------------------------
+  | Auth Manager
+  |--------------------------------------------------------------------------
+  */
+
+  /**
+   * Shape of the callback accepted to add new user providers
+   */
+  export type ExtendedProviderCallback = (container: IocContract, config: any) => ProvidersContract<any>
+
+  /**
+   * Shape of the callback accepted to add new authenticators
+   */
+  export type ExtendedAuthenticatorCallback = (
+    container: IocContract,
+    mapping: string,
+    config: any,
+    ctx: HttpContextContract,
+    provider: ProvidersContract<any>,
+  ) => any
+
+  /**
+   * Shape of the auth manager to register custom drivers and providers and
+   * make instances of them
+   */
+  export interface AuthManagerContract {
+    /**
+     * Returns the instance of [[AuthContract]] for a given HTTP request
+     */
+    getAuthForRequest (ctx: HttpContextContract): AuthContract,
+
+    /**
+     * Returns the name for the default mapping
+     */
+    getDefaultMappingName (): keyof AuthenticatorsList
+
+    /**
+     * Make instance of a mapping
+     */
+    makeMapping<
+      K extends keyof AuthenticatorsList
+    > (ctx: HttpContextContract, mapping?: K): AuthenticatorsList[K]['implementation']
+
+    /**
+     * Extend by adding custom providers and authenticators
+     */
+    extend (type: 'provider', provider: string, callback: ExtendedProviderCallback): void
+    extend (type: 'authenticator', provider: string, callback: ExtendedAuthenticatorCallback): void
+  }
 }

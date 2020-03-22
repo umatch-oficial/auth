@@ -17,7 +17,7 @@ import { ServerResponse, IncomingMessage } from 'http'
 import { Logger } from '@adonisjs/logger/build/standalone'
 import { Database } from '@adonisjs/lucid/build/src/Database'
 import { Profiler } from '@adonisjs/profiler/build/standalone'
-import { FakeEmitter } from '@adonisjs/events/build/standalone'
+import { Emitter } from '@adonisjs/events/build/standalone'
 import { Adapter } from '@adonisjs/lucid/build/src/Orm/Adapter'
 import { Encryption } from '@adonisjs/encryption/build/standalone'
 import { BaseModel } from '@adonisjs/lucid/build/src/Orm/BaseModel'
@@ -41,7 +41,6 @@ import {
 } from '@ioc:Adonis/Addons/Auth'
 
 const fs = new Filesystem(join(__dirname, '__app'))
-const container = new Ioc()
 const logger = new Logger({ enabled: false, level: 'debug', name: 'adonis', prettyPrint: true })
 const profiler = new Profiler(__dirname, logger, {})
 const sessionConfig: SessionConfigContract = {
@@ -54,6 +53,7 @@ const sessionConfig: SessionConfigContract = {
   },
 }
 
+export const container = new Ioc()
 export const secret = 'securelong32characterslongsecret'
 export const encryption = new Encryption(secret)
 export const hash = new Hash(container, {
@@ -66,7 +66,16 @@ export const hash = new Hash(container, {
   },
 })
 
-export const emitter = new FakeEmitter(container)
+export const emitter = new Emitter(container)
+container.singleton('Adonis/Core/Emitter', () => emitter)
+container.singleton('Adonis/Core/Encryption', () => encryption)
+container.singleton('Adonis/Core/Config', () => {
+  return {
+    get () {
+      return secret
+    },
+  }
+})
 
 /**
  * Create the users tables
@@ -230,9 +239,8 @@ export function getLucidProvider<User extends LucidProviderUser> (
 export function getDatabaseProvider (config: Partial<DatabaseProviderConfig>) {
   const defaults = getDatabaseProviderConfig()
   const normalizedConfig = Object.assign(defaults, config) as DatabaseProviderConfig
-
-  return container
-    .make(DatabaseProvider, [normalizedConfig as any]) as unknown as DatabaseProviderContract<any>
+  const db = container.use('Adonis/Lucid/Database')
+  return new DatabaseProvider(normalizedConfig, db) as unknown as DatabaseProviderContract<any>
 }
 
 /**
@@ -242,7 +250,14 @@ export function getCtx (req?: IncomingMessage, res?: ServerResponse) {
   const httpRow = profiler.create('http:request')
   return HttpContext
     .create(
-      '/', {}, logger, httpRow, encryption, req, res, { secret: secret } as any,
+      '/',
+      {},
+      logger,
+      httpRow,
+      encryption,
+      req,
+      res,
+      { secret: secret } as any,
     ) as unknown as HttpContextContract
 }
 

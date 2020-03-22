@@ -23,6 +23,7 @@ import {
   getDb,
   secret,
   getCtx,
+  emitter,
   cleanup,
   getModel,
   getSessionDriver,
@@ -173,6 +174,8 @@ test.group('Session Driver | attempt', (group) => {
   })
 
   test('login user by setting the session', async (assert) => {
+    assert.plan(4)
+
     class Token extends BaseModel {
       public type: string
       public value: string
@@ -196,6 +199,11 @@ test.group('Session Driver | attempt', (group) => {
 
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+    emitter.once('auth:session:login', ([mapping, user, _, token]) => {
+      assert.equal(mapping, 'session')
+      assert.instanceOf(user, User)
+      assert.isUndefined(token)
+    })
 
     const server = createServer(async (req, res) => {
       const ctx = getCtx(req, res)
@@ -219,6 +227,8 @@ test.group('Session Driver | attempt', (group) => {
   })
 
   test('define remember me cookie when remember me is set to true', async (assert) => {
+    assert.plan(8)
+
     class Token extends BaseModel {
       public type: string
       public value: string
@@ -250,6 +260,12 @@ test.group('Session Driver | attempt', (group) => {
 
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+
+    emitter.once('auth:session:login', ([mapping, user, _, token]) => {
+      assert.equal(mapping, 'session')
+      assert.instanceOf(user, User)
+      assert.isDefined(token)
+    })
 
     const server = createServer(async (req, res) => {
       const ctx = getCtx(req, res)
@@ -354,6 +370,8 @@ test.group('Session Driver | authenticate', (group) => {
   })
 
   test('authenticate user session and load user from db', async (assert) => {
+    assert.plan(9)
+
     class Token extends BaseModel {
       public type: string
       public value: string
@@ -377,6 +395,11 @@ test.group('Session Driver | authenticate', (group) => {
 
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+    emitter.once('auth:session:authenticate', ([mapping, user, _, viaRemember]) => {
+      assert.equal(mapping, 'session')
+      assert.instanceOf(user, User)
+      assert.isFalse(viaRemember)
+    })
 
     const server = createServer(async (req, res) => {
       const ctx = getCtx(req, res)
@@ -417,6 +440,8 @@ test.group('Session Driver | authenticate', (group) => {
   })
 
   test('re-login user using remember me token', async (assert) => {
+    assert.plan(8)
+
     class Token extends BaseModel {
       public type: string
       public value: string
@@ -448,6 +473,12 @@ test.group('Session Driver | authenticate', (group) => {
 
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+
+    emitter.once('auth:session:authenticate', ([mapping, user, _, viaRemember]) => {
+      assert.equal(mapping, 'session')
+      assert.instanceOf(user, User)
+      assert.isTrue(viaRemember)
+    })
 
     const server = createServer(async (req, res) => {
       const ctx = getCtx(req, res)
