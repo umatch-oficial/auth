@@ -8,9 +8,8 @@
 */
 
 declare module '@ioc:Adonis/Addons/Auth' {
-  import { DateTime } from 'luxon'
   import { IocContract } from '@adonisjs/fold'
-  import { HasMany } from '@ioc:Adonis/Lucid/Orm'
+  import { HashersList } from '@ioc:Adonis/Core/Hash'
   import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
   import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
   import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/DatabaseQueryBuilder'
@@ -26,20 +25,32 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * Unwrap promise
    */
   type UnwrapPromise<T> = T extends PromiseLike<infer PT> ? PT : never
+  type UnWrapAuthenticableUser<T> = T extends AuthenticatableContract<any> ? Exclude<T['user'], null> : T
 
   /**
    * Returns provider user by excluding null from it
    */
-  export type GetProviderUser<Provider extends keyof ProvidersList> = Exclude<UnwrapPromise<
-    ReturnType<ProvidersList[Provider]['implementation']['findByUid']>
-  >, null>
+  export type GetProviderUser<
+    Provider extends keyof ProvidersList
+  > = UnWrapAuthenticableUser<UnwrapPromise<ReturnType<ProvidersList[Provider]['implementation']['findByUid']>>>
 
   /*
   |--------------------------------------------------------------------------
   | Providers
   |--------------------------------------------------------------------------
   */
-  export type ProviderToken = { value: string, type: string, expiresOn?: DateTime }
+
+  /**
+   * Authenticatable user that works as a bridge between providers
+   * and authenticators
+   */
+  export interface AuthenticatableContract<User extends any> {
+    user: User | null,
+    getId (): string | number | null,
+    verifyPassword: (plainPassword: string) => Promise<boolean>,
+    getRememberMeToken (): string | null,
+    setRememberMeToken (token: string): void,
+  }
 
   /**
    * The interface that every provider must implement
@@ -48,169 +59,128 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * Find a user using the primary key value
      */
-    findById (id: string | number): Promise<User | null>,
+    findById (id: string | number): Promise<AuthenticatableContract<User>>,
 
     /**
      * Find a user by searching for their uids
      */
-    findByUid (uid: string): Promise<User | null>,
+    findByUid (uid: string): Promise<AuthenticatableContract<User>>,
 
     /**
-     * Find a user using a token
+     * Find a user using the remember me token
      */
-    findByToken (userId: string | number, token: ProviderToken): Promise<User | null>,
+    findByToken (userId: string | number, token: string): Promise<AuthenticatableContract<User>>,
 
     /**
-     * Create token for a given user
+     * Update remember token
      */
-    createToken (user: User, token: ProviderToken): Promise<void>
-
-    /**
-     * Create token for a given user
-     */
-    revokeToken (user: User, token: ProviderToken): Promise<void>
-
-    /**
-     * Update an existing token
-     */
-    updateToken (user: User, oldValue: string, token: ProviderToken): Promise<void>
-
-    /**
-     * Purge expired tokens for a given user and type.
-     */
-    purgeTokens (user: User, type: string): Promise<void>
-  }
-
-  /**
-   * The shape of the user model accepted by the Lucid provider
-   */
-  export type LucidProviderUser = ModelConstructorContract<ModelContract & {
-    password: string,
-    tokens: HasMany<ModelContract & {
-      value: string,
-      type: string,
-      userId: string | number,
-      isRevoked: boolean,
-      expiresOn: DateTime,
-    }>,
-  }>
-
-  /**
-   * Lucid provider
-   */
-  export interface LucidProviderContract<
-    User extends LucidProviderUser
-  > extends ProvidersContract<InstanceType<User>> {
-    /**
-     * Define a custom connection for all the provider queries
-     */
-    setConnection (connection: string | QueryClientContract): this
-
-    /**
-     * Before hooks
-     */
-    before (
-      event: 'findUser',
-      callback: (query: ModelQueryBuilderContract<User>) => Promise<void>,
-    ): this
-
-    /**
-     * After hooks
-     */
-    after (
-      event: 'findUser',
-      callback: (user: InstanceType<User>) => Promise<void>,
-    ): this
-    after (
-      event: 'createToken',
-      callback: (user: User, token: InstanceType<User>['tokens'][0]) => Promise<void>,
-    ): this
-    after (
-      event: 'revokeToken',
-      callback: (user: User, token: ProviderToken) => Promise<void>,
-    ): this
-    after (
-      event: 'updateToken',
-      callback: (user: User, oldValue: string, token: ProviderToken) => Promise<void>,
-    ): this
-  }
-
-  /**
-   * Shape of the user returned by the database provider
-   */
-  export type DatabaseProviderUser = {
-    password: string,
-    [key: string]: any,
-  }
-
-  /**
-   * Shape of the token row for the database provider
-   */
-  export type DatabaseProviderToken = {
-    token_value: string,
-    token_type: string,
-    id: string,
-    user_id: string,
-    is_revoked: boolean,
-    expires_on: string,
-  } & { [key: string]: any }
-
-  /**
-   * Database provider
-   */
-  export interface DatabaseProviderContract<
-    User extends DatabaseProviderUser
-  > extends ProvidersContract<User> {
-    /**
-     * Define a custom connection for all the provider queries
-     */
-    setConnection (connection: string | QueryClientContract): this
-
-    /**
-     * Before hooks
-     */
-    before (
-      event: 'findUser',
-      callback: (query: DatabaseQueryBuilderContract) => Promise<void>,
-    ): this
-
-    /**
-     * After hooks
-     */
-    after (
-      event: 'findUser',
-      callback: (user: DatabaseProviderUser) => Promise<void>,
-    ): this
-    after (
-      event: 'createToken',
-      callback: (user: DatabaseProviderUser, token: DatabaseProviderToken) => Promise<void>,
-    ): this
-    after (
-      event: 'revokeToken',
-      callback: (user: DatabaseProviderUser, token: ProviderToken) => Promise<void>,
-    ): this
-    after (
-      event: 'updateToken',
-      callback: (user: DatabaseProviderUser, oldValue: string, token: ProviderToken) => Promise<void>,
-    ): this
+    updateRememberMeToken (authenticatable: AuthenticatableContract<User>): Promise<void>
   }
 
   /*
   |--------------------------------------------------------------------------
-  | Config
+  | Lucid Provider
   |--------------------------------------------------------------------------
   */
+
+  /**
+   * The shape of the user model accepted by the Lucid provider. The model
+   * must have `password` and `rememberMeToken` attributes.
+   */
+  export type LucidProviderUser = ModelConstructorContract<ModelContract & {
+    password: string,
+    rememberMeToken?: string | null,
+  }>
+
+  /**
+   * Shape of lucid authenticatable builder
+   */
+  export interface LucidAuthenticatableBuilder<User extends LucidProviderUser> {
+    new (
+      user: InstanceType<User> | null,
+      config: LucidProviderConfig<User>,
+      ...args: any[],
+    ): AuthenticatableContract<InstanceType<User>>,
+  }
+
+  /**
+   * Lucid provider
+   */
+  export interface LucidProviderContract<User extends LucidProviderUser> extends ProvidersContract<InstanceType<User>> {
+    /**
+     * Define a custom connection for all the provider queries
+     */
+    setConnection (connection: string | QueryClientContract): this
+
+    /**
+     * Before hooks
+     */
+    before (event: 'findUser', callback: (query: ModelQueryBuilderContract<User>) => Promise<void>): this
+
+    /**
+     * After hooks
+     */
+    after (event: 'findUser', callback: (user: InstanceType<User>) => Promise<void>): this
+  }
 
   /**
    * The config accepted by the Lucid provider
    */
   export type LucidProviderConfig<User extends LucidProviderUser> = {
     driver: 'lucid',
-    connection?: string,
     uids: string[],
     identifierKey: string,
-    verifyPassword: (user: InstanceType<User>, plainPassword: string) => Promise<boolean>
+    connection?: string,
+    hashDriver?: keyof HashersList,
     model: User,
+    authenticatable: LucidAuthenticatableBuilder<User>,
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | Database Provider
+  |--------------------------------------------------------------------------
+  */
+
+  /**
+   * Shape of the user returned by the database provider. The table must have `password`
+   * and `remember_me_token` columns.
+   */
+  export type DatabaseProviderUser = {
+    password: string,
+    remember_me_token?: string,
+    [key: string]: any,
+  }
+
+  /**
+   * Shape of lucid authenticatable builder
+   */
+  export interface DatabaseAuthenticatableBuilder {
+    new (
+      user: DatabaseProviderUser | null,
+      config: DatabaseProviderConfig,
+      ...args: any[],
+    ): AuthenticatableContract<DatabaseProviderUser>,
+  }
+
+  /**
+   * Database provider
+   */
+  export interface DatabaseProviderContract<User extends DatabaseProviderUser> extends ProvidersContract<User> {
+    /**
+     * Define a custom connection for all the provider queries
+     */
+    setConnection (connection: string | QueryClientContract): this
+
+    /**
+     * Before hooks
+     */
+    before (event: 'findUser', callback: (query: DatabaseQueryBuilderContract) => Promise<void>): this
+
+    /**
+     * After hooks
+     */
+    after (event: 'findUser', callback: (user: DatabaseProviderUser) => Promise<void>): this
   }
 
   /**
@@ -218,17 +188,19 @@ declare module '@ioc:Adonis/Addons/Auth' {
    */
   export type DatabaseProviderConfig = {
     driver: 'database',
-    connection?: string,
     uids: string[],
     identifierKey: string,
-    verifyPassword: (user: DatabaseProviderUser, plainPassword: string) => Promise<boolean>,
-
-    /**
-     * Since there is no model, one need to define these values.
-     */
+    authenticatable: DatabaseAuthenticatableBuilder,
+    connection?: string,
+    hashDriver?: keyof HashersList,
     usersTable: string,
-    tokensTable: string,
   }
+
+  /*
+  |--------------------------------------------------------------------------
+  | Session Driver
+  |--------------------------------------------------------------------------
+  */
 
   /**
    * Shape of session driver config.
@@ -240,25 +212,10 @@ declare module '@ioc:Adonis/Addons/Auth' {
   }
 
   /**
-   * Shape of config accepted by the Auth module. It relies on the authenticator
-   * list interface
-   */
-  export interface AuthConfig {
-    authenticator: keyof AuthenticatorsList,
-    authenticators: { [P in keyof AuthenticatorsList]: AuthenticatorsList[P]['config'] },
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | Drivers
-  |--------------------------------------------------------------------------
-  */
-
-  /**
    * Shape of data emitted by the login event
    */
   export type SessionLoginEventData<Provider extends keyof ProvidersList> = [
-    string, GetProviderUser<Provider>, HttpContextContract, string?,
+    string, GetProviderUser<Provider>, HttpContextContract, string | null,
   ]
 
   /**
@@ -392,16 +349,23 @@ declare module '@ioc:Adonis/Addons/Auth' {
   */
 
   /**
+   * Shape of config accepted by the Auth module. It relies on the authenticator
+   * list interface
+   */
+  export interface AuthConfig {
+    authenticator: keyof AuthenticatorsList,
+    authenticators: { [P in keyof AuthenticatorsList]: AuthenticatorsList[P]['config'] },
+  }
+
+  /**
    * Instance of the auth contract. The `use` method can be used to obtain
    * an instance of a given authenticator mapping
    */
   export interface AuthContract<
-    DefaultAuthenticator = AuthenticatorsList[AuthConfig['authenticator']]['implementation'],
     Authenticators = {
       [P in keyof AuthenticatorsList]: AuthenticatorsList[P]['implementation']
     },
   > {
-    use (): DefaultAuthenticator
     use<K extends keyof Authenticators> (authenticator: K): Authenticators[K]
   }
 
@@ -414,12 +378,12 @@ declare module '@ioc:Adonis/Addons/Auth' {
   /**
    * Shape of the callback accepted to add new user providers
    */
-  export type ExtendedProviderCallback = (container: IocContract, config: any) => ProvidersContract<any>
+  export type ExtendProviderCallback = (container: IocContract, config: any) => ProvidersContract<any>
 
   /**
    * Shape of the callback accepted to add new authenticators
    */
-  export type ExtendedAuthenticatorCallback = (
+  export type ExtendAuthenticatorCallback = (
     container: IocContract,
     mapping: string,
     config: any,
@@ -452,7 +416,13 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * Extend by adding custom providers and authenticators
      */
-    extend (type: 'provider', provider: string, callback: ExtendedProviderCallback): void
-    extend (type: 'authenticator', provider: string, callback: ExtendedAuthenticatorCallback): void
+    extend (type: 'provider', provider: string, callback: ExtendProviderCallback): void
+    extend (type: 'authenticator', provider: string, callback: ExtendAuthenticatorCallback): void
   }
+
+  const Auth: AuthContract
+
+  export const LucidAuthenticatable: LucidAuthenticatableBuilder<LucidProviderUser>
+  export const DatabaseAuthenticatable: DatabaseAuthenticatableBuilder
+  export default Auth
 }

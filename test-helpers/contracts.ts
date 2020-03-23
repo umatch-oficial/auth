@@ -1,8 +1,10 @@
+import { User } from '../example/models'
+
 declare module '@ioc:Adonis/Addons/Auth' {
   interface ProvidersList {
     lucid: {
-      implementation: LucidProviderContract<any>,
-      config: LucidProviderConfig<any>,
+      implementation: LucidProviderContract<typeof User>,
+      config: LucidProviderConfig<typeof User>,
     },
     database: {
       config: DatabaseProviderConfig,
@@ -24,9 +26,6 @@ declare module '@ioc:Adonis/Addons/Auth' {
 
 declare module '@ioc:Adonis/Core/Hash' {
   interface HashersList {
-    bcrypt: {
-      config: BcryptConfigContract,
-      implementation: BcryptContract,
-    }
+    bcrypt: HashDrivers['bcrypt'],
   }
 }

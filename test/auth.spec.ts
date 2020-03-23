@@ -8,8 +8,6 @@
 */
 
 import test from 'japa'
-import { DateTime } from 'luxon'
-import { HasMany } from '@ioc:Adonis/Lucid/Orm'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 
 import { AuthManager } from '../src/AuthManager'
@@ -24,6 +22,7 @@ import {
   cleanup,
   container,
   getModel,
+  getUserModel,
   getLucidProviderConfig,
   getDatabaseProviderConfig,
 } from '../test-helpers'
@@ -47,36 +46,7 @@ test.group('Auth', (group) => {
   })
 
   test('make and cache instance of the session authenticator', (assert) => {
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public expiresOn: DateTime
-      public isRevoked: boolean
-    }
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public password: string
-      public email: string
-      public expiresOn: DateTime
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('email', {})
-    User.$addRelation('tokens', 'hasMany', {
-      relatedModel: () => Token,
-    })
-
-    Token.boot()
-    Token.$addColumn('userId', {})
-    Token.$addColumn('value', { columnName: 'token_value' })
-    Token.$addColumn('type', { columnName: 'token_type' })
-    Token.$addColumn('isRevoked', { columnName: 'is_revoked' })
+    const User = getUserModel(BaseModel)
 
     const manager = new AuthManager({
       authenticator: 'session',

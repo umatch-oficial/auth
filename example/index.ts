@@ -1,20 +1,33 @@
-// import { User } from './models'
-// import { AuthConfig, AuthContract } from '@ioc:Adonis/Addons/Auth'
+import { User } from './models'
+import { AuthConfig, AuthContract, LucidAuthenticatable, DatabaseAuthenticatable } from '@ioc:Adonis/Addons/Auth'
 
-// export const config: AuthConfig = {
-//   authenticator: 'session',
+export const config: AuthConfig = {
+  authenticator: 'session' as const,
+  authenticators: {
+    session: {
+      driver: 'session',
+      provider: {
+        driver: 'lucid',
+        model: User,
+        identifierKey: 'id',
+        uids: ['email'],
+        authenticatable: LucidAuthenticatable,
+      },
+    },
+    sessionDb: {
+      driver: 'session',
+      provider: {
+        driver: 'database',
+        usersTable: 'users',
+        identifierKey: 'id',
+        uids: ['email'],
+        authenticatable: DatabaseAuthenticatable,
+      },
+    },
+  },
+}
 
-//   authenticators: {
-//     session: {
-//       driver: 'session',
-//       provider: {
-//         driver: 'lucid',
-//         model: User,
-//         uids: ['email'],
-//       },
-//     }
-//   }
-// }
-
-// const a = {} as AuthContract
-// a.use().verifyCredentials().then((user) => )
+const a = {} as AuthContract
+a.use('session').provider
+a.use('session').verifyCredentials('asd', 'sda').then(() => {
+})

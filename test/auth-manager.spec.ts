@@ -8,8 +8,6 @@
 */
 
 import test from 'japa'
-import { DateTime } from 'luxon'
-import { HasMany } from '@ioc:Adonis/Lucid/Orm'
 import { ProvidersContract } from '@ioc:Adonis/Addons/Auth'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 
@@ -27,6 +25,7 @@ import {
   cleanup,
   container,
   getModel,
+  getUserModel,
   getLucidProviderConfig,
   getDatabaseProviderConfig,
 } from '../test-helpers'
@@ -50,35 +49,7 @@ test.group('Auth Manager', (group) => {
   })
 
   test('make an instance of the session authenticator with lucid provider', (assert) => {
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public isRevoked: boolean
-      public expiresOn: DateTime
-    }
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public password: string
-      public email: string
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('email', {})
-    User.$addRelation('tokens', 'hasMany', {
-      relatedModel: () => Token,
-    })
-
-    Token.boot()
-    Token.$addColumn('userId', {})
-    Token.$addColumn('value', { columnName: 'token_value' })
-    Token.$addColumn('type', { columnName: 'token_type' })
-    Token.$addColumn('isRevoked', { columnName: 'is_revoked' })
+    const User = getUserModel(BaseModel)
 
     const manager = new AuthManager({
       authenticator: 'session',
@@ -102,35 +73,7 @@ test.group('Auth Manager', (group) => {
   })
 
   test('make an instance of the session authenticator with database provider', (assert) => {
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public isRevoked: boolean
-      public expiresOn: DateTime
-    }
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public password: string
-      public email: string
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('email', {})
-    User.$addRelation('tokens', 'hasMany', {
-      relatedModel: () => Token,
-    })
-
-    Token.boot()
-    Token.$addColumn('userId', {})
-    Token.$addColumn('value', { columnName: 'token_value' })
-    Token.$addColumn('type', { columnName: 'token_type' })
-    Token.$addColumn('isRevoked', { columnName: 'is_revoked' })
+    const User = getUserModel(BaseModel)
 
     const manager = new AuthManager({
       authenticator: 'session',
@@ -154,35 +97,7 @@ test.group('Auth Manager', (group) => {
   })
 
   test('make an instance of auth class for a given http request', (assert) => {
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public isRevoked: boolean
-      public expiresOn: DateTime
-    }
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public password: string
-      public email: string
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('email', {})
-    User.$addRelation('tokens', 'hasMany', {
-      relatedModel: () => Token,
-    })
-
-    Token.boot()
-    Token.$addColumn('userId', {})
-    Token.$addColumn('value', { columnName: 'token_value' })
-    Token.$addColumn('type', { columnName: 'token_type' })
-    Token.$addColumn('isRevoked', { columnName: 'is_revoked' })
+    const User = getUserModel(BaseModel)
 
     const manager = new AuthManager({
       authenticator: 'session',
@@ -210,13 +125,10 @@ test.group('Auth Manager', (group) => {
         assert.deepEqual(config, { driver: 'mongodb' })
       }
 
-      public async findById () {}
-      public async findByToken () {}
-      public async findByUid () {}
-      public async createToken () {}
-      public async revokeToken () {}
-      public async updateToken () {}
-      public async purgeTokens () {}
+      public async findById (): Promise<any> {}
+      public async findByToken (): Promise<any> {}
+      public async findByUid (): Promise<any> {}
+      public async updateRememberMeToken () {}
     }
 
     const manager = new AuthManager({
@@ -245,13 +157,10 @@ test.group('Auth Manager', (group) => {
         assert.deepEqual(config, { driver: 'mongodb' })
       }
 
-      public async findById () {}
-      public async findByToken () {}
-      public async findByUid () {}
-      public async createToken () {}
-      public async revokeToken () {}
-      public async updateToken () {}
-      public async purgeTokens () {}
+      public async findById (): Promise<any> {}
+      public async findByToken (): Promise<any> {}
+      public async findByUid (): Promise<any> {}
+      public async updateRememberMeToken () {}
     }
 
     class CustomAuthenticator {

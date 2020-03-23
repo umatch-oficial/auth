@@ -9,12 +9,10 @@
 
 import test from 'japa'
 import { JWS } from 'jose'
-import { DateTime } from 'luxon'
 import supertest from 'supertest'
 import { createServer } from 'http'
 import { parse, pack } from '@poppinss/cookie'
 import cookieParser from 'set-cookie-parser'
-import { HasMany } from '@ioc:Adonis/Lucid/Orm'
 import { Store } from '@adonisjs/session/build/src/Store'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 import {
@@ -27,6 +25,7 @@ import {
   emitter,
   cleanup,
   getModel,
+  getUserModel,
   getSessionDriver,
   getLucidProvider,
   getLucidProviderConfig,
@@ -53,28 +52,7 @@ test.group('Session Driver | Verify Credentials', (group) => {
   test('return error when unable to lookup user', async (assert) => {
     assert.plan(1)
 
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public isRevoked: boolean
-      public expiresOn: DateTime
-    }
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public email: string
-      public password: string
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('password', {})
-    User.$addColumn('email', {})
-
+    const User = getUserModel(BaseModel)
     const lucidProvider = getLucidProvider({ model: User })
     const ctx = getCtx()
     const sessionDriver = getSessionDriver(lucidProvider, getLucidProviderConfig({ model: User }), ctx)
@@ -89,28 +67,7 @@ test.group('Session Driver | Verify Credentials', (group) => {
   test('return error when password is incorrect', async (assert) => {
     assert.plan(1)
 
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public isRevoked: boolean
-      public expiresOn: DateTime
-    }
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public email: string
-      public password: string
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('password', {})
-    User.$addColumn('email', {})
-
+    const User = getUserModel(BaseModel)
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
@@ -128,28 +85,7 @@ test.group('Session Driver | Verify Credentials', (group) => {
   test('return user when able to verify credentials', async (assert) => {
     assert.plan(1)
 
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public isRevoked: boolean
-      public expiresOn: DateTime
-    }
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public email: string
-      public password: string
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('password', {})
-    User.$addColumn('email', {})
-
+    const User = getUserModel(BaseModel)
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
@@ -180,34 +116,13 @@ test.group('Session Driver | attempt', (group) => {
   test('login user by setting the session', async (assert) => {
     assert.plan(4)
 
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public isRevoked: boolean
-      public expiresOn: DateTime
-    }
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public email: string
-      public password: string
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('password', {})
-    User.$addColumn('email', {})
-
+    const User = getUserModel(BaseModel)
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
     emitter.once('auth:session:login', ([mapping, user, _, token]) => {
       assert.equal(mapping, 'session')
       assert.instanceOf(user, User)
-      assert.isUndefined(token)
+      assert.isNull(token)
     })
 
     const server = createServer(async (req, res) => {
@@ -232,45 +147,16 @@ test.group('Session Driver | attempt', (group) => {
   })
 
   test('define remember me cookie when remember me is set to true', async (assert) => {
-    assert.plan(8)
+    assert.plan(5)
 
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public isRevoked: boolean
-      public expiresOn: DateTime
-    }
-    Token.boot()
-    Token.$addColumn('userId', {})
-    Token.$addColumn('value', { columnName: 'token_value' })
-    Token.$addColumn('type', { columnName: 'token_type' })
-    Token.$addColumn('isRevoked', { columnName: 'is_revoked' })
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public email: string
-      public password: string
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('password', {})
-    User.$addColumn('email', {})
-    User.$addRelation('tokens', 'hasMany', {
-      relatedModel: () => Token,
-    })
-
+    const User = getUserModel(BaseModel)
     const password = await hash.hash('secret')
-    await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+    const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
     emitter.once('auth:session:login', ([mapping, user, _, token]) => {
       assert.equal(mapping, 'session')
       assert.instanceOf(user, User)
-      assert.isDefined(token)
+      assert.exists(token)
     })
 
     const server = createServer(async (req, res) => {
@@ -292,50 +178,15 @@ test.group('Session Driver | attempt', (group) => {
     const sessionValueCookie = parse(headers['set-cookie'][3].split(';')[0], secret)
 
     const sessionValue = sessionValueCookie.signedCookies[sessionCookie.signedCookies['adonis-session']]
+    const { token } = JWS.verify(rememberMeCookie.signedCookies.remember_session, secret) as { token: string }
+    await user.refresh()
+
     assert.deepEqual(new Store(sessionValue).all(), { auth_session: 1 })
-
-    const { token, id } = JWS.verify(rememberMeCookie.signedCookies.remember_session, secret) as {
-      id: string, token: string,
-    }
-
-    const tokens = await Token.all()
-    assert.lengthOf(tokens, 1)
-    assert.equal(tokens[0].value, token)
-    assert.equal(tokens[0].userId, id)
-    assert.equal(tokens[0].type, 'remember_me')
+    assert.equal(user.rememberMeToken!, token)
   })
 
   test('delete remember_me cookie explicitly when login with remember me is false', async (assert) => {
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public expiresOn: DateTime
-      public isRevoked: boolean
-    }
-    Token.boot()
-    Token.$addColumn('userId', {})
-    Token.$addColumn('value', { columnName: 'token_value' })
-    Token.$addColumn('type', { columnName: 'token_type' })
-    Token.$addColumn('isRevoked', { columnName: 'is_revoked' })
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public email: string
-      public password: string
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('password', {})
-    User.$addColumn('email', {})
-    User.$addRelation('tokens', 'hasMany', {
-      relatedModel: () => Token,
-    })
-
+    const User = getUserModel(BaseModel)
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
@@ -379,30 +230,10 @@ test.group('Session Driver | authenticate', (group) => {
   test('authenticate user session and load user from db', async (assert) => {
     assert.plan(9)
 
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public isRevoked: boolean
-      public expiresOn: DateTime
-    }
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public email: string
-      public password: string
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('password', {})
-    User.$addColumn('email', {})
-
+    const User = getUserModel(BaseModel)
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+
     emitter.once('auth:session:authenticate', ([mapping, user, _, viaRemember]) => {
       assert.equal(mapping, 'session')
       assert.instanceOf(user, User)
@@ -450,36 +281,7 @@ test.group('Session Driver | authenticate', (group) => {
   test('re-login user using remember me token', async (assert) => {
     assert.plan(8)
 
-    class Token extends BaseModel {
-      public type: string
-      public value: string
-      public userId: string
-      public isRevoked: boolean
-      public expiresOn: DateTime
-    }
-    Token.boot()
-    Token.$addColumn('userId', {})
-    Token.$addColumn('value', { columnName: 'token_value' })
-    Token.$addColumn('type', { columnName: 'token_type' })
-    Token.$addColumn('isRevoked', { columnName: 'is_revoked' })
-
-    class User extends BaseModel {
-      public id: number
-      public username: string
-      public email: string
-      public password: string
-      public tokens: HasMany<Token>
-    }
-
-    User.boot()
-    User.$addColumn('id', { isPrimary: true })
-    User.$addColumn('username', {})
-    User.$addColumn('password', {})
-    User.$addColumn('email', {})
-    User.$addRelation('tokens', 'hasMany', {
-      relatedModel: () => Token,
-    })
-
+    const User = getUserModel(BaseModel)
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 

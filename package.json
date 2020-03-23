@@ -34,6 +34,7 @@
     "@adonisjs/encryption": "^1.0.4",
     "@adonisjs/events": "^1.0.7",
     "@adonisjs/fold": "^6.3.4",
+    "@adonisjs/hash": "^1.0.12",
     "@adonisjs/lucid": "^7.6.3",
     "@adonisjs/mrm-preset": "^2.2.4",
     "@adonisjs/profiler": "^2.0.0",

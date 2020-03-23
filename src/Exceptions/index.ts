@@ -27,6 +27,9 @@ export class CredentialsVerficationException extends Exception {
   }
 }
 
+/**
+ * Exception raised when unable to authenticate user session
+ */
 export class AuthenticationFailureException extends Exception {
   public static missingSession () {
     return new this('Missing user session', 401, 'E_MISSING_AUTH_SESSION')

@@ -18,8 +18,8 @@ import {
   SessionDriverConfig,
   AuthManagerContract,
   DatabaseProviderConfig,
-  ExtendedProviderCallback,
-  ExtendedAuthenticatorCallback,
+  ExtendProviderCallback,
+  ExtendAuthenticatorCallback,
 } from '@ioc:Adonis/Addons/Auth'
 
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
@@ -32,12 +32,12 @@ export class AuthManager implements AuthManagerContract {
   /**
    * Extended set of providers
    */
-  private extendedProviders: Map<string, ExtendedProviderCallback> = new Map()
+  private extendedProviders: Map<string, ExtendProviderCallback> = new Map()
 
   /**
    * Extend set of authenticators
    */
-  private extendAuthenticators: Map<string, ExtendedAuthenticatorCallback> = new Map()
+  private extendAuthenticators: Map<string, ExtendAuthenticatorCallback> = new Map()
 
   constructor (private config: AuthConfig, private container: IocContract) {
   }
@@ -46,7 +46,7 @@ export class AuthManager implements AuthManagerContract {
    * Makes an instance of lucid provider
    */
   private makeLucidProvider (config: LucidProviderConfig<any>) {
-    return new (require('../Providers/Lucid').LucidProvider)(config)
+    return new (require('../Providers/Lucid').LucidProvider)(this.container, config)
   }
 
   /**
@@ -54,7 +54,7 @@ export class AuthManager implements AuthManagerContract {
    */
   private makeDatabaseProvider (config: DatabaseProviderConfig) {
     const Database = this.container.use('Adonis/Lucid/Database')
-    return new (require('../Providers/Database').DatabaseProvider)(config, Database)
+    return new (require('../Providers/Database').DatabaseProvider)(this.container, config, Database)
   }
 
   /**
@@ -166,19 +166,19 @@ export class AuthManager implements AuthManagerContract {
   /**
    * Extend auth by adding custom providers and authenticators
    */
-  public extend (type: 'provider', name: string, callback: ExtendedProviderCallback): void
-  public extend (type: 'authenticator', name: string, callback: ExtendedAuthenticatorCallback): void
+  public extend (type: 'provider', name: string, callback: ExtendProviderCallback): void
+  public extend (type: 'authenticator', name: string, callback: ExtendAuthenticatorCallback): void
   public extend (
     type: 'provider' | 'authenticator',
     name: string,
-    callback: ExtendedProviderCallback | ExtendedAuthenticatorCallback,
+    callback: ExtendProviderCallback | ExtendAuthenticatorCallback,
   ) {
     if (type === 'provider') {
-      this.extendedProviders.set(name, callback as ExtendedProviderCallback)
+      this.extendedProviders.set(name, callback as ExtendProviderCallback)
     }
 
     if (type === 'authenticator') {
-      this.extendAuthenticators.set(name, callback as ExtendedAuthenticatorCallback)
+      this.extendAuthenticators.set(name, callback as ExtendAuthenticatorCallback)
     }
   }
 }

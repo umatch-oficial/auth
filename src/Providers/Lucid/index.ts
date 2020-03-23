@@ -7,14 +7,14 @@
 * file that was distributed with this source code.
 */
 
-import { DateTime } from 'luxon'
 import { Hooks } from '@poppinss/hooks'
+import { IocContract } from '@adonisjs/fold'
 import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 import {
-  ProviderToken,
   LucidProviderUser,
   LucidProviderConfig,
   LucidProviderContract,
+  AuthenticatableContract,
 } from '@ioc:Adonis/Addons/Auth'
 
 /**
@@ -24,30 +24,20 @@ export class LucidProvider implements LucidProviderContract<LucidProviderUser> {
   private hooks = new Hooks()
   private connection?: string | QueryClientContract
 
-  /**
-   * Token model property names
-   */
-  private tokenTypeColumn = 'type'
-  private tokenValueColumn = 'value'
-  private tokenIsRevokedColumn = 'isRevoked'
-  private userIdColumn = 'userId'
-  private expiresOnColumn = 'expires_on'
-
-  constructor (private config: LucidProviderConfig<LucidProviderUser>) {
+  constructor (
+    private container: IocContract,
+    private config: LucidProviderConfig<LucidProviderUser>,
+  ) {
   }
 
   /**
-   * The models options for constructing
-   * a query
+   * The models options for constructing a query
    */
   private getModelOptions () {
-    if (this.connection) {
-      return typeof (this.connection) === 'string'
-        ? { connection: this.connection }
-        : { client: this.connection }
+    if (!this.connection) {
+      return this.config.connection ? { connection: this.config.connection } : {}
     }
-
-    return this.config.connection ? { connection: this.config.connection } : {}
+    return typeof (this.connection) === 'string' ? { connection: this.connection } : { client: this.connection }
   }
 
   /**
@@ -55,17 +45,6 @@ export class LucidProvider implements LucidProviderContract<LucidProviderUser> {
    */
   private getModelQuery () {
     return this.config.model.query(this.getModelOptions())
-  }
-
-  /**
-   * Returns query instance for the user tokens
-   */
-  private getTokensQuery (user: InstanceType<LucidProviderUser>, value: string, type: string) {
-    return user
-      .related('tokens')
-      .query()
-      .where(this.tokenValueColumn, value)
-      .where(this.tokenTypeColumn, type)
   }
 
   /**
@@ -96,51 +75,47 @@ export class LucidProvider implements LucidProviderContract<LucidProviderUser> {
    * Returns a user instance using the primary key value
    */
   public async findById (id: string | number) {
+    /**
+     * Pull query builder instance and execute the before hook
+     */
     const query = this.getModelQuery()
     await this.hooks.exec('before', 'findUser', query)
 
     const user = await query.where(this.config.identifierKey, id).first()
-    if (!user) {
-      return null
+
+    /**
+     * Execute hook when user has been found
+     */
+    if (user) {
+      await this.hooks.exec('after', 'findUser', user)
     }
 
-    await this.hooks.exec('after', 'findUser', user)
-    return user
+    return this.container.make(this.config.authenticatable as any, [user, this.config])
   }
 
   /**
    * Returns a user instance using a specific token type and value
    */
-  public async findByToken (userId: string | number, { value, type }: ProviderToken) {
-    const modelInstance = new this.config.model()
-
+  public async findByToken (id: string | number, value: string) {
     /**
-     * We create an instance of the tokens model by accessing the relatedModel directly, since
-     * the actual relationship query builder expects the `user.id` to exists.
-     *
-     * However, in our case, we do not have the user instance and we instead want to find the user
-     * from the token.
+     * Pull query builder instance and execute the before hook
      */
-    const token = await modelInstance
-      .related('tokens').relation
-      .relatedModel()
-      .query(this.getModelOptions())
-      .where(this.userIdColumn, userId)
-      .where(this.tokenValueColumn, value)
-      .where(this.tokenTypeColumn, type)
-      .where(this.tokenIsRevokedColumn, false)
-      .where((builder) => {
-        builder
-          .whereNull(this.expiresOnColumn)
-          .orWhere(this.expiresOnColumn, '>', DateTime.utc().toSQLDate())
-      })
+    const query = this.getModelQuery()
+    await this.hooks.exec('before', 'findUser', query)
+
+    const user = await query
+      .where(this.config.identifierKey, id)
+      .where('rememberMeToken', value)
       .first()
 
-    if (!token) {
-      return null
+    /**
+     * Execute hook when user has been found
+     */
+    if (user) {
+      await this.hooks.exec('after', 'findUser', user)
     }
 
-    return this.findById(token.userId)
+    return this.container.make(this.config.authenticatable as any, [user, this.config])
   }
 
   /**
@@ -148,67 +123,31 @@ export class LucidProvider implements LucidProviderContract<LucidProviderUser> {
    * their defined uids.
    */
   public async findByUid (uidValue: string) {
-    const query = this.config.model.query(this.getModelOptions())
+    /**
+     * Pull query builder instance and execute the before hook
+     */
+    const query = this.getModelQuery()
     await this.hooks.exec('before', 'findUser', query)
 
     this.config.uids.forEach((uid) => (query.orWhere(uid, uidValue)))
-
     const user = await query.first()
-    if (!user) {
-      return null
+
+    /**
+     * Execute hook when user has been found
+     */
+    if (user) {
+      await this.hooks.exec('after', 'findUser', user)
     }
 
-    await this.hooks.exec('after', 'findUser', user)
-    return user
+    return this.container.make(this.config.authenticatable as any, [user, this.config])
   }
 
   /**
-   * Store token for a given user
+   * Updates the user remember me token
    */
-  public async createToken (user: InstanceType<LucidProviderUser>, token: ProviderToken) {
-    const tokenInstance = await user.related('tokens').create({
-      [this.tokenValueColumn]: token.value,
-      [this.tokenTypeColumn]: token.type,
-      [this.tokenIsRevokedColumn]: false,
-      ...(token.expiresOn) ? { [this.expiresOnColumn]: token.expiresOn.toSQLDate() } : {},
-    })
-
-    await this.hooks.exec('after', 'createToken', user, tokenInstance)
-  }
-
-  /**
-   * Revoke token for a given user
-   */
-  public async revokeToken (user: InstanceType<LucidProviderUser>, token: ProviderToken) {
-    await this.getTokensQuery(user, token.value, token.type).update({ is_revoked: true })
-    await this.hooks.exec('after', 'revokeToken', user, token)
-  }
-
-  /**
-   * Update token value and expiry for a pre-existing token
-   */
-  public async updateToken (user: InstanceType<LucidProviderUser>,oldValue: string, token: ProviderToken) {
-    await this.getTokensQuery(user, oldValue, token.type)
-      .update({
-        token_value: token.value,
-        ...(token.expiresOn ? { expires_on: token.expiresOn.toSQLDate() } : {}),
-      })
-
-    await this.hooks.exec('after', 'updateToken', user, oldValue, token)
-  }
-
-  /**
-   * Purge expired or revoked tokens for a given user and type.
-   */
-  public async purgeTokens (user: InstanceType<LucidProviderUser>, type: string) {
-    await user.related('tokens')
-      .query()
-      .where(this.tokenTypeColumn, type)
-      .where((builder) => {
-        builder
-          .where(this.expiresOnColumn, '<', DateTime.utc().toSQLDate())
-          .orWhere(this.tokenIsRevokedColumn, true)
-      })
-      .del()
+  public async updateRememberMeToken (
+    authenticatable: AuthenticatableContract<InstanceType<LucidProviderUser>>,
+  ) {
+    await authenticatable.user!.save()
   }
 }

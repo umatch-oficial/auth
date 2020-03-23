@@ -7,7 +7,7 @@
 * file that was distributed with this source code.
 */
 
-declare module '@ioc:Adonis/Auth/HttpContext' {
+declare module '@ioc:Adonis/Core/HttpContext' {
   import { AuthContract } from '@ioc:Adonis/Addons/Auth'
   interface HttpContextContract {
     auth: AuthContract,

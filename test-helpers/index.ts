@@ -31,6 +31,8 @@ import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Databas
 import { SessionDriver } from '../src/Drivers/Session'
 import { LucidProvider } from '../src/Providers/Lucid'
 import { DatabaseProvider } from '../src/Providers/Database'
+import { Authenticatable as LucidAuthenticatable } from '../src/Providers/Lucid/Authenticatable'
+import { Authenticatable as DatabaseAuthenticatable } from '../src/Providers/Database/Authenticatable'
 
 import {
   LucidProviderUser,
@@ -69,6 +71,7 @@ export const hash = new Hash(container, {
 export const emitter = new Emitter(container)
 container.singleton('Adonis/Core/Emitter', () => emitter)
 container.singleton('Adonis/Core/Encryption', () => encryption)
+container.singleton('Adonis/Core/Hash', () => hash)
 container.singleton('Adonis/Core/Config', () => {
   return {
     get () {
@@ -86,23 +89,9 @@ async function createUsersTable (client: QueryClientContract) {
     table.string('username').notNullable().unique()
     table.string('email').notNullable().unique()
     table.string('password')
+    table.string('remember_me_token').nullable()
     table.boolean('is_active').notNullable().defaultTo(1)
     table.string('country').notNullable().defaultTo('IN')
-  })
-}
-
-/**
- * Create the token tables
- */
-async function createTokensTable (client: QueryClientContract) {
-  await client.schema.createTable('tokens', (table) => {
-    table.increments('id').notNullable().primary()
-    table.integer('user_id').notNullable()
-    table.string('token_value').notNullable()
-    table.string('token_type').notNullable()
-    table.date('expires_on').nullable()
-    table.boolean('is_revoked').notNullable().defaultTo(0)
-    table.unique(['token_type', 'token_value'])
   })
 }
 
@@ -110,18 +99,15 @@ async function createTokensTable (client: QueryClientContract) {
  * Returns default config for the lucid provider
  */
 export function getLucidProviderConfig <User extends LucidProviderUser> (
-  config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'verifyPassword'>,
+  config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'authenticatable'>,
 ) {
   const defaults: LucidProviderConfig<User> = {
     driver: 'lucid' as const,
     uids: ['username', 'email'],
     model: config.model,
     identifierKey: 'id',
-    async verifyPassword (user, password) {
-      return hash.verify(user.password, password)
-    },
+    authenticatable: LucidAuthenticatable,
   }
-
   return defaults
 }
 
@@ -134,12 +120,8 @@ export function getDatabaseProviderConfig () {
     uids: ['username', 'email'],
     identifierKey: 'id',
     usersTable: 'users',
-    tokensTable: 'tokens',
-    async verifyPassword () {
-      return true
-    },
+    authenticatable: DatabaseAuthenticatable,
   }
-
   return defaults
 }
 
@@ -178,10 +160,7 @@ export async function getDb () {
  */
 export async function setup (db: DatabaseContract) {
   await createUsersTable(db.connection())
-  await createTokensTable(db.connection())
-
   await createUsersTable(db.connection('secondary'))
-  await createTokensTable(db.connection('secondary'))
 
   HttpContext.getter('session', function session () {
     const sessionManager = new SessionManager(container, sessionConfig)
@@ -194,11 +173,7 @@ export async function setup (db: DatabaseContract) {
  */
 export async function cleanup (db: DatabaseContract) {
   await db.connection().schema.dropTableIfExists('users')
-  await db.connection().schema.dropTableIfExists('tokens')
-
   await db.connection('secondary').schema.dropTableIfExists('users')
-  await db.connection('secondary').schema.dropTableIfExists('tokens')
-
   await db.manager.closeAll()
   await fs.cleanup()
 }
@@ -208,10 +183,7 @@ export async function cleanup (db: DatabaseContract) {
  */
 export async function reset (db: DatabaseContract) {
   await db.connection().truncate('users')
-  await db.connection().truncate('tokens')
-
   await db.connection('secondary').truncate('users')
-  await db.connection('secondary').truncate('tokens')
 }
 
 /**
@@ -227,11 +199,11 @@ export function getModel (db: DatabaseContract) {
  * Returns an instance of the lucid provider
  */
 export function getLucidProvider<User extends LucidProviderUser> (
-  config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'verifyPassword'>,
+  config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'authenticatable'>,
 ) {
   const defaults = getLucidProviderConfig(config)
   const normalizedConfig = Object.assign(defaults, config) as LucidProviderConfig<User>
-  return new LucidProvider(normalizedConfig) as unknown as LucidProviderContract<User>
+  return new LucidProvider(container, normalizedConfig) as unknown as LucidProviderContract<User>
 }
 
 /**
@@ -241,7 +213,7 @@ export function getDatabaseProvider (config: Partial<DatabaseProviderConfig>) {
   const defaults = getDatabaseProviderConfig()
   const normalizedConfig = Object.assign(defaults, config) as DatabaseProviderConfig
   const db = container.use('Adonis/Lucid/Database')
-  return new DatabaseProvider(normalizedConfig, db) as unknown as DatabaseProviderContract<any>
+  return new DatabaseProvider(container, normalizedConfig, db) as unknown as DatabaseProviderContract<any>
 }
 
 /**
@@ -276,4 +248,26 @@ export function getSessionDriver (
   }
 
   return new SessionDriver('session', secret, config, emitter, provider, ctx)
+}
+
+/**
+ * Returns the user model
+ */
+export function getUserModel (BaseModel: ModelConstructorContract<ModelContract>) {
+  const UserModel = class User extends BaseModel {
+    public id: number
+    public username: string
+    public password: string
+    public email: string
+    public rememberMeToken: string
+  }
+
+  UserModel.boot()
+  UserModel.$addColumn('id', { isPrimary: true })
+  UserModel.$addColumn('username', {})
+  UserModel.$addColumn('email', {})
+  UserModel.$addColumn('password', {})
+  UserModel.$addColumn('rememberMeToken', {})
+
+  return UserModel
 }
