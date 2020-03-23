@@ -8,6 +8,7 @@
 */
 
 import test from 'japa'
+import { DateTime } from 'luxon'
 import { HasMany } from '@ioc:Adonis/Lucid/Orm'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 
@@ -50,6 +51,7 @@ test.group('Auth', (group) => {
       public type: string
       public value: string
       public userId: string
+      public expiresOn: DateTime
       public isRevoked: boolean
     }
 
@@ -58,6 +60,7 @@ test.group('Auth', (group) => {
       public username: string
       public password: string
       public email: string
+      public expiresOn: DateTime
       public tokens: HasMany<Token>
     }
 

@@ -8,6 +8,7 @@
 */
 
 import test from 'japa'
+import { DateTime } from 'luxon'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 import { getDatabaseProvider, getDb, cleanup, setup, reset } from '../test-helpers'
 
@@ -215,7 +216,10 @@ test.group('Database Provider | findByToken', (group) => {
       assert.equal(user.email, 'virk@adonisjs.com')
     })
 
-    const providerUser = await dbProvider.findByToken(1, '123', 'remember_me')
+    const providerUser = await dbProvider.findByToken(1, {
+      value: '123',
+      type: 'remember_me',
+    })
 
     assert.equal(providerUser!.username, 'virk')
     assert.equal(providerUser!.email, 'virk@adonisjs.com')
@@ -249,7 +253,46 @@ test.group('Database Provider | findByToken', (group) => {
       throw new Error('not expected to be called')
     })
 
-    const providerUser = await dbProvider.findByToken(1, '123', 'remember_me')
+    const providerUser = await dbProvider.findByToken(1, {
+      value: '123',
+      type: 'remember_me',
+    })
+    assert.isNull(providerUser)
+  })
+
+  test('return null when token has been expired', async (assert) => {
+    assert.plan(2)
+
+    await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
+    await db.table('users').insert({ username: 'nikk', email: 'nikk@adonisjs.com' })
+
+    await db.table('tokens').insert({
+      user_id: 1,
+      token_value: '123',
+      token_type: 'remember_me',
+      is_revoked: false,
+      expires_on: DateTime.utc().minus({ days: 1 }).toSQLDate(),
+    })
+    await db.table('tokens').insert({
+      user_id: 2,
+      token_value: '456',
+      token_type: 'remember_me',
+      is_revoked: false,
+    })
+
+    const dbProvider = getDatabaseProvider({})
+    dbProvider.before('findUser', async (query) => {
+      assert.exists(query)
+    })
+
+    dbProvider.after('findUser', async () => {
+      throw new Error('not expected to be called')
+    })
+
+    const providerUser = await dbProvider.findByToken(1, {
+      value: '123',
+      type: 'remember_me',
+    })
     assert.isNull(providerUser)
   })
 
@@ -265,7 +308,10 @@ test.group('Database Provider | findByToken', (group) => {
     })
 
     const dbProvider = getDatabaseProvider({})
-    const providerUser = await dbProvider.findByToken(2, '123', 'remember_me')
+    const providerUser = await dbProvider.findByToken(2, {
+      value: '123',
+      type: 'remember_me',
+    })
 
     assert.isNull(providerUser)
   })
@@ -279,7 +325,10 @@ test.group('Database Provider | findByToken', (group) => {
     })
 
     const dbProvider = getDatabaseProvider({})
-    const providerUser = await dbProvider.findByToken(1, '123', 'remember_me')
+    const providerUser = await dbProvider.findByToken(1, {
+      value: '123',
+      type: 'remember_me',
+    })
 
     assert.isNull(providerUser)
   })
@@ -304,7 +353,10 @@ test.group('Database Provider | findByToken', (group) => {
     const dbProvider = getDatabaseProvider({})
     dbProvider.setConnection('secondary')
 
-    const providerUser = await dbProvider.findByToken(1, '123', 'remember_me')
+    const providerUser = await dbProvider.findByToken(1, {
+      value: '123',
+      type: 'remember_me',
+    })
     assert.isNull(providerUser)
   })
 
@@ -328,7 +380,10 @@ test.group('Database Provider | findByToken', (group) => {
     const dbProvider = getDatabaseProvider({})
     dbProvider.setConnection(db.connection('secondary'))
 
-    const providerUser = await dbProvider.findByToken(1, '123', 'remember_me')
+    const providerUser = await dbProvider.findByToken(1, {
+      value: '123',
+      type: 'remember_me',
+    })
     assert.isNull(providerUser)
   })
 })
@@ -359,7 +414,10 @@ test.group('Database Provider | createToken', (group) => {
       assert.equal(token.token_type, 'remember_me')
     })
 
-    await dbProvider.createToken({ id: id, username: 'virk' }, '1032030303', 'remember_me')
+    await dbProvider.createToken({ id: id, username: 'virk' }, {
+      value: '1032030303',
+      type: 'remember_me',
+    })
 
     const tokens = await db.from('tokens')
     assert.lengthOf(tokens, 1)
@@ -374,7 +432,10 @@ test.group('Database Provider | createToken', (group) => {
 
     const dbProvider = getDatabaseProvider({})
     dbProvider.setConnection('secondary')
-    await dbProvider.createToken({ id: id }, '1032030303', 'remember_me')
+    await dbProvider.createToken({ id: id }, {
+      value: '1032030303',
+      type: 'remember_me',
+    })
 
     const tokens = await db.connection('secondary').from('tokens')
     assert.lengthOf(tokens, 1)
@@ -390,7 +451,10 @@ test.group('Database Provider | createToken', (group) => {
     const dbProvider = getDatabaseProvider({})
     dbProvider.setConnection(db.connection('secondary'))
 
-    await dbProvider.createToken({ id: id }, '1032030303', 'remember_me')
+    await dbProvider.createToken({ id: id }, {
+      value: '1032030303',
+      type: 'remember_me',
+    })
     const tokens = await db.connection('secondary').from('tokens')
 
     assert.lengthOf(tokens, 1)
@@ -450,13 +514,16 @@ test.group('Database Provider | revokeToken', (group) => {
     })
 
     const dbProvider = getDatabaseProvider({})
-    dbProvider.after('revokeToken', async (user, token, type) => {
+    dbProvider.after('revokeToken', async (user, token) => {
       assert.equal(user.username, 'virk')
-      assert.equal(token, '123')
-      assert.equal(type, 'remember_me')
+      assert.equal(token.value, '123')
+      assert.equal(token.type, 'remember_me')
     })
 
-    await dbProvider.revokeToken({ id: id, username: 'virk' }, '123', 'remember_me')
+    await dbProvider.revokeToken({ id: id, username: 'virk' }, {
+      value: '123',
+      type: 'remember_me',
+    })
 
     const tokens = await db.from('tokens').orderBy('id', 'asc')
     assert.lengthOf(tokens, 4)
@@ -503,7 +570,10 @@ test.group('Database Provider | revokeToken', (group) => {
     const dbProvider = getDatabaseProvider({})
     dbProvider.setConnection('secondary')
 
-    await dbProvider.revokeToken({ id: id }, '123', 'remember_me')
+    await dbProvider.revokeToken({ id: id }, {
+      value: '123',
+      type: 'remember_me',
+    })
 
     const tokens = await client.from('tokens').orderBy('id', 'asc')
     assert.lengthOf(tokens, 4)
@@ -549,7 +619,10 @@ test.group('Database Provider | revokeToken', (group) => {
 
     const dbProvider = getDatabaseProvider({})
     dbProvider.setConnection(client)
-    await dbProvider.revokeToken({ id: id }, '123', 'remember_me')
+    await dbProvider.revokeToken({ id: id }, {
+      value: '123',
+      type: 'remember_me',
+    })
 
     const tokens = await client.from('tokens').orderBy('id', 'asc')
     assert.lengthOf(tokens, 4)
@@ -557,5 +630,181 @@ test.group('Database Provider | revokeToken', (group) => {
     assert.isFalse(!!tokens[1].is_revoked)
     assert.isFalse(!!tokens[2].is_revoked)
     assert.isFalse(!!tokens[3].is_revoked)
+  })
+})
+
+test.group('Database Provider | updateToken', (group) => {
+  group.before(async () => {
+    db = await getDb()
+    await setup(db)
+  })
+
+  group.after(async () => {
+    await cleanup(db)
+  })
+
+  group.afterEach(async () => {
+    await reset(db)
+  })
+
+  test('update token value and expiry', async (assert) => {
+    assert.plan(10)
+
+    const [id] = await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
+    const [id1] = await db.table('users').insert({ username: 'nikk', email: 'nikk@adonisjs.com' })
+
+    await db.table('tokens').insert({
+      user_id: id,
+      token_value: '123',
+      token_type: 'remember_me',
+      is_revoked: false,
+    })
+
+    await db.table('tokens').insert({
+      user_id: id,
+      token_value: '123',
+      token_type: 'jwt',
+      is_revoked: false,
+    })
+
+    await db.table('tokens').insert({
+      user_id: id,
+      token_value: '456',
+      token_type: 'remember_me',
+      is_revoked: false,
+    })
+
+    await db.table('tokens').insert({
+      user_id: id1,
+      token_value: '678',
+      token_type: 'remember_me',
+      is_revoked: false,
+    })
+
+    const dbProvider = getDatabaseProvider({})
+    dbProvider.after('updateToken', async (user, oldValue, token) => {
+      assert.equal(user.username, 'virk')
+      assert.equal(oldValue, '123')
+      assert.equal(token.value, '990')
+      assert.equal(token.type, 'remember_me')
+    })
+
+    await dbProvider.updateToken({ id: id, username: 'virk' }, '123', {
+      value: '990',
+      type: 'remember_me',
+      expiresOn: DateTime.utc(),
+    })
+
+    const tokens = await db.from('tokens').orderBy('id', 'asc')
+    assert.lengthOf(tokens, 4)
+    assert.equal(tokens[0].token_value, '990')
+    assert.equal(tokens[0].expires_on, DateTime.utc().toSQLDate())
+    assert.equal(tokens[1].token_value, '123')
+    assert.equal(tokens[2].token_value, '456')
+    assert.equal(tokens[3].token_value, '678')
+  })
+})
+
+test.group('Database Provider | purgeTokens', (group) => {
+  group.before(async () => {
+    db = await getDb()
+    await setup(db)
+  })
+
+  group.after(async () => {
+    await cleanup(db)
+  })
+
+  group.afterEach(async () => {
+    await reset(db)
+  })
+
+  test('purge expired tokens', async (assert) => {
+    const [id] = await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
+    const [id1] = await db.table('users').insert({ username: 'nikk', email: 'nikk@adonisjs.com' })
+
+    await db.table('tokens').insert({
+      user_id: id,
+      token_value: '123',
+      token_type: 'remember_me',
+      is_revoked: false,
+      expires_on: DateTime.utc().minus({ days: 1 }).toSQLDate(),
+    })
+
+    await db.table('tokens').insert({
+      user_id: id,
+      token_value: '123',
+      token_type: 'jwt',
+      is_revoked: false,
+      expires_on: DateTime.utc().minus({ days: 1 }).toSQLDate(),
+    })
+
+    await db.table('tokens').insert({
+      user_id: id,
+      token_value: '456',
+      token_type: 'remember_me',
+      is_revoked: false,
+    })
+
+    await db.table('tokens').insert({
+      user_id: id1,
+      token_value: '678',
+      token_type: 'remember_me',
+      is_revoked: false,
+      expires_on: DateTime.utc().minus({ days: 1 }).toSQLDate(),
+    })
+
+    const dbProvider = getDatabaseProvider({})
+    await dbProvider.purgeTokens({ id: id, username: 'virk' }, 'remember_me')
+
+    const tokens = await db.from('tokens').orderBy('id', 'asc')
+    assert.lengthOf(tokens, 3)
+    assert.equal(tokens[0].token_value, '123')
+    assert.equal(tokens[1].token_value, '456')
+    assert.equal(tokens[2].token_value, '678')
+  })
+
+  test('purge revoked tokens', async (assert) => {
+    const [id] = await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
+    const [id1] = await db.table('users').insert({ username: 'nikk', email: 'nikk@adonisjs.com' })
+
+    await db.table('tokens').insert({
+      user_id: id,
+      token_value: '123',
+      token_type: 'remember_me',
+      is_revoked: false,
+      expires_on: DateTime.utc().minus({ days: 1 }).toSQLDate(),
+    })
+
+    await db.table('tokens').insert({
+      user_id: id,
+      token_value: '123',
+      token_type: 'jwt',
+      is_revoked: false,
+      expires_on: DateTime.utc().minus({ days: 1 }).toSQLDate(),
+    })
+
+    await db.table('tokens').insert({
+      user_id: id,
+      token_value: '456',
+      token_type: 'remember_me',
+      is_revoked: true,
+    })
+
+    await db.table('tokens').insert({
+      user_id: id1,
+      token_value: '678',
+      token_type: 'remember_me',
+      is_revoked: false,
+      expires_on: DateTime.utc().minus({ days: 1 }).toSQLDate(),
+    })
+
+    const dbProvider = getDatabaseProvider({})
+    await dbProvider.purgeTokens({ id: id, username: 'virk' }, 'remember_me')
+
+    const tokens = await db.from('tokens').orderBy('id', 'asc')
+    assert.lengthOf(tokens, 2)
+    assert.equal(tokens[0].token_value, '123')
+    assert.equal(tokens[1].token_value, '678')
   })
 })

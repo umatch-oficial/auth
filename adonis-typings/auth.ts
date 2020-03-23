@@ -8,6 +8,7 @@
 */
 
 declare module '@ioc:Adonis/Addons/Auth' {
+  import { DateTime } from 'luxon'
   import { IocContract } from '@adonisjs/fold'
   import { HasMany } from '@ioc:Adonis/Lucid/Orm'
   import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
@@ -38,6 +39,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
   | Providers
   |--------------------------------------------------------------------------
   */
+  export type ProviderToken = { value: string, type: string, expiresOn?: DateTime }
 
   /**
    * The interface that every provider must implement
@@ -56,17 +58,27 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * Find a user using a token
      */
-    findByToken (userId: string | number, value: string, type: string): Promise<User | null>,
+    findByToken (userId: string | number, token: ProviderToken): Promise<User | null>,
 
     /**
      * Create token for a given user
      */
-    createToken (user: User, value: string, type: string): Promise<void>
+    createToken (user: User, token: ProviderToken): Promise<void>
 
     /**
      * Create token for a given user
      */
-    revokeToken (user: User, value: string, type: string): Promise<void>
+    revokeToken (user: User, token: ProviderToken): Promise<void>
+
+    /**
+     * Update an existing token
+     */
+    updateToken (user: User, oldValue: string, token: ProviderToken): Promise<void>
+
+    /**
+     * Purge expired tokens for a given user and type.
+     */
+    purgeTokens (user: User, type: string): Promise<void>
   }
 
   /**
@@ -79,6 +91,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
       type: string,
       userId: string | number,
       isRevoked: boolean,
+      expiresOn: DateTime,
     }>,
   }>
 
@@ -114,7 +127,11 @@ declare module '@ioc:Adonis/Addons/Auth' {
     ): this
     after (
       event: 'revokeToken',
-      callback: (user: User, value: string, type: string) => Promise<void>,
+      callback: (user: User, token: ProviderToken) => Promise<void>,
+    ): this
+    after (
+      event: 'updateToken',
+      callback: (user: User, oldValue: string, token: ProviderToken) => Promise<void>,
     ): this
   }
 
@@ -125,6 +142,18 @@ declare module '@ioc:Adonis/Addons/Auth' {
     password: string,
     [key: string]: any,
   }
+
+  /**
+   * Shape of the token row for the database provider
+   */
+  export type DatabaseProviderToken = {
+    token_value: string,
+    token_type: string,
+    id: string,
+    user_id: string,
+    is_revoked: boolean,
+    expires_on: string,
+  } & { [key: string]: any }
 
   /**
    * Database provider
@@ -154,11 +183,15 @@ declare module '@ioc:Adonis/Addons/Auth' {
     ): this
     after (
       event: 'createToken',
-      callback: (user: DatabaseProviderUser, token: any) => Promise<void>,
+      callback: (user: DatabaseProviderUser, token: DatabaseProviderToken) => Promise<void>,
     ): this
     after (
       event: 'revokeToken',
-      callback: (user: DatabaseProviderUser, value: string, type: string) => Promise<void>,
+      callback: (user: DatabaseProviderUser, token: ProviderToken) => Promise<void>,
+    ): this
+    after (
+      event: 'updateToken',
+      callback: (user: DatabaseProviderUser, oldValue: string, token: ProviderToken) => Promise<void>,
     ): this
   }
 
@@ -305,6 +338,11 @@ declare module '@ioc:Adonis/Addons/Auth' {
      * exceptions raised by the [[authenticate]] method and returns a boolean
      */
     check (): Promise<boolean>
+
+    /**
+     * Logout user by clearing up the session and the tokens
+     */
+    logout (): Promise<void>
   }
 
   /*

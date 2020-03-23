@@ -8,6 +8,7 @@
 */
 
 import test from 'japa'
+import { DateTime } from 'luxon'
 import { HasMany } from '@ioc:Adonis/Lucid/Orm'
 import { ProvidersContract } from '@ioc:Adonis/Addons/Auth'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
@@ -54,6 +55,7 @@ test.group('Auth Manager', (group) => {
       public value: string
       public userId: string
       public isRevoked: boolean
+      public expiresOn: DateTime
     }
 
     class User extends BaseModel {
@@ -105,6 +107,7 @@ test.group('Auth Manager', (group) => {
       public value: string
       public userId: string
       public isRevoked: boolean
+      public expiresOn: DateTime
     }
 
     class User extends BaseModel {
@@ -156,6 +159,7 @@ test.group('Auth Manager', (group) => {
       public value: string
       public userId: string
       public isRevoked: boolean
+      public expiresOn: DateTime
     }
 
     class User extends BaseModel {
@@ -211,6 +215,8 @@ test.group('Auth Manager', (group) => {
       public async findByUid () {}
       public async createToken () {}
       public async revokeToken () {}
+      public async updateToken () {}
+      public async purgeTokens () {}
     }
 
     const manager = new AuthManager({
@@ -244,6 +250,8 @@ test.group('Auth Manager', (group) => {
       public async findByUid () {}
       public async createToken () {}
       public async revokeToken () {}
+      public async updateToken () {}
+      public async purgeTokens () {}
     }
 
     class CustomAuthenticator {

@@ -93,6 +93,7 @@
     "@poppinss/manager": "^2.1.4",
     "@poppinss/utils": "^2.1.2",
     "array-to-sentence": "^2.0.0",
-    "jose": "^1.25.0"
+    "jose": "^1.25.0",
+    "luxon": "^1.22.0"
   }
 }

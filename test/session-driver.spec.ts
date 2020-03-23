@@ -9,6 +9,7 @@
 
 import test from 'japa'
 import { JWS } from 'jose'
+import { DateTime } from 'luxon'
 import supertest from 'supertest'
 import { createServer } from 'http'
 import { parse, pack } from '@poppinss/cookie'
@@ -57,6 +58,7 @@ test.group('Session Driver | Verify Credentials', (group) => {
       public value: string
       public userId: string
       public isRevoked: boolean
+      public expiresOn: DateTime
     }
 
     class User extends BaseModel {
@@ -92,6 +94,7 @@ test.group('Session Driver | Verify Credentials', (group) => {
       public value: string
       public userId: string
       public isRevoked: boolean
+      public expiresOn: DateTime
     }
 
     class User extends BaseModel {
@@ -130,6 +133,7 @@ test.group('Session Driver | Verify Credentials', (group) => {
       public value: string
       public userId: string
       public isRevoked: boolean
+      public expiresOn: DateTime
     }
 
     class User extends BaseModel {
@@ -181,6 +185,7 @@ test.group('Session Driver | attempt', (group) => {
       public value: string
       public userId: string
       public isRevoked: boolean
+      public expiresOn: DateTime
     }
 
     class User extends BaseModel {
@@ -234,6 +239,7 @@ test.group('Session Driver | attempt', (group) => {
       public value: string
       public userId: string
       public isRevoked: boolean
+      public expiresOn: DateTime
     }
     Token.boot()
     Token.$addColumn('userId', {})
@@ -304,6 +310,7 @@ test.group('Session Driver | attempt', (group) => {
       public type: string
       public value: string
       public userId: string
+      public expiresOn: DateTime
       public isRevoked: boolean
     }
     Token.boot()
@@ -377,6 +384,7 @@ test.group('Session Driver | authenticate', (group) => {
       public value: string
       public userId: string
       public isRevoked: boolean
+      public expiresOn: DateTime
     }
 
     class User extends BaseModel {
@@ -447,6 +455,7 @@ test.group('Session Driver | authenticate', (group) => {
       public value: string
       public userId: string
       public isRevoked: boolean
+      public expiresOn: DateTime
     }
     Token.boot()
     Token.$addColumn('userId', {})

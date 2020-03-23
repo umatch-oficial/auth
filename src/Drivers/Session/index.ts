@@ -8,6 +8,7 @@
 */
 
 import { JWS } from 'jose'
+import { DateTime } from 'luxon'
 import { randomBytes } from 'crypto'
 import { Exception } from '@poppinss/utils'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
@@ -59,6 +60,11 @@ export class SessionDriver<
    * Algorithm for the JWS remember me token
    */
   private jwsAlg = 'HS256'
+
+  /**
+   * Number of years for the remember me token expiry
+   */
+  private rememberMeTokenExpiry = 5
 
   /**
    * A boolean to know if user is retrieved by authenticating
@@ -127,7 +133,11 @@ export class SessionDriver<
    * encrypted before persistence
    */
   private async persistRememberMeToken (user: any, token: string) {
-    await this.provider.createToken(user, token, 'remember_me')
+    await this.provider.createToken(user, {
+      value: token,
+      type: 'remember_me',
+      expiresOn: DateTime.utc().plus({ years: this.rememberMeTokenExpiry }),
+    })
   }
 
   /**
@@ -139,7 +149,10 @@ export class SessionDriver<
       token: token,
     }, this.appKey, { alg: this.jwsAlg })
 
-    this.ctx.response.cookie(this.rememberMeKeyName, rememberMeToken, { maxAge: '5y' })
+    this.ctx.response.cookie(this.rememberMeKeyName, rememberMeToken, {
+      maxAge: `${this.rememberMeTokenExpiry}y`,
+      httpOnly: true,
+    })
   }
 
   /**
@@ -212,7 +225,11 @@ export class SessionDriver<
    * Returns user for the remember me token
    */
   private async getUserForRememberMeToken (id: string, token: string) {
-    const user = await this.provider.findByToken(id, token, 'remember_me')
+    const user = await this.provider.findByToken(id, {
+      value: token,
+      type: 'remember_me',
+    })
+
     if (!user) {
       throw AuthenticationFailureException.missingUser()
     }
@@ -347,5 +364,8 @@ export class SessionDriver<
     } catch {
       return false
     }
+  }
+
+  public async logout () {
   }
 }

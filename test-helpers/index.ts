@@ -100,6 +100,7 @@ async function createTokensTable (client: QueryClientContract) {
     table.integer('user_id').notNullable()
     table.string('token_value').notNullable()
     table.string('token_type').notNullable()
+    table.date('expires_on').nullable()
     table.boolean('is_revoked').notNullable().defaultTo(0)
     table.unique(['token_type', 'token_value'])
   })
