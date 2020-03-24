@@ -65,18 +65,6 @@ const authConfig: AuthConfig = {
 
       /*
       |--------------------------------------------------------------------------
-      | Authenticatable
-      |--------------------------------------------------------------------------
-      |
-      | The Authenticatable class works as a bridge between the provider and the
-      | authenticator. Leave the following value as it is, until you want to
-      | customize it.
-      |
-      */
-      authenticatable: LucidAuthenticatable,
-
-      /*
-      |--------------------------------------------------------------------------
       | Model
       |--------------------------------------------------------------------------
       |
