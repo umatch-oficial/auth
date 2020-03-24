@@ -49,6 +49,7 @@ export default class AuthProvider {
         HttpContext.getter('auth', function auth () {
           return Auth.getAuthForRequest(this)
         }, true)
-    })
+      },
+    )
   }
 }

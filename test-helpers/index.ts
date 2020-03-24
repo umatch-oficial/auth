@@ -20,13 +20,13 @@ import { Profiler } from '@adonisjs/profiler/build/standalone'
 import { Emitter } from '@adonisjs/events/build/standalone'
 import { Adapter } from '@adonisjs/lucid/build/src/Orm/Adapter'
 import { Encryption } from '@adonisjs/encryption/build/standalone'
-import { BaseModel } from '@adonisjs/lucid/build/src/Orm/BaseModel'
 import { HttpContext } from '@adonisjs/http-server/build/standalone'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { SessionConfigContract } from '@ioc:Adonis/Addons/Session'
 import { SessionManager } from '@adonisjs/session/build/src/SessionManager'
 import { ModelContract, ModelConstructorContract } from '@ioc:Adonis/Lucid/Model'
 import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
+import { BaseModel as LucidBaseModel } from '@adonisjs/lucid/build/src/Orm/BaseModel'
 
 import { LucidProvider } from '../src/Providers/Lucid'
 import { DatabaseProvider } from '../src/Providers/Database'
@@ -186,9 +186,9 @@ export async function reset (db: DatabaseContract) {
  * Returns Base model that other models can extend
  */
 export function getModel (db: DatabaseContract) {
-  BaseModel.$adapter = new Adapter(db)
-  BaseModel.$container = container
-  return BaseModel as unknown as ModelConstructorContract<ModelContract>
+  LucidBaseModel.$adapter = new Adapter(db)
+  LucidBaseModel.$container = container
+  return LucidBaseModel as unknown as ModelConstructorContract<ModelContract>
 }
 
 /**

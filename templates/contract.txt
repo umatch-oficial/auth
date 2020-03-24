@@ -54,19 +54,19 @@ declare module '@ioc:Adonis/Addons/Auth' {
 
   /*
   |--------------------------------------------------------------------------
-  | Authenticators
+  | Guards
   |--------------------------------------------------------------------------
   |
-  | The authenticators are used for authenticating users using different
-  | drivers. The auth module comes with 4 different drivers.
+  | The guards are used for authenticating users using different
+  | drivers. The auth module comes with 4 different guards.
   |
-  | - SessionDriverContract
-  | - BasicAuthDriverContract
-  | - JwtDriverContract
-  | - ApiTokensDriverContract
+  | - SessionGuardContract
+  | - BasicAuthGuardContract
+  | - JwtGuardContract
+  | - ApiTokensGuardContract
   |
   */
-  interface AuthenticatorsList {
+  interface GuardsList {
     session: {
       implementation: SessionDriverContract<'lucid'>,
       config: SessionDriverConfig<'lucid'>,

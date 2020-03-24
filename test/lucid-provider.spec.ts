@@ -37,7 +37,7 @@ test.group('Lucid Provider | findById', (group) => {
 
     const lucidProvider = getLucidProvider({ model: User })
     lucidProvider.before('findUser', async (query) => assert.exists(query))
-    lucidProvider.after('findUser', async (user) => assert.instanceOf(user, User))
+    lucidProvider.after('findUser', async (model) => assert.instanceOf(model, User))
 
     const providerUser = await lucidProvider.findById(user.id)
 
@@ -190,7 +190,7 @@ test.group('Lucid Provider | findByToken', (group) => {
 
     const lucidProvider = getLucidProvider({ model: User })
     lucidProvider.before('findUser', async (query) => assert.exists(query))
-    lucidProvider.after('findUser', async (user) => assert.instanceOf(user, User))
+    lucidProvider.after('findUser', async (model) => assert.instanceOf(model, User))
 
     const providerUser = await lucidProvider.findByToken(user.id, '123')
     assert.instanceOf(providerUser.user, User)

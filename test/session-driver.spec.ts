@@ -153,9 +153,9 @@ test.group('Session Driver | attempt', (group) => {
     const password = await hash.hash('secret')
     const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-    emitter.once('auth:session:login', ([mapping, user, _, token]) => {
+    emitter.once('auth:session:login', ([mapping, model, _, token]) => {
       assert.equal(mapping, 'session')
-      assert.instanceOf(user, User)
+      assert.instanceOf(model, User)
       assert.exists(token)
     })
 

@@ -6,24 +6,24 @@
  */
 
 import User from 'App/Models/User'
-import { AuthConfig, LucidAuthenticatable } from '@ioc:Adonis/Addons/Auth'
+import { AuthConfig } from '@ioc:Adonis/Addons/Auth'
 
 /*
 |--------------------------------------------------------------------------
-| Authenticators
+| Authentication Mapping
 |--------------------------------------------------------------------------
 |
-| List of available authenticators. You must first define them inside the
-| `contracts/auth.ts` file before mentioning them here.
+| List of available authentication mapping. You must first define them
+| inside the `contracts/auth.ts` file before mentioning them here.
 |
 */
 const authConfig: AuthConfig = {
   /*
   |--------------------------------------------------------------------------
-  | Session Authenticator
+  | Session Guard
   |--------------------------------------------------------------------------
   |
-  | The following authenticator uses the `session` driver and `lucid` provider
+  | The following guard uses the `session` driver and `lucid` provider
   | to authenticate users.
   |
   */

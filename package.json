@@ -2,26 +2,20 @@
   "name": "@adonisjs/auth",
   "version": "4.0.0",
   "description": "Offical authentication provider for Adonis framework",
-  "main": "build/providers/AuthProvider.js",
-  "files": [
-    "build/adonis-typings",
-    "build/providers",
-    "build/src",
-    "build/templates"
-  ],
   "types": "build/adonis-typings/index.d.ts",
   "scripts": {
     "mrm": "mrm --preset=@adonisjs/mrm-preset",
     "pretest": "npm run lint",
     "test": "node japaFile.js",
-    "lint": "tslint --project tsconfig.json",
     "clean": "del build",
     "copyfiles": "copyfiles \"templates/**/*.txt\" build",
     "compile": "npm run lint && npm run clean && tsc",
-    "build": "npm run compile && npm run copyfiles",
+    "build": "npm run compile",
     "commit": "git-cz",
     "release": "np",
-    "version": "npm run build"
+    "version": "npm run build",
+    "lint": "eslint . --ext=.ts",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "adonis",
@@ -56,6 +50,8 @@
     "cz-conventional-changelog": "^3.1.0",
     "del-cli": "^3.0.0",
     "doctoc": "^1.4.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-adonis": "^1.0.8",
     "husky": "^4.2.3",
     "japa": "^3.0.1",
     "mrm": "^2.1.0",
@@ -66,8 +62,6 @@
     "sqlite3": "^4.1.1",
     "supertest": "^4.0.2",
     "ts-node": "^8.7.0",
-    "tslint": "^6.1.0",
-    "tslint-eslint-rules": "^5.4.0",
     "typescript": "^3.8.3"
   },
   "nyc": {
@@ -122,5 +116,11 @@
     "providers": [
       "@adonisjs/auth"
     ]
-  }
+  },
+  "main": "build/index.js",
+  "files": [
+    "build/src",
+    "build/index.d.ts",
+    "build/index.js"
+  ]
 }
