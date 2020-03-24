@@ -52,16 +52,13 @@ test.group('Auth Manager', (group) => {
     const User = getUserModel(BaseModel)
 
     const manager = new AuthManager({
-      authenticator: 'session',
-      authenticators: {
-        session: {
-          driver: 'session',
-          provider: getLucidProviderConfig({ model: User }),
-        },
-        sessionDb: {
-          driver: 'session',
-          provider: getDatabaseProviderConfig(),
-        },
+      session: {
+        driver: 'session',
+        provider: getLucidProviderConfig({ model: User }),
+      },
+      sessionDb: {
+        driver: 'session',
+        provider: getDatabaseProviderConfig(),
       },
     }, container)
 
@@ -76,16 +73,13 @@ test.group('Auth Manager', (group) => {
     const User = getUserModel(BaseModel)
 
     const manager = new AuthManager({
-      authenticator: 'session',
-      authenticators: {
-        session: {
-          driver: 'session',
-          provider: getLucidProviderConfig({ model: User }),
-        },
-        sessionDb: {
-          driver: 'session',
-          provider: getDatabaseProviderConfig(),
-        },
+      session: {
+        driver: 'session',
+        provider: getLucidProviderConfig({ model: User }),
+      },
+      sessionDb: {
+        driver: 'session',
+        provider: getDatabaseProviderConfig(),
       },
     }, container)
 
@@ -100,16 +94,13 @@ test.group('Auth Manager', (group) => {
     const User = getUserModel(BaseModel)
 
     const manager = new AuthManager({
-      authenticator: 'session',
-      authenticators: {
-        session: {
-          driver: 'session',
-          provider: getLucidProviderConfig({ model: User }),
-        },
-        sessionDb: {
-          driver: 'session',
-          provider: getDatabaseProviderConfig(),
-        },
+      session: {
+        driver: 'session',
+        provider: getLucidProviderConfig({ model: User }),
+      },
+      sessionDb: {
+        driver: 'session',
+        provider: getDatabaseProviderConfig(),
       },
     }, container)
 
@@ -132,16 +123,13 @@ test.group('Auth Manager', (group) => {
     }
 
     const manager = new AuthManager({
-      authenticator: 'session',
-      authenticators: {
-        admin: {
-          driver: 'session',
-          provider: {
-            driver: 'mongodb',
-          },
+      admin: {
+        driver: 'session',
+        provider: {
+          driver: 'mongodb',
         },
-      } as any,
-    }, container)
+      },
+    } as any, container)
 
     manager.extend('provider', 'mongodb', (_, config) => {
       return new MongoDBProvider(config)
@@ -171,16 +159,13 @@ test.group('Auth Manager', (group) => {
     }
 
     const manager = new AuthManager({
-      authenticator: 'session',
-      authenticators: {
-        admin: {
-          driver: 'google',
-          provider: {
-            driver: 'mongodb',
-          },
+      admin: {
+        driver: 'google',
+        provider: {
+          driver: 'mongodb',
         },
-      } as any,
-    }, container)
+      },
+    } as any, container)
 
     manager.extend('provider', 'mongodb', (_, config) => {
       return new MongoDBProvider(config)

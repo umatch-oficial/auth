@@ -23,12 +23,18 @@ import {
 } from '@ioc:Adonis/Addons/Auth'
 
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+
 import { Auth } from '../Auth'
+import { Authenticatable as LucidAuthenticatable } from '../Providers/Lucid/Authenticatable'
+import { Authenticatable as DatabaseAuthenticatable } from '../Providers/Database/Authenticatable'
 
 /**
  * Auth manager to instantiate authentication driver objects
  */
 export class AuthManager implements AuthManagerContract {
+  public static LucidAuthenticatable = LucidAuthenticatable
+  public static DatabaseAuthenticatable = DatabaseAuthenticatable
+
   /**
    * Extended set of providers
    */
@@ -97,9 +103,7 @@ export class AuthManager implements AuthManagerContract {
     provider: ProvidersContract<any>,
     ctx: HttpContextContract,
   ) {
-    const emitter = this.container.use('Adonis/Core/Emitter')
-    const appKey = this.container.use('Adonis/Core/Config').get('app.appKey')
-    return new (require('../Drivers/Session').SessionDriver)(mapping, config, appKey, emitter, provider, ctx)
+    return new (require('../Drivers/Session').SessionDriver)(this.container, mapping, config, provider, ctx)
   }
 
   /**
@@ -140,18 +144,10 @@ export class AuthManager implements AuthManagerContract {
   }
 
   /**
-   * Returns the name of the default mapping
-   */
-  public getDefaultMappingName () {
-    return this.config.authenticator
-  }
-
-  /**
    * Make an instance of a given mapping for the current HTTP request.
    */
-  public makeMapping (ctx: HttpContextContract, mapping?: keyof AuthenticatorsList) {
-    mapping = mapping || this.config.authenticator
-    const mappingConfig = this.config.authenticators[mapping]
+  public makeMapping (ctx: HttpContextContract, mapping: keyof AuthenticatorsList) {
+    const mappingConfig = this.config[mapping]
     const provider = this.makeProviderInstance(mappingConfig.provider)
     return this.makeAuthenticatorInstance(mapping, mappingConfig, provider, ctx)
   }

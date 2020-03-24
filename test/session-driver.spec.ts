@@ -361,7 +361,7 @@ test.group('Session Driver | logout', (group) => {
         ctx.response.send({
           user: sessionDriver.user,
           isAuthenticated: sessionDriver.isAuthenticated,
-          isLoggedOut: sessionDriver.isLoggedOut
+          isLoggedOut: sessionDriver.isLoggedOut,
         })
         await ctx.session.commit()
         ctx.response.finish()
@@ -412,7 +412,7 @@ test.group('Session Driver | logout', (group) => {
         ctx.response.send({
           user: sessionDriver.user,
           isAuthenticated: sessionDriver.isAuthenticated,
-          isLoggedOut: sessionDriver.isLoggedOut
+          isLoggedOut: sessionDriver.isLoggedOut,
         })
         await ctx.session.commit()
         ctx.response.finish()

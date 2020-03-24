@@ -30,9 +30,9 @@ export class Auth implements AuthContract {
   /**
    * Returns an instance of a named or the default mapping
    */
-  public use (mapping?: keyof AuthenticatorsList) {
-    mapping = mapping || this.manager.getDefaultMappingName()
+  public use (mapping: keyof AuthenticatorsList) {
     if (!this.mappingsCache.has(mapping)) {
+      this.ctx.logger.trace('instantiating auth mapping', { name: mapping })
       this.mappingsCache.set(mapping, this.manager.makeMapping(this.ctx, mapping))
     }
     return this.mappingsCache.get(mapping)!

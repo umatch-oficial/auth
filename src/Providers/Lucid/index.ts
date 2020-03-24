@@ -18,7 +18,7 @@ import {
 } from '@ioc:Adonis/Addons/Auth'
 
 /**
- * Lucid provider uses Lucid models to lookup a user.
+ * Lucid provider uses Lucid models to lookup a users
  */
 export class LucidProvider implements LucidProviderContract<LucidProviderUser> {
   private hooks = new Hooks()

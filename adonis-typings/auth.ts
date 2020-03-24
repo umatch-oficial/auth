@@ -363,17 +363,16 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * Shape of config accepted by the Auth module. It relies on the authenticator
    * list interface
    */
-  export interface AuthConfig {
-    authenticator: keyof AuthenticatorsList,
-    authenticators: { [P in keyof AuthenticatorsList]: AuthenticatorsList[P]['config'] },
-  }
+  export type AuthConfig = { [P in keyof AuthenticatorsList]: AuthenticatorsList[P]['config'] }
 
   /**
    * Instance of the auth contract. The `use` method can be used to obtain
    * an instance of a given authenticator mapping
    */
   export interface AuthContract<
-    Authenticators = {
+    Authenticators extends {
+      [P in keyof AuthenticatorsList]: AuthenticatorsList[P]['implementation']
+    } = {
       [P in keyof AuthenticatorsList]: AuthenticatorsList[P]['implementation']
     },
   > {
@@ -413,16 +412,11 @@ declare module '@ioc:Adonis/Addons/Auth' {
     getAuthForRequest (ctx: HttpContextContract): AuthContract,
 
     /**
-     * Returns the name for the default mapping
-     */
-    getDefaultMappingName (): keyof AuthenticatorsList
-
-    /**
      * Make instance of a mapping
      */
     makeMapping<
       K extends keyof AuthenticatorsList
-    > (ctx: HttpContextContract, mapping?: K): AuthenticatorsList[K]['implementation']
+    > (ctx: HttpContextContract, mapping: K): AuthenticatorsList[K]['implementation']
 
     /**
      * Extend by adding custom providers and authenticators

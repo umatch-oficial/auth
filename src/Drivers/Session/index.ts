@@ -347,12 +347,12 @@ export class SessionDriver implements SessionDriverContract<any> {
        * Create and persist the user remember me token, when an existing one is missing
        */
       if (!authenticatable.getRememberMeToken()) {
-        this.ctx.logger.debug('generating fresh remember me token')
+        this.ctx.logger.trace('generating fresh remember me token')
         authenticatable.setRememberMeToken(this.generateToken(20))
         await this.persistRememberMeToken(authenticatable)
       }
 
-      this.ctx.logger.debug('defining remember me cookie', { name: this.rememberMeKeyName })
+      this.ctx.logger.trace('defining remember me cookie', { name: this.rememberMeKeyName })
       this.setRememberMeCookie(authenticatable)
     } else {
       /**
@@ -484,7 +484,7 @@ export class SessionDriver implements SessionDriverContract<any> {
      */
     if (this.user) {
       const authenticatable = this.makeAuthenticatableFor(this.user)
-      this.ctx.logger.debug('re-generating remember me token')
+      this.ctx.logger.trace('re-generating remember me token')
       authenticatable.setRememberMeToken(this.generateToken(20))
       await this.persistRememberMeToken(authenticatable)
     }
