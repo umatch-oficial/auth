@@ -25,14 +25,16 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * Unwrap promise
    */
   type UnwrapPromise<T> = T extends PromiseLike<infer PT> ? PT : never
-  type UnWrapAuthenticableUser<T> = T extends AuthenticatableContract<any> ? Exclude<T['user'], null> : T
+  type UnWrapProviderUser<T> = T extends ProviderUserContract<any> ? Exclude<T['user'], null> : T
 
   /**
-   * Returns provider user by excluding null from it
+   * Returns the real user from the provider user
    */
-  export type GetProviderUser<
+  export type GetProviderRealUser<
     Provider extends keyof ProvidersList
-  > = UnWrapAuthenticableUser<UnwrapPromise<ReturnType<ProvidersList[Provider]['implementation']['findByUid']>>>
+  > = UnWrapProviderUser<UnwrapPromise<
+    ReturnType<ProvidersList[Provider]['implementation']['findByUid']>
+  >>
 
   /*
   |--------------------------------------------------------------------------
@@ -41,10 +43,10 @@ declare module '@ioc:Adonis/Addons/Auth' {
   */
 
   /**
-   * Authenticatable user that works as a bridge between providers
-   * and authenticators
+   * Provider user works as a bridge between the provider real user
+   * and the authenticator
    */
-  export interface AuthenticatableContract<User extends any> {
+  export interface ProviderUserContract<User extends any> {
     user: User | null,
     getId (): string | number | null,
     verifyPassword: (plainPassword: string) => Promise<boolean>,
@@ -57,24 +59,29 @@ declare module '@ioc:Adonis/Addons/Auth' {
    */
   export interface ProvidersContract<User extends any> {
     /**
+     * Returns provider user instance for a given user
+     */
+    getUserFor (user: User): ProviderUserContract<User>
+
+    /**
      * Find a user using the primary key value
      */
-    findById (id: string | number): Promise<AuthenticatableContract<User>>,
+    findById (id: string | number): Promise<ProviderUserContract<User>>,
 
     /**
      * Find a user by searching for their uids
      */
-    findByUid (uid: string): Promise<AuthenticatableContract<User>>,
+    findByUid (uid: string): Promise<ProviderUserContract<User>>,
 
     /**
      * Find a user using the remember me token
      */
-    findByToken (userId: string | number, token: string): Promise<AuthenticatableContract<User>>,
+    findByToken (userId: string | number, token: string): Promise<ProviderUserContract<User>>,
 
     /**
      * Update remember token
      */
-    updateRememberMeToken (authenticatable: AuthenticatableContract<User>): Promise<void>
+    updateRememberMeToken (authenticatable: ProviderUserContract<User>): Promise<void>
   }
 
   /*
@@ -87,26 +94,28 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * The shape of the user model accepted by the Lucid provider. The model
    * must have `password` and `rememberMeToken` attributes.
    */
-  export type LucidProviderUser = ModelConstructorContract<ModelContract & {
+  export type LucidProviderModel = ModelConstructorContract<ModelContract & {
     password: string,
     rememberMeToken?: string | null,
   }>
 
   /**
-   * Shape of lucid authenticatable builder
+   * Shape of lucid provider user builder. It must return [[ProviderUserContract]]
    */
-  export interface LucidAuthenticatableBuilder<User extends LucidProviderUser> {
+  export interface LucidProviderUserBuilder<User extends LucidProviderModel> {
     new (
       user: InstanceType<User> | null,
       config: LucidProviderConfig<User>,
       ...args: any[],
-    ): AuthenticatableContract<InstanceType<User>>,
+    ): ProviderUserContract<InstanceType<User>>,
   }
 
   /**
    * Lucid provider
    */
-  export interface LucidProviderContract<User extends LucidProviderUser> extends ProvidersContract<InstanceType<User>> {
+  export interface LucidProviderContract<
+    User extends LucidProviderModel
+  > extends ProvidersContract<InstanceType<User>> {
     /**
      * Define a custom connection for all the provider queries
      */
@@ -126,14 +135,14 @@ declare module '@ioc:Adonis/Addons/Auth' {
   /**
    * The config accepted by the Lucid provider
    */
-  export type LucidProviderConfig<User extends LucidProviderUser> = {
+  export type LucidProviderConfig<User extends LucidProviderModel> = {
     driver: 'lucid',
-    uids: string[],
+    model: User,
+    uids: (keyof InstanceType<User>)[],
     identifierKey: string,
     connection?: string,
     hashDriver?: keyof HashersList,
-    model: User,
-    authenticatable: LucidAuthenticatableBuilder<User>,
+    user?: LucidProviderUserBuilder<User>,
   }
 
   /*
@@ -143,30 +152,30 @@ declare module '@ioc:Adonis/Addons/Auth' {
   */
 
   /**
-   * Shape of the user returned by the database provider. The table must have `password`
+   * Shape of the row returned by the database provider. The table must have `password`
    * and `remember_me_token` columns.
    */
-  export type DatabaseProviderUser = {
+  export type DatabaseProviderRow = {
     password: string,
     remember_me_token?: string,
     [key: string]: any,
   }
 
   /**
-   * Shape of lucid authenticatable builder
+   * Shape of database provider user builder. It must always returns [[ProviderUserContract]]
    */
-  export interface DatabaseAuthenticatableBuilder {
+  export interface DatabaseProviderUserBuilder {
     new (
-      user: DatabaseProviderUser | null,
+      user: DatabaseProviderRow | null,
       config: DatabaseProviderConfig,
       ...args: any[],
-    ): AuthenticatableContract<DatabaseProviderUser>,
+    ): ProviderUserContract<DatabaseProviderRow>,
   }
 
   /**
    * Database provider
    */
-  export interface DatabaseProviderContract<User extends DatabaseProviderUser> extends ProvidersContract<User> {
+  export interface DatabaseProviderContract<User extends DatabaseProviderRow> extends ProvidersContract<User> {
     /**
      * Define a custom connection for all the provider queries
      */
@@ -180,7 +189,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * After hooks
      */
-    after (event: 'findUser', callback: (user: DatabaseProviderUser) => Promise<void>): this
+    after (event: 'findUser', callback: (user: DatabaseProviderRow) => Promise<void>): this
   }
 
   /**
@@ -189,11 +198,11 @@ declare module '@ioc:Adonis/Addons/Auth' {
   export type DatabaseProviderConfig = {
     driver: 'database',
     uids: string[],
+    usersTable: string,
     identifierKey: string,
-    authenticatable: DatabaseAuthenticatableBuilder,
     connection?: string,
     hashDriver?: keyof HashersList,
-    usersTable: string,
+    user?: DatabaseProviderUserBuilder,
   }
 
   /*
@@ -207,7 +216,6 @@ declare module '@ioc:Adonis/Addons/Auth' {
    */
   export type SessionDriverConfig<Provider extends keyof ProvidersList> = {
     driver: 'session',
-    identifier?: string,
     provider: ProvidersList[Provider]['config'],
   }
 
@@ -215,24 +223,24 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * Shape of data emitted by the login event
    */
   export type SessionLoginEventData<Provider extends keyof ProvidersList> = [
-    string, GetProviderUser<Provider>, HttpContextContract, string | null,
+    string, GetProviderRealUser<Provider>, HttpContextContract, string | null,
   ]
 
   /**
    * Shape of data emitted by the authenticate event
    */
   export type SessionAuthenticateEventData<Provider extends keyof ProvidersList> = [
-    string, GetProviderUser<Provider>, HttpContextContract, boolean,
+    string, GetProviderRealUser<Provider>, HttpContextContract, boolean,
   ]
 
   /**
    * Shape of the session driver
    */
-  export interface SessionDriverContract<Provider extends keyof ProvidersList> {
+  export interface SessionAuthenticatorContract<Provider extends keyof ProvidersList> {
     /**
      * Reference to the logged in user.
      */
-    user?: GetProviderUser<Provider>
+    user?: GetProviderRealUser<Provider>
 
     /**
      * A boolean to know if user is a guest or not. It is
@@ -277,18 +285,18 @@ declare module '@ioc:Adonis/Addons/Auth' {
      * Verify user credentials. An Exception is raised when unable
      * to find user or the password is incorrects
      */
-    verifyCredentials (uid: string, password: string): Promise<GetProviderUser<Provider>>
+    verifyCredentials (uid: string, password: string): Promise<GetProviderRealUser<Provider>>
 
     /**
      * Attempt to verify user credentials and set their login session
      * when credentials are correct.
      */
-    attempt (uid: string, password: string, remember?: boolean): Promise<GetProviderUser<Provider>>
+    attempt (uid: string, password: string, remember?: boolean): Promise<GetProviderRealUser<Provider>>
 
     /**
      * Login a user without any verification
      */
-    login (user: GetProviderUser<Provider>, remember?: boolean): Promise<void>
+    login (user: GetProviderRealUser<Provider>, remember?: boolean): Promise<void>
 
     /**
      * Login a user using their id
@@ -414,20 +422,22 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * Make instance of a mapping
      */
-    makeMapping<
-      K extends keyof AuthenticatorsList
-    > (ctx: HttpContextContract, mapping: K): AuthenticatorsList[K]['implementation']
+    makeMapping<K extends keyof AuthenticatorsList> (
+      ctx: HttpContextContract,
+      mapping: K,
+    ): AuthenticatorsList[K]['implementation']
 
     /**
      * Extend by adding custom providers and authenticators
      */
     extend (type: 'provider', provider: string, callback: ExtendProviderCallback): void
-    extend (type: 'authenticator', provider: string, callback: ExtendAuthenticatorCallback): void
+    extend (type: 'authenticator', authenticator: string, callback: ExtendAuthenticatorCallback): void
   }
 
-  const Auth: AuthContract
-
-  export const LucidAuthenticatable: LucidAuthenticatableBuilder<LucidProviderUser>
-  export const DatabaseAuthenticatable: DatabaseAuthenticatableBuilder
-  export default Auth
+  /**
+   * The references one can pull from the container to create their
+   * own provider users.
+   */
+  export const LucidUser: LucidProviderUserBuilder<LucidProviderModel>
+  export const DatabaseUser: DatabaseProviderUserBuilder
 }

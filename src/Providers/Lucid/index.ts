@@ -11,22 +11,24 @@ import { Hooks } from '@poppinss/hooks'
 import { IocContract } from '@adonisjs/fold'
 import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 import {
-  LucidProviderUser,
+  LucidProviderModel,
   LucidProviderConfig,
+  ProviderUserContract,
   LucidProviderContract,
-  AuthenticatableContract,
 } from '@ioc:Adonis/Addons/Auth'
+
+import { LucidUser } from './User'
 
 /**
  * Lucid provider uses Lucid models to lookup a users
  */
-export class LucidProvider implements LucidProviderContract<LucidProviderUser> {
+export class LucidProvider implements LucidProviderContract<LucidProviderModel> {
   private hooks = new Hooks()
   private connection?: string | QueryClientContract
 
   constructor (
     private container: IocContract,
-    private config: LucidProviderConfig<LucidProviderUser>,
+    private config: LucidProviderConfig<LucidProviderModel>,
   ) {
   }
 
@@ -45,6 +47,10 @@ export class LucidProvider implements LucidProviderContract<LucidProviderUser> {
    */
   private getModelQuery () {
     return this.config.model.query(this.getModelOptions())
+  }
+
+  public getUserFor (user: InstanceType<LucidProviderModel> | null) {
+    return this.container.make((this.config.user || LucidUser) as any, [user, this.config])
   }
 
   /**
@@ -90,7 +96,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderUser> {
       await this.hooks.exec('after', 'findUser', user)
     }
 
-    return this.container.make(this.config.authenticatable as any, [user, this.config])
+    return this.getUserFor(user)
   }
 
   /**
@@ -115,7 +121,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderUser> {
       await this.hooks.exec('after', 'findUser', user)
     }
 
-    return this.container.make(this.config.authenticatable as any, [user, this.config])
+    return this.getUserFor(user)
   }
 
   /**
@@ -139,14 +145,14 @@ export class LucidProvider implements LucidProviderContract<LucidProviderUser> {
       await this.hooks.exec('after', 'findUser', user)
     }
 
-    return this.container.make(this.config.authenticatable as any, [user, this.config])
+    return this.getUserFor(user)
   }
 
   /**
    * Updates the user remember me token
    */
   public async updateRememberMeToken (
-    authenticatable: AuthenticatableContract<InstanceType<LucidProviderUser>>,
+    authenticatable: ProviderUserContract<InstanceType<LucidProviderModel>>,
   ) {
     await authenticatable.user!.save()
   }

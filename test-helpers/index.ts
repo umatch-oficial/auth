@@ -28,14 +28,12 @@ import { SessionManager } from '@adonisjs/session/build/src/SessionManager'
 import { ModelContract, ModelConstructorContract } from '@ioc:Adonis/Lucid/Model'
 import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 
-import { SessionDriver } from '../src/Drivers/Session'
 import { LucidProvider } from '../src/Providers/Lucid'
 import { DatabaseProvider } from '../src/Providers/Database'
-import { Authenticatable as LucidAuthenticatable } from '../src/Providers/Lucid/Authenticatable'
-import { Authenticatable as DatabaseAuthenticatable } from '../src/Providers/Database/Authenticatable'
+import { SessionAuthenticator } from '../src/Authenticators/Session'
 
 import {
-  LucidProviderUser,
+  LucidProviderModel,
   LucidProviderConfig,
   LucidProviderContract,
   DatabaseProviderConfig,
@@ -69,7 +67,7 @@ export const hash = new Hash(container, {
 })
 
 export const emitter = new Emitter(container)
-container.singleton('Adonis/Core/Emitter', () => emitter)
+container.singleton('Adonis/Core/Event', () => emitter)
 container.singleton('Adonis/Core/Encryption', () => encryption)
 container.singleton('Adonis/Core/Hash', () => hash)
 container.singleton('Adonis/Core/Config', () => {
@@ -98,15 +96,14 @@ async function createUsersTable (client: QueryClientContract) {
 /**
  * Returns default config for the lucid provider
  */
-export function getLucidProviderConfig <User extends LucidProviderUser> (
-  config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'authenticatable'>,
+export function getLucidProviderConfig <User extends LucidProviderModel> (
+  config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'user'>,
 ) {
   const defaults: LucidProviderConfig<User> = {
     driver: 'lucid' as const,
-    uids: ['username', 'email'],
+    uids: ['username', 'email' as any],
     model: config.model,
     identifierKey: 'id',
-    authenticatable: LucidAuthenticatable,
   }
   return defaults
 }
@@ -120,7 +117,6 @@ export function getDatabaseProviderConfig () {
     uids: ['username', 'email'],
     identifierKey: 'id',
     usersTable: 'users',
-    authenticatable: DatabaseAuthenticatable,
   }
   return defaults
 }
@@ -198,8 +194,8 @@ export function getModel (db: DatabaseContract) {
 /**
  * Returns an instance of the lucid provider
  */
-export function getLucidProvider<User extends LucidProviderUser> (
-  config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'authenticatable'>,
+export function getLucidProvider<User extends LucidProviderModel> (
+  config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'user'>,
 ) {
   const defaults = getLucidProviderConfig(config)
   const normalizedConfig = Object.assign(defaults, config) as LucidProviderConfig<User>
@@ -247,7 +243,7 @@ export function getSessionDriver (
     provider: providerConfig,
   }
 
-  return new SessionDriver(container, 'session', config, provider, ctx)
+  return new SessionAuthenticator(container, 'session', config, provider, ctx)
 }
 
 /**

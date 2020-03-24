@@ -13,7 +13,7 @@ import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 
 import { Auth } from '../src/Auth'
 import { AuthManager } from '../src/AuthManager'
-import { SessionDriver } from '../src/Drivers/Session'
+import { SessionAuthenticator } from '../src/Authenticators/Session'
 import { LucidProvider } from '../src/Providers/Lucid'
 import { DatabaseProvider } from '../src/Providers/Database'
 
@@ -65,7 +65,7 @@ test.group('Auth Manager', (group) => {
     const ctx = getCtx()
 
     const mapping = manager.makeMapping(ctx, 'session')
-    assert.instanceOf(mapping, SessionDriver)
+    assert.instanceOf(mapping, SessionAuthenticator)
     assert.instanceOf(mapping.provider, LucidProvider)
   })
 
@@ -86,7 +86,7 @@ test.group('Auth Manager', (group) => {
     const ctx = getCtx()
 
     const mapping = manager.makeMapping(ctx, 'sessionDb')
-    assert.instanceOf(mapping, SessionDriver)
+    assert.instanceOf(mapping, SessionAuthenticator)
     assert.instanceOf(mapping.provider, DatabaseProvider)
   })
 
@@ -116,6 +116,7 @@ test.group('Auth Manager', (group) => {
         assert.deepEqual(config, { driver: 'mongodb' })
       }
 
+      public getUserFor (): any {}
       public async findById (): Promise<any> {}
       public async findByToken (): Promise<any> {}
       public async findByUid (): Promise<any> {}
@@ -145,6 +146,7 @@ test.group('Auth Manager', (group) => {
         assert.deepEqual(config, { driver: 'mongodb' })
       }
 
+      public getUserFor (): any {}
       public async findById (): Promise<any> {}
       public async findByToken (): Promise<any> {}
       public async findByUid (): Promise<any> {}

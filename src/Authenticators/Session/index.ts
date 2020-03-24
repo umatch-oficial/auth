@@ -13,12 +13,13 @@ import { Exception } from '@poppinss/utils'
 import { IocContract } from '@adonisjs/fold'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+
 import {
-  SessionDriverConfig,
   ProvidersContract,
-  SessionDriverContract,
+  SessionDriverConfig,
+  ProviderUserContract,
   SessionLoginEventData,
-  AuthenticatableContract,
+  SessionAuthenticatorContract,
   SessionAuthenticateEventData,
 } from '@ioc:Adonis/Addons/Auth'
 
@@ -28,10 +29,10 @@ import {
 } from '../../Exceptions'
 
 /**
- * Session driver enables user login using session. Also it allows user
+ * Session authenticator enables user login using session. Also it allows user
  * to opt for remember me token.
  */
-export class SessionDriver implements SessionDriverContract<any> {
+export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
   /**
    * The application key require to sign the JWS token.
    */
@@ -67,12 +68,12 @@ export class SessionDriver implements SessionDriverContract<any> {
    * Verifies and returns an instance of the event emitter
    */
   private getEmitter () {
-    const emitter = this.container.use('Adonis/Core/Emitter')
-    if (!emitter) {
-      throw new Exception('"Adonis/Core/Emitter" is required to initiate auth session driver')
+    const hasEmitter = this.container.hasBinding('Adonis/Core/Event')
+    if (!hasEmitter) {
+      throw new Exception('"Adonis/Core/Event" is required to initiate auth session driver')
     }
 
-    return emitter
+    return this.container.use('Adonis/Core/Event')
   }
 
   /**
@@ -117,14 +118,14 @@ export class SessionDriver implements SessionDriverContract<any> {
    * The name of the session key name
    */
   public get sessionKeyName () {
-    return `auth_${this.config.identifier || this.name}`
+    return `auth_${this.name}`
   }
 
   /**
    * The name of the session key name
    */
   public get rememberMeKeyName () {
-    return `remember_${this.config.identifier || this.name}`
+    return `remember_${this.name}`
   }
 
   /**
@@ -143,17 +144,10 @@ export class SessionDriver implements SessionDriverContract<any> {
   }
 
   /**
-   * Returns an instance of authenticable for a given user
-   */
-  private makeAuthenticatableFor (user: any) {
-    return this.container.make(this.config.provider.authenticatable, [user, this.config.provider])
-  }
-
-  /**
    * Set the user id inside the session. Also forces the session module
    * to re-generate the session id
    */
-  private setSession (user: AuthenticatableContract<any>) {
+  private setSession (user: ProviderUserContract<any>) {
     this.ctx.session.put(this.sessionKeyName, user.getId()!)
     this.ctx.session.regenerate()
   }
@@ -168,14 +162,14 @@ export class SessionDriver implements SessionDriverContract<any> {
   /**
    * Persists remember me token with the provider.
    */
-  private async persistRememberMeToken (authenticatable: AuthenticatableContract<any>) {
+  private async persistRememberMeToken (authenticatable: ProviderUserContract<any>) {
     await this.provider.updateRememberMeToken(authenticatable)
   }
 
   /**
    * Sets the remember me token cookie
    */
-  private setRememberMeCookie (user: AuthenticatableContract<any>) {
+  private setRememberMeCookie (user: ProviderUserContract<any>) {
     const rememberMeToken = JWS.sign({
       id: user.getId()!,
       token: user.getRememberMeToken()!,
@@ -209,8 +203,8 @@ export class SessionDriver implements SessionDriverContract<any> {
    * - HTTP context
    * - Remember me token (optional)
    */
-  private getLoginEventData (authenticatable: AuthenticatableContract<any>): SessionLoginEventData<any> {
-    return [this.config.identifier || this.name, authenticatable.user, this.ctx, authenticatable.getRememberMeToken()]
+  private getLoginEventData (authenticatable: ProviderUserContract<any>): SessionLoginEventData<any> {
+    return [this.name, authenticatable.user, this.ctx, authenticatable.getRememberMeToken()]
   }
 
   /**
@@ -222,10 +216,10 @@ export class SessionDriver implements SessionDriverContract<any> {
    * - A boolean to tell if logged in viaRemember or not
    */
   private getAuthenticateEventData (
-    authenticatable: AuthenticatableContract<any>,
+    authenticatable: ProviderUserContract<any>,
     viaRemember: boolean,
   ): SessionAuthenticateEventData<any> {
-    return [this.config.identifier || this.name, authenticatable.user, this.ctx, viaRemember]
+    return [this.name, authenticatable.user, this.ctx, viaRemember]
   }
 
   /**
@@ -278,7 +272,7 @@ export class SessionDriver implements SessionDriverContract<any> {
   /**
    * Lookup user using UID
    */
-  private async lookupUsingUid (uid): Promise<AuthenticatableContract<any>> {
+  private async lookupUsingUid (uid: string): Promise<ProviderUserContract<any>> {
     const authenticatable = await this.provider.findByUid(uid)
     if (!authenticatable.user) {
       throw CredentialsVerficationException.invalidUid(this.config.provider.uids)
@@ -290,7 +284,7 @@ export class SessionDriver implements SessionDriverContract<any> {
   /**
    * Verify user password
    */
-  private async verifyPassword (authenticatable: AuthenticatableContract<any>, password: string): Promise<void> {
+  private async verifyPassword (authenticatable: ProviderUserContract<any>, password: string): Promise<void> {
     /**
      * Verify password or raise exception
      */
@@ -331,7 +325,7 @@ export class SessionDriver implements SessionDriverContract<any> {
      * them to instantiate and return an instance of authenticatable, so
      * we create one manually.
      */
-    const authenticatable = this.makeAuthenticatableFor(user)
+    const authenticatable = this.provider.getUserFor(user)
 
     /**
      * Update user reference
@@ -483,7 +477,7 @@ export class SessionDriver implements SessionDriverContract<any> {
      * for the current user.
      */
     if (this.user) {
-      const authenticatable = this.makeAuthenticatableFor(this.user)
+      const authenticatable = this.provider.getUserFor(this.user)
       this.ctx.logger.trace('re-generating remember me token')
       authenticatable.setRememberMeToken(this.generateToken(20))
       await this.persistRememberMeToken(authenticatable)

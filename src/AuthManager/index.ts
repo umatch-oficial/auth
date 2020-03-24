@@ -23,18 +23,12 @@ import {
 } from '@ioc:Adonis/Addons/Auth'
 
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-
 import { Auth } from '../Auth'
-import { Authenticatable as LucidAuthenticatable } from '../Providers/Lucid/Authenticatable'
-import { Authenticatable as DatabaseAuthenticatable } from '../Providers/Database/Authenticatable'
 
 /**
  * Auth manager to instantiate authentication driver objects
  */
 export class AuthManager implements AuthManagerContract {
-  public static LucidAuthenticatable = LucidAuthenticatable
-  public static DatabaseAuthenticatable = DatabaseAuthenticatable
-
   /**
    * Extended set of providers
    */
@@ -103,7 +97,8 @@ export class AuthManager implements AuthManagerContract {
     provider: ProvidersContract<any>,
     ctx: HttpContextContract,
   ) {
-    return new (require('../Drivers/Session').SessionDriver)(this.container, mapping, config, provider, ctx)
+    const { SessionAuthenticator } = require('../Authenticators/Session')
+    return new SessionAuthenticator(this.container, mapping, config, provider, ctx)
   }
 
   /**

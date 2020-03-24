@@ -1,5 +1,5 @@
 import { User } from './models'
-import { AuthConfig, AuthContract, LucidAuthenticatable, DatabaseAuthenticatable } from '@ioc:Adonis/Addons/Auth'
+import { AuthConfig, AuthContract } from '@ioc:Adonis/Addons/Auth'
 
 export const config: AuthConfig = {
   session: {
@@ -9,7 +9,6 @@ export const config: AuthConfig = {
       model: User,
       identifierKey: 'id',
       uids: ['email'],
-      authenticatable: LucidAuthenticatable,
     },
   },
   sessionDb: {
@@ -19,7 +18,6 @@ export const config: AuthConfig = {
       usersTable: 'users',
       identifierKey: 'id',
       uids: ['email'],
-      authenticatable: DatabaseAuthenticatable,
     },
   },
 }

@@ -10,16 +10,16 @@
 import { inject } from '@adonisjs/fold'
 import { Exception } from '@poppinss/utils'
 import { HashContract } from '@ioc:Adonis/Core/Hash'
-import { LucidProviderUser, AuthenticatableContract, LucidProviderConfig } from '@ioc:Adonis/Addons/Auth'
+import { ProviderUserContract, DatabaseProviderRow, DatabaseProviderConfig } from '@ioc:Adonis/Addons/Auth'
 
 /**
- * Authenticatable works a bridge between the provider and the authenticator
+ * Database user works a bridge between the provider and the authenticator
  */
 @inject([null, null, 'Adonis/Core/Hash'])
-export class Authenticatable<User extends LucidProviderUser> implements AuthenticatableContract<InstanceType<User>> {
+export class DatabaseUser implements ProviderUserContract<DatabaseProviderRow> {
   constructor (
-    public user: InstanceType<User> | null,
-    private config: LucidProviderConfig<User>,
+    public user: DatabaseProviderRow | null,
+    private config: DatabaseProviderConfig,
     private hash: HashContract,
   ) {
   }
@@ -35,15 +35,18 @@ export class Authenticatable<User extends LucidProviderUser> implements Authenti
    * Verifies the user password
    */
   public async verifyPassword (plainPassword: string): Promise<boolean> {
+    if (!this.user) {
+      throw new Exception('Cannot "verifyPassword" for non-existing user')
+    }
     const hasher = this.config.hashDriver ? this.hash.use(this.config.hashDriver) : this.hash
-    return hasher.verify(this.user!.password, plainPassword)
+    return hasher.verify(this.user.password, plainPassword)
   }
 
   /**
    * Returns the user remember me token or null
    */
   public getRememberMeToken () {
-    return this.user ? (this.user.rememberMeToken || null) : null
+    return this.user ? (this.user.remember_me_token || null) : null
   }
 
   /**
@@ -53,6 +56,6 @@ export class Authenticatable<User extends LucidProviderUser> implements Authenti
     if (!this.user) {
       throw new Exception('Cannot set "rememberMeToken" on non-existing user')
     }
-    this.user.rememberMeToken = token
+    this.user.remember_me_token = token
   }
 }

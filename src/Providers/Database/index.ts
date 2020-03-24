@@ -14,16 +14,18 @@ import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 
 import {
-  DatabaseProviderUser,
+  DatabaseProviderRow,
+  ProviderUserContract,
   DatabaseProviderConfig,
-  AuthenticatableContract,
   DatabaseProviderContract,
 } from '@ioc:Adonis/Addons/Auth'
 
+import { DatabaseUser } from './User'
+
 /**
- * Database provider to lookup users
+ * Database provider to lookup users inside the database
  */
-export class DatabaseProvider implements DatabaseProviderContract<DatabaseProviderUser> {
+export class DatabaseProvider implements DatabaseProviderContract<DatabaseProviderRow> {
   /**
    * Hooks reference
    */
@@ -61,12 +63,27 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
   /**
    * Ensure "user.id" is always present
    */
-  private ensureUserHasId (user: any): asserts user is DatabaseProviderUser {
+  private ensureUserHasId (user: any): asserts user is DatabaseProviderRow {
+    /**
+     * Ignore when user is null
+     */
+    if (!user) {
+      return
+    }
+
     if (!user[this.config.identifierKey]) {
       throw new Exception(
         `Auth database provider expects "${this.config.usersTable}.${this.config.identifierKey}" to always exist`,
       )
     }
+  }
+
+  /**
+   * Returns an instance of provider user
+   */
+  public getUserFor (user: any) {
+    this.ensureUserHasId(user)
+    return this.container.make((this.config.user || DatabaseUser) as any, [user, this.config])
   }
 
   /**
@@ -102,11 +119,10 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
 
     const user = await query.where(this.config.identifierKey, id).first()
     if (user) {
-      this.ensureUserHasId(user)
       await this.hooks.exec('after', 'findUser', user)
     }
 
-    return this.container.make(this.config.authenticatable as any, [user, this.config])
+    return this.getUserFor(user)
   }
 
   /**
@@ -116,17 +132,12 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
     const query = this.getUserQueryBuilder()
     await this.hooks.exec('before', 'findUser', query)
 
-    const user = await query
-      .where(this.config.identifierKey, id)
-      .where('remember_me_token', token)
-      .first()
-
+    const user = await query.where(this.config.identifierKey, id).where('remember_me_token', token).first()
     if (user) {
-      this.ensureUserHasId(user)
       await this.hooks.exec('after', 'findUser', user)
     }
 
-    return this.container.make(this.config.authenticatable as any, [user, this.config])
+    return this.getUserFor(user)
   }
 
   /**
@@ -141,17 +152,16 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
     const user = await query.first()
 
     if (user) {
-      this.ensureUserHasId(user)
       await this.hooks.exec('after', 'findUser', user)
     }
 
-    return this.container.make(this.config.authenticatable as any, [user, this.config])
+    return this.getUserFor(user)
   }
 
   /**
    * Updates the user remember me token
    */
-  public async updateRememberMeToken (user: AuthenticatableContract<DatabaseProviderUser>) {
+  public async updateRememberMeToken (user: ProviderUserContract<DatabaseProviderRow>) {
     await this
       .getUserQueryBuilder()
       .where(this.config.identifierKey, user[this.config.identifierKey])

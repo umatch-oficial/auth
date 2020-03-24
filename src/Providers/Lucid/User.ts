@@ -10,23 +10,16 @@
 import { inject } from '@adonisjs/fold'
 import { Exception } from '@poppinss/utils'
 import { HashContract } from '@ioc:Adonis/Core/Hash'
-import { DatabaseProviderUser, AuthenticatableContract, DatabaseProviderConfig } from '@ioc:Adonis/Addons/Auth'
+import { LucidProviderModel, ProviderUserContract, LucidProviderConfig } from '@ioc:Adonis/Addons/Auth'
 
 /**
- * Authenticatable works a bridge between the provider and the authenticator
+ * Lucid works works a bridge between the provider and the authenticator
  */
 @inject([null, null, 'Adonis/Core/Hash'])
-export class Authenticatable implements AuthenticatableContract<DatabaseProviderUser> {
-  /**
-   * The primary key identifier
-   */
-  public static identifierKey () {
-    return 'id'
-  }
-
+export class LucidUser<User extends LucidProviderModel> implements ProviderUserContract<InstanceType<User>> {
   constructor (
-    public user: DatabaseProviderUser | null,
-    private config: DatabaseProviderConfig,
+    public user: InstanceType<User> | null,
+    private config: LucidProviderConfig<User>,
     private hash: HashContract,
   ) {
   }
@@ -42,6 +35,10 @@ export class Authenticatable implements AuthenticatableContract<DatabaseProvider
    * Verifies the user password
    */
   public async verifyPassword (plainPassword: string): Promise<boolean> {
+    if (!this.user) {
+      throw new Exception('Cannot "verifyPassword" for non-existing user')
+    }
+
     const hasher = this.config.hashDriver ? this.hash.use(this.config.hashDriver) : this.hash
     return hasher.verify(this.user!.password, plainPassword)
   }
@@ -50,7 +47,7 @@ export class Authenticatable implements AuthenticatableContract<DatabaseProvider
    * Returns the user remember me token or null
    */
   public getRememberMeToken () {
-    return this.user ? (this.user.remember_me_token || null) : null
+    return this.user ? (this.user.rememberMeToken || null) : null
   }
 
   /**
@@ -60,6 +57,6 @@ export class Authenticatable implements AuthenticatableContract<DatabaseProvider
     if (!this.user) {
       throw new Exception('Cannot set "rememberMeToken" on non-existing user')
     }
-    this.user.remember_me_token = token
+    this.user.rememberMeToken = token
   }
 }

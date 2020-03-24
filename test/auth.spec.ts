@@ -11,7 +11,7 @@ import test from 'japa'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 
 import { AuthManager } from '../src/AuthManager'
-import { SessionDriver } from '../src/Drivers/Session'
+import { SessionAuthenticator } from '../src/Authenticators/Session'
 import { LucidProvider } from '../src/Providers/Lucid'
 
 import {
@@ -65,7 +65,7 @@ test.group('Auth', (group) => {
     mapping['isCached'] = true
 
     assert.equal(auth.use('session')['isCached'], true)
-    assert.instanceOf(mapping, SessionDriver)
+    assert.instanceOf(mapping, SessionAuthenticator)
     assert.instanceOf(mapping.provider, LucidProvider)
   })
 })
