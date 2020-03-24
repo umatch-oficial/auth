@@ -26,16 +26,3 @@ export class CredentialsVerficationException extends Exception {
     return new this('Password mis-match', 401, 'E_INVALID_AUTH_PASSWORD')
   }
 }
-
-/**
- * Exception raised when unable to authenticate user session
- */
-export class AuthenticationFailureException extends Exception {
-  public static missingSession () {
-    return new this('Missing user session', 401, 'E_MISSING_AUTH_SESSION')
-  }
-
-  public static missingUser () {
-    return new this('Invalid auth session id', 401, 'E_INVALID_AUTH_SESSION')
-  }
-}

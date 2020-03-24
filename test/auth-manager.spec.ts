@@ -8,14 +8,14 @@
 */
 
 import test from 'japa'
-import { ProvidersContract } from '@ioc:Adonis/Addons/Auth'
+import { ProviderContract } from '@ioc:Adonis/Addons/Auth'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 
 import { Auth } from '../src/Auth'
 import { AuthManager } from '../src/AuthManager'
-import { SessionAuthenticator } from '../src/Authenticators/Session'
 import { LucidProvider } from '../src/Providers/Lucid'
 import { DatabaseProvider } from '../src/Providers/Database'
+import { SessionGuard } from '../src/Guards/Session'
 
 import {
   setup,
@@ -48,10 +48,10 @@ test.group('Auth Manager', (group) => {
     await reset(db)
   })
 
-  test('make an instance of the session authenticator with lucid provider', (assert) => {
+  test('make an instance of the session guard with lucid provider', (assert) => {
     const User = getUserModel(BaseModel)
 
-    const manager = new AuthManager({
+    const manager = new AuthManager(container, {
       session: {
         driver: 'session',
         provider: getLucidProviderConfig({ model: User }),
@@ -60,19 +60,19 @@ test.group('Auth Manager', (group) => {
         driver: 'session',
         provider: getDatabaseProviderConfig(),
       },
-    }, container)
+    })
 
     const ctx = getCtx()
 
     const mapping = manager.makeMapping(ctx, 'session')
-    assert.instanceOf(mapping, SessionAuthenticator)
+    assert.instanceOf(mapping, SessionGuard)
     assert.instanceOf(mapping.provider, LucidProvider)
   })
 
-  test('make an instance of the session authenticator with database provider', (assert) => {
+  test('make an instance of the session guard with database provider', (assert) => {
     const User = getUserModel(BaseModel)
 
-    const manager = new AuthManager({
+    const manager = new AuthManager(container, {
       session: {
         driver: 'session',
         provider: getLucidProviderConfig({ model: User }),
@@ -81,19 +81,19 @@ test.group('Auth Manager', (group) => {
         driver: 'session',
         provider: getDatabaseProviderConfig(),
       },
-    }, container)
+    })
 
     const ctx = getCtx()
 
     const mapping = manager.makeMapping(ctx, 'sessionDb')
-    assert.instanceOf(mapping, SessionAuthenticator)
+    assert.instanceOf(mapping, SessionGuard)
     assert.instanceOf(mapping.provider, DatabaseProvider)
   })
 
   test('make an instance of auth class for a given http request', (assert) => {
     const User = getUserModel(BaseModel)
 
-    const manager = new AuthManager({
+    const manager = new AuthManager(container, {
       session: {
         driver: 'session',
         provider: getLucidProviderConfig({ model: User }),
@@ -102,7 +102,7 @@ test.group('Auth Manager', (group) => {
         driver: 'session',
         provider: getDatabaseProviderConfig(),
       },
-    }, container)
+    })
 
     const ctx = getCtx()
 
@@ -111,7 +111,7 @@ test.group('Auth Manager', (group) => {
   })
 
   test('extend by adding custom provider', (assert) => {
-    class MongoDBProvider implements ProvidersContract<any> {
+    class MongoDBProvider implements ProviderContract<any> {
       constructor (config: any) {
         assert.deepEqual(config, { driver: 'mongodb' })
       }
@@ -123,14 +123,14 @@ test.group('Auth Manager', (group) => {
       public async updateRememberMeToken () {}
     }
 
-    const manager = new AuthManager({
+    const manager = new AuthManager(container, {
       admin: {
         driver: 'session',
         provider: {
           driver: 'mongodb',
         },
       },
-    } as any, container)
+    } as any)
 
     manager.extend('provider', 'mongodb', (_, config) => {
       return new MongoDBProvider(config)
@@ -140,8 +140,8 @@ test.group('Auth Manager', (group) => {
     assert.instanceOf(manager.makeMapping(ctx, 'admin' as any).provider, MongoDBProvider)
   })
 
-  test('extend by adding custom authenticator', (assert) => {
-    class MongoDBProvider implements ProvidersContract<any> {
+  test('extend by adding custom guard', (assert) => {
+    class MongoDBProvider implements ProviderContract<any> {
       constructor (config: any) {
         assert.deepEqual(config, { driver: 'mongodb' })
       }
@@ -153,32 +153,32 @@ test.group('Auth Manager', (group) => {
       public async updateRememberMeToken () {}
     }
 
-    class CustomAuthenticator {
+    class CustomGuard {
       constructor (mapping: string, config: any, public provider: any) {
         assert.equal(mapping, 'admin')
         assert.deepEqual(config, { driver: 'google', provider: { driver: 'mongodb' } })
       }
     }
 
-    const manager = new AuthManager({
+    const manager = new AuthManager(container, {
       admin: {
         driver: 'google',
         provider: {
           driver: 'mongodb',
         },
       },
-    } as any, container)
+    } as any)
 
     manager.extend('provider', 'mongodb', (_, config) => {
       return new MongoDBProvider(config)
     })
 
-    manager.extend('authenticator', 'google', (_, mapping, config, __, provider) => {
-      return new CustomAuthenticator(mapping, config, provider)
+    manager.extend('guard', 'google', (_, mapping, config, provider) => {
+      return new CustomGuard(mapping, config, provider) as any
     })
 
     const ctx = getCtx()
-    assert.instanceOf(manager.makeMapping(ctx, 'admin' as any), CustomAuthenticator)
+    assert.instanceOf(manager.makeMapping(ctx, 'admin' as any), CustomGuard)
     assert.instanceOf(manager.makeMapping(ctx, 'admin' as any).provider, MongoDBProvider)
   })
 })

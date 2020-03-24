@@ -12,14 +12,14 @@ declare module '@ioc:Adonis/Addons/Auth' {
     },
   }
 
-  interface AuthenticatorsList {
+  interface GuardsList {
     session: {
-      implementation: SessionDriverContract<'lucid'>,
-      config: SessionDriverConfig<'lucid'>,
+      implementation: SessionGuardContract<'lucid', 'session'>,
+      config: SessionGuardConfig<'lucid'>,
     },
     sessionDb: {
-      implementation: SessionDriverContract<'database'>,
-      config: SessionDriverConfig<'database'>,
+      implementation: SessionGuardContract<'database', 'sessionDb'>,
+      config: SessionGuardConfig<'database'>,
     },
   }
 }

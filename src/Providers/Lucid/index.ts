@@ -23,23 +23,32 @@ import { LucidUser } from './User'
  * Lucid provider uses Lucid models to lookup a users
  */
 export class LucidProvider implements LucidProviderContract<LucidProviderModel> {
+  /**
+   * Hooks reference
+   */
   private hooks = new Hooks()
+
+  /**
+   * Custom connection or query client
+   */
   private connection?: string | QueryClientContract
 
-  constructor (
-    private container: IocContract,
-    private config: LucidProviderConfig<LucidProviderModel>,
-  ) {
+  constructor (private container: IocContract, private config: LucidProviderConfig<LucidProviderModel>) {
   }
 
   /**
    * The models options for constructing a query
    */
   private getModelOptions () {
-    if (!this.connection) {
-      return this.config.connection ? { connection: this.config.connection } : {}
+    if (typeof (this.connection) === 'string') {
+      return { connection: this.connection }
     }
-    return typeof (this.connection) === 'string' ? { connection: this.connection } : { client: this.connection }
+
+    if (this.connection) {
+      return { client: this.connection }
+    }
+
+    return this.config.connection ? { connection: this.config.connection } : {}
   }
 
   /**
@@ -49,6 +58,25 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
     return this.config.model.query(this.getModelOptions())
   }
 
+  /**
+   * Executes the query to find the user, calls the registered hooks
+   * and wraps the result inside [[ProviderUserContract]]
+   */
+  private async findUser (query: ReturnType<LucidProviderModel['query']>) {
+    await this.hooks.exec('before', 'findUser', query)
+
+    const user = await query.first()
+    if (user) {
+      await this.hooks.exec('after', 'findUser', user)
+    }
+
+    return this.getUserFor(user)
+  }
+
+  /**
+   * Returns an instance of the [[ProviderUser]] by wrapping lucid model
+   * inside it
+   */
   public getUserFor (user: InstanceType<LucidProviderModel> | null) {
     return this.container.make((this.config.user || LucidUser) as any, [user, this.config])
   }
@@ -81,47 +109,16 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
    * Returns a user instance using the primary key value
    */
   public async findById (id: string | number) {
-    /**
-     * Pull query builder instance and execute the before hook
-     */
     const query = this.getModelQuery()
-    await this.hooks.exec('before', 'findUser', query)
-
-    const user = await query.where(this.config.identifierKey, id).first()
-
-    /**
-     * Execute hook when user has been found
-     */
-    if (user) {
-      await this.hooks.exec('after', 'findUser', user)
-    }
-
-    return this.getUserFor(user)
+    return this.findUser(query.where(this.config.identifierKey, id))
   }
 
   /**
    * Returns a user instance using a specific token type and value
    */
   public async findByToken (id: string | number, value: string) {
-    /**
-     * Pull query builder instance and execute the before hook
-     */
     const query = this.getModelQuery()
-    await this.hooks.exec('before', 'findUser', query)
-
-    const user = await query
-      .where(this.config.identifierKey, id)
-      .where('rememberMeToken', value)
-      .first()
-
-    /**
-     * Execute hook when user has been found
-     */
-    if (user) {
-      await this.hooks.exec('after', 'findUser', user)
-    }
-
-    return this.getUserFor(user)
+    return this.findUser(query.where(this.config.identifierKey, id).where('rememberMeToken', value))
   }
 
   /**
@@ -129,23 +126,9 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
    * their defined uids.
    */
   public async findByUid (uidValue: string) {
-    /**
-     * Pull query builder instance and execute the before hook
-     */
     const query = this.getModelQuery()
-    await this.hooks.exec('before', 'findUser', query)
-
     this.config.uids.forEach((uid) => (query.orWhere(uid, uidValue)))
-    const user = await query.first()
-
-    /**
-     * Execute hook when user has been found
-     */
-    if (user) {
-      await this.hooks.exec('after', 'findUser', user)
-    }
-
-    return this.getUserFor(user)
+    return this.findUser(query)
   }
 
   /**

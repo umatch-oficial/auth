@@ -11,7 +11,7 @@ import test from 'japa'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 
 import { AuthManager } from '../src/AuthManager'
-import { SessionAuthenticator } from '../src/Authenticators/Session'
+import { SessionGuard } from '../src/Guards/Session'
 import { LucidProvider } from '../src/Providers/Lucid'
 
 import {
@@ -45,10 +45,10 @@ test.group('Auth', (group) => {
     await reset(db)
   })
 
-  test('make and cache instance of the session authenticator', (assert) => {
+  test('make and cache instance of the session guard', (assert) => {
     const User = getUserModel(BaseModel)
 
-    const manager = new AuthManager({
+    const manager = new AuthManager(container, {
       session: {
         driver: 'session',
         provider: getLucidProviderConfig({ model: User }),
@@ -57,7 +57,7 @@ test.group('Auth', (group) => {
         driver: 'session',
         provider: getDatabaseProviderConfig(),
       },
-    }, container)
+    })
 
     const ctx = getCtx()
     const auth = manager.getAuthForRequest(ctx)
@@ -65,7 +65,7 @@ test.group('Auth', (group) => {
     mapping['isCached'] = true
 
     assert.equal(auth.use('session')['isCached'], true)
-    assert.instanceOf(mapping, SessionAuthenticator)
+    assert.instanceOf(mapping, SessionGuard)
     assert.instanceOf(mapping.provider, LucidProvider)
   })
 })

@@ -23,7 +23,6 @@ export const config: AuthConfig = {
 }
 
 const a = {} as AuthContract
-
-a.use('session').provider
-a.use('session').verifyCredentials('asd', 'sda').then(() => {
+a.use('session').verifyCredentials('asd', 'sda').then((user) => {
+  user.email
 })

@@ -9,71 +9,34 @@
 
 import { JWS } from 'jose'
 import { randomBytes } from 'crypto'
-import { Exception } from '@poppinss/utils'
-import { IocContract } from '@adonisjs/fold'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
 import {
-  ProvidersContract,
-  SessionDriverConfig,
+  ProviderContract,
+  SessionGuardConfig,
   ProviderUserContract,
   SessionLoginEventData,
-  SessionAuthenticatorContract,
+  SessionGuardContract,
   SessionAuthenticateEventData,
 } from '@ioc:Adonis/Addons/Auth'
 
-import {
-  AuthenticationFailureException,
-  CredentialsVerficationException,
-} from '../../Exceptions'
+import { AuthenticationFailureException } from '../../Exceptions/AuthenticationFailureException'
+import { CredentialsVerficationException } from '../../Exceptions/CredentialsVerficationException'
 
 /**
  * Session authenticator enables user login using session. Also it allows user
  * to opt for remember me token.
  */
-export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
-  /**
-   * The application key require to sign the JWS token.
-   */
-  private appKey = this.getAppKey()
-
-  /**
-   * Emitter instance
-   */
-  private emitter: EmitterContract = this.getEmitter()
-
+export class SessionGuard implements SessionGuardContract<any, any> {
   constructor (
-    private container: IocContract,
-    private name: string,
-    private config: SessionDriverConfig<any>,
-    public provider: ProvidersContract<any>,
+    public name: string,
+    private config: SessionGuardConfig<any>,
+    private appKey: string,
+    private emitter: EmitterContract,
+    public provider: ProviderContract<any>,
     private ctx: HttpContextContract,
   ) {
-  }
-
-  /**
-   * Verifies and returns the app secret key
-   */
-  private getAppKey (): string {
-    const appKey = this.container.use('Adonis/Core/Config').get('app.appKey') as string
-    if (!appKey) {
-      throw new Exception('"app.appKey" is required to initiate auth session driver', 500, 'E_MISSING_APP_KEY')
-    }
-
-    return appKey
-  }
-
-  /**
-   * Verifies and returns an instance of the event emitter
-   */
-  private getEmitter () {
-    const hasEmitter = this.container.hasBinding('Adonis/Core/Event')
-    if (!hasEmitter) {
-      throw new Exception('"Adonis/Core/Event" is required to initiate auth session driver')
-    }
-
-    return this.container.use('Adonis/Core/Event')
   }
 
   /**
@@ -147,8 +110,8 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
    * Set the user id inside the session. Also forces the session module
    * to re-generate the session id
    */
-  private setSession (user: ProviderUserContract<any>) {
-    this.ctx.session.put(this.sessionKeyName, user.getId()!)
+  private setSession (userId: string | number) {
+    this.ctx.session.put(this.sessionKeyName, userId)
     this.ctx.session.regenerate()
   }
 
@@ -160,19 +123,12 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
   }
 
   /**
-   * Persists remember me token with the provider.
-   */
-  private async persistRememberMeToken (authenticatable: ProviderUserContract<any>) {
-    await this.provider.updateRememberMeToken(authenticatable)
-  }
-
-  /**
    * Sets the remember me token cookie
    */
-  private setRememberMeCookie (user: ProviderUserContract<any>) {
+  private setRememberMeCookie (userId: string | number, token: string) {
     const rememberMeToken = JWS.sign({
-      id: user.getId()!,
-      token: user.getRememberMeToken()!,
+      id: userId,
+      token: token,
     }, this.appKey, { alg: this.jwsAlg })
 
     this.touchRememberMeCookie(rememberMeToken)
@@ -196,6 +152,34 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
   }
 
   /**
+   * Marks the user as logged out
+   */
+  private markUserAsLoggedOut () {
+    this.isLoggedOut = true
+    this.isAuthenticated = false
+    this.viaRemember = false
+    this.user = null
+  }
+
+  /**
+   * Marks user as logged-in
+   */
+  private markUserAsLoggedIn (user: any, authenticated?: boolean, viaRemember?: boolean) {
+    this.user = user
+    this.isLoggedOut = false
+    authenticated && (this.isAuthenticated = true)
+    viaRemember && (this.viaRemember = true)
+  }
+
+  /**
+   * Clears user session and remember me cookie
+   */
+  private clearUserFromStorage () {
+    this.ctx.session.forget(this.sessionKeyName)
+    this.clearRememberMeCookie()
+  }
+
+  /**
    * Returns data packet for the login event. Arguments are
    *
    * - The mapping identifier
@@ -203,8 +187,8 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
    * - HTTP context
    * - Remember me token (optional)
    */
-  private getLoginEventData (authenticatable: ProviderUserContract<any>): SessionLoginEventData<any> {
-    return [this.name, authenticatable.user, this.ctx, authenticatable.getRememberMeToken()]
+  private getLoginEventData (user: any, token: string | null): SessionLoginEventData<any> {
+    return [this.name, user, this.ctx, token]
   }
 
   /**
@@ -215,11 +199,33 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
    * - HTTP context
    * - A boolean to tell if logged in viaRemember or not
    */
-  private getAuthenticateEventData (
-    authenticatable: ProviderUserContract<any>,
-    viaRemember: boolean,
-  ): SessionAuthenticateEventData<any> {
-    return [this.name, authenticatable.user, this.ctx, viaRemember]
+  private getAuthenticateEventData (user: any, viaRemember: boolean): SessionAuthenticateEventData<any> {
+    return [this.name, user, this.ctx, viaRemember]
+  }
+
+  /**
+   * Lookup user using UID
+   */
+  private async lookupUsingUid (uid: string): Promise<ProviderUserContract<any>> {
+    const providerUser = await this.provider.findByUid(uid)
+    if (!providerUser.user) {
+      throw CredentialsVerficationException.invalidUid(this.config.provider.uids)
+    }
+
+    return providerUser
+  }
+
+  /**
+   * Verify user password
+   */
+  private async verifyPassword (providerUser: ProviderUserContract<any>, password: string): Promise<void> {
+    /**
+     * Verify password or raise exception
+     */
+    const verified = await providerUser.verifyPassword(password)
+    if (!verified) {
+      throw CredentialsVerficationException.invalidPassword()
+    }
   }
 
   /**
@@ -270,50 +276,35 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
   }
 
   /**
-   * Lookup user using UID
-   */
-  private async lookupUsingUid (uid: string): Promise<ProviderUserContract<any>> {
-    const authenticatable = await this.provider.findByUid(uid)
-    if (!authenticatable.user) {
-      throw CredentialsVerficationException.invalidUid(this.config.provider.uids)
-    }
-
-    return authenticatable
-  }
-
-  /**
-   * Verify user password
-   */
-  private async verifyPassword (authenticatable: ProviderUserContract<any>, password: string): Promise<void> {
-    /**
-     * Verify password or raise exception
-     */
-    const verified = await authenticatable.verifyPassword(password)
-    if (!verified) {
-      throw CredentialsVerficationException.invalidPassword()
-    }
-  }
-
-  /**
    * Verifies user credentials
    */
   public async verifyCredentials (uid: string, password: string): Promise<any> {
-    /**
-     * Find user or raise exception
-     */
-    const authenticatable = await this.lookupUsingUid(uid)
-    await this.verifyPassword(authenticatable, password)
-    return authenticatable.user
+    const providerUser = await this.lookupUsingUid(uid)
+    await this.verifyPassword(providerUser, password)
+    return providerUser.user
   }
 
   /**
    * Verify user credentials and perform login
    */
   public async attempt (uid: string, password: string, remember?: boolean): Promise<any> {
-    const authenticatable = await this.lookupUsingUid(uid)
-    await this.verifyPassword(authenticatable, password)
-    await this.login(authenticatable.user, remember)
-    return authenticatable.user
+    const providerUser = await this.lookupUsingUid(uid)
+    await this.verifyPassword(providerUser, password)
+    await this.login(providerUser.user, remember)
+    return providerUser.user
+  }
+
+  /**
+   * Login user using their id
+   */
+  public async loginViaId (id: string | number, remember?: boolean): Promise<void> {
+    const providerUser = await this.provider.findById(id)
+    if (!providerUser.user) {
+      throw CredentialsVerficationException.invalidId(this.config.provider.identifierKey, id)
+    }
+
+    await this.login(providerUser.user, remember)
+    return providerUser.user
   }
 
   /**
@@ -325,13 +316,12 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
      * them to instantiate and return an instance of authenticatable, so
      * we create one manually.
      */
-    const authenticatable = this.provider.getUserFor(user)
+    const providerUser = this.provider.getUserFor(user)
 
     /**
-     * Update user reference
+     * Set session
      */
-    this.user = authenticatable.user
-    this.setSession(authenticatable)
+    this.setSession(providerUser.getId()!)
 
     /**
      * Set remember me token when enabled
@@ -340,14 +330,14 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
       /**
        * Create and persist the user remember me token, when an existing one is missing
        */
-      if (!authenticatable.getRememberMeToken()) {
+      if (!providerUser.getRememberMeToken()) {
         this.ctx.logger.trace('generating fresh remember me token')
-        authenticatable.setRememberMeToken(this.generateToken(20))
-        await this.persistRememberMeToken(authenticatable)
+        providerUser.setRememberMeToken(this.generateToken(20))
+        await this.provider.updateRememberMeToken(providerUser)
       }
 
       this.ctx.logger.trace('defining remember me cookie', { name: this.rememberMeKeyName })
-      this.setRememberMeCookie(authenticatable)
+      this.setRememberMeCookie(providerUser.getId()!, providerUser.getRememberMeToken()!)
     } else {
       /**
        * Clear remember me cookie, which may have been set previously.
@@ -355,21 +345,13 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
       this.clearRememberMeCookie()
     }
 
-    this.emitter.emit('auth:session:login', this.getLoginEventData(authenticatable))
-    return authenticatable.user
-  }
+    this.emitter.emit(
+      'auth:session:login',
+      this.getLoginEventData(providerUser.user, providerUser.getRememberMeToken()),
+    )
 
-  /**
-   * Login user using their id
-   */
-  public async loginViaId (id: string | number, remember?: boolean): Promise<void> {
-    const authenticatable = await this.provider.findById(id)
-    if (!authenticatable.user) {
-      throw CredentialsVerficationException.invalidId(this.config.provider.identifierKey, id)
-    }
-
-    await this.login(authenticatable.user, remember)
-    return authenticatable.user
+    this.markUserAsLoggedIn(providerUser.user)
+    return providerUser.user
   }
 
   /**
@@ -389,10 +371,9 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
      * session
      */
     if (sessionId) {
-      const authenticatable = await this.getUserForSessionId(sessionId)
-      this.user = authenticatable.user
-      this.isAuthenticated = true
-      this.emitter.emit('auth:session:authenticate', this.getAuthenticateEventData(authenticatable, false))
+      const providerUser = await this.getUserForSessionId(sessionId)
+      this.markUserAsLoggedIn(providerUser.user, true)
+      this.emitter.emit('auth:session:authenticate', this.getAuthenticateEventData(providerUser.user, false))
       return
     }
 
@@ -412,21 +393,19 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
     /**
      * Attempt to locate the user for remember me token
      */
-    const authenticatable = await this.getUserForRememberMeToken(id, token)
-    this.user = authenticatable.user
-    this.isAuthenticated = true
-    this.viaRemember = true
+    const providerUser = await this.getUserForRememberMeToken(id, token)
+    this.markUserAsLoggedIn(providerUser.user, true, true)
 
     /**
      * Renew remember me cookie
      */
     this.touchRememberMeCookie(rememberMeToken)
-    this.emitter.emit('auth:session:authenticate', this.getAuthenticateEventData(authenticatable, true))
+    this.emitter.emit('auth:session:authenticate', this.getAuthenticateEventData(providerUser.user, true))
 
     /**
      * Update the session to re-login the user
      */
-    this.setSession(authenticatable)
+    this.setSession(providerUser.getId()!)
   }
 
   /**
@@ -438,17 +417,6 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
     } catch {
     }
     return this.isAuthenticated
-  }
-
-  private markUserAsLoggedOut () {
-    this.isLoggedOut = true
-    this.isAuthenticated = false
-    this.user = null
-  }
-
-  private clearUserFromStorage () {
-    this.ctx.session.forget(this.sessionKeyName)
-    this.clearRememberMeCookie()
   }
 
   /**
@@ -477,10 +445,11 @@ export class SessionAuthenticator implements SessionAuthenticatorContract<any> {
      * for the current user.
      */
     if (this.user) {
-      const authenticatable = this.provider.getUserFor(this.user)
+      const providerUser = this.provider.getUserFor(this.user)
+
       this.ctx.logger.trace('re-generating remember me token')
-      authenticatable.setRememberMeToken(this.generateToken(20))
-      await this.persistRememberMeToken(authenticatable)
+      providerUser.setRememberMeToken(this.generateToken(20))
+      await this.provider.updateRememberMeToken(providerUser)
     }
 
     /**

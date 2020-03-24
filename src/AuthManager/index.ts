@@ -12,21 +12,22 @@ import { IocContract } from '@adonisjs/fold'
 
 import {
   AuthConfig,
-  ProvidersContract,
-  AuthenticatorsList,
+  GuardsList,
+  ProviderContract,
+  SessionGuardConfig,
   LucidProviderConfig,
-  SessionDriverConfig,
   AuthManagerContract,
+  ExtendGuardCallback,
   DatabaseProviderConfig,
   ExtendProviderCallback,
-  ExtendAuthenticatorCallback,
 } from '@ioc:Adonis/Addons/Auth'
 
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { Auth } from '../Auth'
 
 /**
- * Auth manager to instantiate authentication driver objects
+ * Auth manager to manage guards and providers object. The extend API can
+ * be used to add custom guards and providers
  */
 export class AuthManager implements AuthManagerContract {
   /**
@@ -35,22 +36,46 @@ export class AuthManager implements AuthManagerContract {
   private extendedProviders: Map<string, ExtendProviderCallback> = new Map()
 
   /**
-   * Extend set of authenticators
+   * Extend set of guards
    */
-  private extendAuthenticators: Map<string, ExtendAuthenticatorCallback> = new Map()
+  private extendedGuards: Map<string, ExtendGuardCallback> = new Map()
 
-  constructor (private config: AuthConfig, private container: IocContract) {
+  constructor (private container: IocContract, private config: AuthConfig) {
   }
 
   /**
-   * Makes an instance of lucid provider
+   * Verifies and returns the app secret key
+   */
+  private getAppKey (): string {
+    const appKey = this.container.use('Adonis/Core/Config').get('app.appKey') as string
+    if (!appKey) {
+      throw new Exception('"app.appKey" is required by the auth provider', 500, 'E_MISSING_APP_KEY')
+    }
+
+    return appKey
+  }
+
+  /**
+   * Verifies and returns an instance of the event emitter
+   */
+  private getEmitter () {
+    const hasEmitter = this.container.hasBinding('Adonis/Core/Event')
+    if (!hasEmitter) {
+      throw new Exception('"Adonis/Core/Event" is required by the auth provider')
+    }
+
+    return this.container.use('Adonis/Core/Event')
+  }
+
+  /**
+   * Lazily makes an instance of the lucid provider
    */
   private makeLucidProvider (config: LucidProviderConfig<any>) {
     return new (require('../Providers/Lucid').LucidProvider)(this.container, config)
   }
 
   /**
-   * Makes an instance of database provider
+   * Lazily makes an instance of the database provider
    */
   private makeDatabaseProvider (config: DatabaseProviderConfig) {
     const Database = this.container.use('Adonis/Lucid/Database')
@@ -58,7 +83,7 @@ export class AuthManager implements AuthManagerContract {
   }
 
   /**
-   * Returns an instance of an extended provider
+   * Returns an instance of the extended provider
    */
   private makeExtendedProvider (config: any) {
     const providerCallback = this.extendedProviders.get(config.driver)
@@ -77,74 +102,75 @@ export class AuthManager implements AuthManagerContract {
       throw new Exception('Invalid auth config, missing "provider" or "provider.driver" property')
     }
 
-    if (providerConfig.driver === 'lucid') {
-      return this.makeLucidProvider(providerConfig)
+    switch (providerConfig.driver) {
+      case 'lucid':
+        return this.makeLucidProvider(providerConfig)
+      case 'database':
+        return this.makeDatabaseProvider(providerConfig)
+      default:
+        return this.makeExtendedProvider(providerConfig)
     }
-
-    if (providerConfig.driver === 'database') {
-      return this.makeDatabaseProvider(providerConfig)
-    }
-
-    return this.makeExtendedProvider(providerConfig)
   }
 
   /**
-   * Returns an instance of the session driver
+   * Returns an instance of the session guard
    */
-  private makeSessionDriver (
+  private makeSessionGuard (
     mapping: string,
-    config: SessionDriverConfig<any>,
-    provider: ProvidersContract<any>,
+    config: SessionGuardConfig<any>,
+    provider: ProviderContract<any>,
     ctx: HttpContextContract,
   ) {
-    const { SessionAuthenticator } = require('../Authenticators/Session')
-    return new SessionAuthenticator(this.container, mapping, config, provider, ctx)
+    const { SessionGuard } = require('../Guards/Session')
+    return new SessionGuard(mapping, config, this.getAppKey(), this.getEmitter(), provider, ctx)
   }
 
   /**
-   * Returns an instance of the extended authenticator
+   * Returns an instance of the extended guard
    */
-  private makeExtendedAuthenticator (
+  private makeExtendedGuard (
     mapping: string,
     config: any,
-    provider: ProvidersContract<any>,
+    provider: ProviderContract<any>,
     ctx: HttpContextContract,
   ) {
-    const authenticatorCallback = this.extendAuthenticators.get(config.driver)
-    if (!authenticatorCallback) {
-      throw new Exception(`Invalid authenticator driver "${config.driver}" property`)
+    const guardCallback = this.extendedGuards.get(config.driver)
+    if (!guardCallback) {
+      throw new Exception(`Invalid guard driver "${config.driver}" property`)
     }
-    return authenticatorCallback(this.container, mapping, config, ctx, provider)
+
+    return guardCallback(this.container, mapping, config, provider, ctx)
   }
 
   /**
-   * Makes authenticator instance for the defined driver inside the
+   * Makes guard instance for the defined driver inside the
    * mapping config.
    */
-  private makeAuthenticatorInstance (
+  private makeGuardInstance (
     mapping: string,
     mappingConfig: any,
-    provider: ProvidersContract<any>,
+    provider: ProviderContract<any>,
     ctx: HttpContextContract,
   ) {
     if (!mappingConfig || !mappingConfig.driver) {
       throw new Exception('Invalid auth config, missing "driver" property')
     }
 
-    if (mappingConfig.driver === 'session') {
-      return this.makeSessionDriver(mapping, mappingConfig, provider, ctx)
+    switch (mappingConfig.driver) {
+      case 'session':
+        return this.makeSessionGuard(mapping, mappingConfig, provider, ctx)
+      default:
+        return this.makeExtendedGuard(mapping, mappingConfig, provider, ctx)
     }
-
-    return this.makeExtendedAuthenticator(mapping, mappingConfig, provider, ctx)
   }
 
   /**
    * Make an instance of a given mapping for the current HTTP request.
    */
-  public makeMapping (ctx: HttpContextContract, mapping: keyof AuthenticatorsList) {
+  public makeMapping (ctx: HttpContextContract, mapping: keyof GuardsList) {
     const mappingConfig = this.config[mapping]
     const provider = this.makeProviderInstance(mappingConfig.provider)
-    return this.makeAuthenticatorInstance(mapping, mappingConfig, provider, ctx)
+    return this.makeGuardInstance(mapping, mappingConfig, provider, ctx)
   }
 
   /**
@@ -155,21 +181,21 @@ export class AuthManager implements AuthManagerContract {
   }
 
   /**
-   * Extend auth by adding custom providers and authenticators
+   * Extend auth by adding custom providers and guards
    */
   public extend (type: 'provider', name: string, callback: ExtendProviderCallback): void
-  public extend (type: 'authenticator', name: string, callback: ExtendAuthenticatorCallback): void
+  public extend (type: 'guard', name: string, callback: ExtendGuardCallback): void
   public extend (
-    type: 'provider' | 'authenticator',
+    type: 'provider' | 'guard',
     name: string,
-    callback: ExtendProviderCallback | ExtendAuthenticatorCallback,
+    callback: ExtendProviderCallback | ExtendGuardCallback,
   ) {
     if (type === 'provider') {
       this.extendedProviders.set(name, callback as ExtendProviderCallback)
     }
 
-    if (type === 'authenticator') {
-      this.extendAuthenticators.set(name, callback as ExtendAuthenticatorCallback)
+    if (type === 'guard') {
+      this.extendedGuards.set(name, callback as ExtendGuardCallback)
     }
   }
 }

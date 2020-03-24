@@ -10,8 +10,8 @@
 import { Hooks } from '@poppinss/hooks'
 import { Exception } from '@poppinss/utils'
 import { IocContract } from '@adonisjs/fold'
-import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
-import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
+import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
+import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/DatabaseQueryBuilder'
 
 import {
   DatabaseProviderRow,
@@ -35,6 +35,11 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
    * Custom connection or query client
    */
   private connection?: string | QueryClientContract
+
+  /**
+   * Name of the member me token column
+   */
+  private rememberMeColumn = 'remember_me_token'
 
   constructor (
     private container: IocContract,
@@ -79,9 +84,24 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
   }
 
   /**
+   * Executes the query to find the user, calls the registered hooks
+   * and wraps the result inside [[ProviderUserContract]]
+   */
+  private async findUser (query: DatabaseQueryBuilderContract) {
+    await this.hooks.exec('before', 'findUser', query)
+
+    const user = await query.first()
+    if (user) {
+      await this.hooks.exec('after', 'findUser', user)
+    }
+
+    return this.getUserFor(user)
+  }
+
+  /**
    * Returns an instance of provider user
    */
-  public getUserFor (user: any) {
+  public getUserFor (user: any): ProviderUserContract<DatabaseProviderRow> {
     this.ensureUserHasId(user)
     return this.container.make((this.config.user || DatabaseUser) as any, [user, this.config])
   }
@@ -115,29 +135,19 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
    */
   public async findById (id: string | number) {
     const query = this.getUserQueryBuilder()
-    await this.hooks.exec('before', 'findUser', query)
-
-    const user = await query.where(this.config.identifierKey, id).first()
-    if (user) {
-      await this.hooks.exec('after', 'findUser', user)
-    }
-
-    return this.getUserFor(user)
+    return this.findUser(query.where(this.config.identifierKey, id))
   }
 
   /**
    * Returns a user row using a specific token type and value
    */
   public async findByToken (id: number | string, token: string) {
-    const query = this.getUserQueryBuilder()
-    await this.hooks.exec('before', 'findUser', query)
+    const query = this
+      .getUserQueryBuilder()
+      .where(this.rememberMeColumn, token)
+      .where(this.config.identifierKey, id)
 
-    const user = await query.where(this.config.identifierKey, id).where('remember_me_token', token).first()
-    if (user) {
-      await this.hooks.exec('after', 'findUser', user)
-    }
-
-    return this.getUserFor(user)
+    return this.findUser(query)
   }
 
   /**
@@ -146,22 +156,16 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
    */
   public async findByUid (uidValue: string) {
     const query = this.getUserQueryBuilder()
-    await this.hooks.exec('before', 'findUser', query)
-
     this.config.uids.forEach((uid) => query.orWhere(uid, uidValue))
-    const user = await query.first()
-
-    if (user) {
-      await this.hooks.exec('after', 'findUser', user)
-    }
-
-    return this.getUserFor(user)
+    return this.findUser(query)
   }
 
   /**
    * Updates the user remember me token
    */
   public async updateRememberMeToken (user: ProviderUserContract<DatabaseProviderRow>) {
+    this.ensureUserHasId(user)
+
     await this
       .getUserQueryBuilder()
       .where(this.config.identifierKey, user[this.config.identifierKey])

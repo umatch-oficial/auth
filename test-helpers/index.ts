@@ -30,7 +30,7 @@ import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Databas
 
 import { LucidProvider } from '../src/Providers/Lucid'
 import { DatabaseProvider } from '../src/Providers/Database'
-import { SessionAuthenticator } from '../src/Authenticators/Session'
+import { SessionGuard } from '../src/Guards/Session'
 
 import {
   LucidProviderModel,
@@ -243,7 +243,7 @@ export function getSessionDriver (
     provider: providerConfig,
   }
 
-  return new SessionAuthenticator(container, 'session', config, provider, ctx)
+  return new SessionGuard('session', config, secret, emitter, provider, ctx)
 }
 
 /**

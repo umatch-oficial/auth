@@ -13,7 +13,7 @@ import { HashContract } from '@ioc:Adonis/Core/Hash'
 import { LucidProviderModel, ProviderUserContract, LucidProviderConfig } from '@ioc:Adonis/Addons/Auth'
 
 /**
- * Lucid works works a bridge between the provider and the authenticator
+ * Lucid works works a bridge between the provider and the guard
  */
 @inject([null, null, 'Adonis/Core/Hash'])
 export class LucidUser<User extends LucidProviderModel> implements ProviderUserContract<InstanceType<User>> {

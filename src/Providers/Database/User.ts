@@ -13,7 +13,7 @@ import { HashContract } from '@ioc:Adonis/Core/Hash'
 import { ProviderUserContract, DatabaseProviderRow, DatabaseProviderConfig } from '@ioc:Adonis/Addons/Auth'
 
 /**
- * Database user works a bridge between the provider and the authenticator
+ * Database user works a bridge between the provider and the guard
  */
 @inject([null, null, 'Adonis/Core/Hash'])
 export class DatabaseUser implements ProviderUserContract<DatabaseProviderRow> {

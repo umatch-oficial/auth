@@ -32,9 +32,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
    */
   export type GetProviderRealUser<
     Provider extends keyof ProvidersList
-  > = UnWrapProviderUser<UnwrapPromise<
-    ReturnType<ProvidersList[Provider]['implementation']['findByUid']>
-  >>
+  > = UnWrapProviderUser<ReturnType<ProvidersList[Provider]['implementation']['getUserFor']>>
 
   /*
   |--------------------------------------------------------------------------
@@ -44,7 +42,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 
   /**
    * Provider user works as a bridge between the provider real user
-   * and the authenticator
+   * and the guard
    */
   export interface ProviderUserContract<User extends any> {
     user: User | null,
@@ -57,9 +55,9 @@ declare module '@ioc:Adonis/Addons/Auth' {
   /**
    * The interface that every provider must implement
    */
-  export interface ProvidersContract<User extends any> {
+  export interface ProviderContract<User extends any> {
     /**
-     * Returns provider user instance for a given user
+     * Return an instance of the user wrapped inside the Provider user contract
      */
     getUserFor (user: User): ProviderUserContract<User>
 
@@ -100,7 +98,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
   }>
 
   /**
-   * Shape of lucid provider user builder. It must return [[ProviderUserContract]]
+   * Shape of the lucid provider user builder. It must return [[ProviderUserContract]]
    */
   export interface LucidProviderUserBuilder<User extends LucidProviderModel> {
     new (
@@ -113,9 +111,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
   /**
    * Lucid provider
    */
-  export interface LucidProviderContract<
-    User extends LucidProviderModel
-  > extends ProvidersContract<InstanceType<User>> {
+  export interface LucidProviderContract<User extends LucidProviderModel> extends ProviderContract<InstanceType<User>> {
     /**
      * Define a custom connection for all the provider queries
      */
@@ -175,7 +171,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
   /**
    * Database provider
    */
-  export interface DatabaseProviderContract<User extends DatabaseProviderRow> extends ProvidersContract<User> {
+  export interface DatabaseProviderContract<User extends DatabaseProviderRow> extends ProviderContract<User> {
     /**
      * Define a custom connection for all the provider queries
      */
@@ -207,40 +203,21 @@ declare module '@ioc:Adonis/Addons/Auth' {
 
   /*
   |--------------------------------------------------------------------------
-  | Session Driver
+  | Guards
   |--------------------------------------------------------------------------
   */
+  export interface GuardContract<Provider extends keyof ProvidersList, Name extends keyof GuardsList> {
+    name: Name,
 
-  /**
-   * Shape of session driver config.
-   */
-  export type SessionDriverConfig<Provider extends keyof ProvidersList> = {
-    driver: 'session',
-    provider: ProvidersList[Provider]['config'],
-  }
-
-  /**
-   * Shape of data emitted by the login event
-   */
-  export type SessionLoginEventData<Provider extends keyof ProvidersList> = [
-    string, GetProviderRealUser<Provider>, HttpContextContract, string | null,
-  ]
-
-  /**
-   * Shape of data emitted by the authenticate event
-   */
-  export type SessionAuthenticateEventData<Provider extends keyof ProvidersList> = [
-    string, GetProviderRealUser<Provider>, HttpContextContract, boolean,
-  ]
-
-  /**
-   * Shape of the session driver
-   */
-  export interface SessionAuthenticatorContract<Provider extends keyof ProvidersList> {
     /**
      * Reference to the logged in user.
      */
     user?: GetProviderRealUser<Provider>
+
+    /**
+     * Find if the user has been logged out in the current request
+     */
+    isLoggedOut: boolean
 
     /**
      * A boolean to know if user is a guest or not. It is
@@ -266,42 +243,29 @@ declare module '@ioc:Adonis/Addons/Auth' {
     authenticationAttempted: boolean
 
     /**
-     * Find if the user has been logged out in the current request
-     */
-    isLoggedOut: boolean
-
-    /**
-     * A boolean to know if user is loggedin via remember me token
-     * or not.
-     */
-    viaRemember: boolean
-
-    /**
      * Reference to the provider for looking up the user
      */
     provider: ProvidersList[Provider]['implementation']
 
     /**
-     * Verify user credentials. An Exception is raised when unable
-     * to find user or the password is incorrects
+     * Verify user credentials.
      */
     verifyCredentials (uid: string, password: string): Promise<GetProviderRealUser<Provider>>
 
     /**
-     * Attempt to verify user credentials and set their login session
-     * when credentials are correct.
+     * Attempt to verify user credentials and perform login
      */
-    attempt (uid: string, password: string, remember?: boolean): Promise<GetProviderRealUser<Provider>>
+    attempt (uid: string, password: string, ...args: any[]): Promise<any>
 
     /**
      * Login a user without any verification
      */
-    login (user: GetProviderRealUser<Provider>, remember?: boolean): Promise<void>
+    login (user: GetProviderRealUser<Provider>, ...args: any[]): Promise<any>
 
     /**
      * Login a user using their id
      */
-    loginViaId (id: string | number, remember?: boolean): Promise<void>
+    loginViaId (id: string | number, ...args: any[]): Promise<any>
 
     /**
      * Attempts to authenticate the user for the current HTTP request. An exception
@@ -316,9 +280,70 @@ declare module '@ioc:Adonis/Addons/Auth' {
     check (): Promise<boolean>
 
     /**
-     * Logout user by clearing up the session and the tokens
+     * Logout user
      */
-    logout (recycleRememberToken?: boolean): Promise<void>
+    logout (...args: any[]): Promise<void>
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | Session Guard
+  |--------------------------------------------------------------------------
+  */
+
+  /**
+   * Shape of data emitted by the login event
+   */
+  export type SessionLoginEventData<Provider extends keyof ProvidersList> = [
+    string, GetProviderRealUser<Provider>, HttpContextContract, string | null,
+  ]
+
+  /**
+   * Shape of data emitted by the authenticate event
+   */
+  export type SessionAuthenticateEventData<Provider extends keyof ProvidersList> = [
+    string, GetProviderRealUser<Provider>, HttpContextContract, boolean,
+  ]
+
+  /**
+   * Shape of the session driver
+   */
+  export interface SessionGuardContract<
+    Provider extends keyof ProvidersList,
+    Name extends keyof GuardsList,
+  > extends GuardContract<Provider, Name> {
+    /**
+     * A boolean to know if user is loggedin via remember me token or not.
+     */
+    viaRemember: boolean
+
+    /**
+     * Attempt to verify user credentials and perform login
+     */
+    attempt (uid: string, password: string, remember?: boolean): Promise<any>
+
+    /**
+     * Login a user without any verification
+     */
+    login (user: GetProviderRealUser<Provider>, remember?: boolean): Promise<any>
+
+    /**
+     * Login a user using their id
+     */
+    loginViaId (id: string | number, remember?: boolean): Promise<any>
+
+    /**
+     * Logout user
+     */
+    logout (renewRememberToken?: boolean): Promise<void>
+  }
+
+  /**
+   * Shape of session driver config.
+   */
+  export type SessionGuardConfig<Provider extends keyof ProvidersList> = {
+    driver: 'session',
+    provider: ProvidersList[Provider]['config'],
   }
 
   /*
@@ -345,7 +370,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
   }
 
   /**
-   * List of authenticators mappings used by the app. Using declaration
+   * List of guards mappings used by the app. Using declaration
    * merging, one must extend this interface.
    *
    * MUST BE SET IN THE USER LAND.
@@ -353,12 +378,12 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * Example:
    *
    * session: {
-   *   config: SessionDriverConfig<'lucid'>,
-   *   implementation: SessionDriverContract<'lucid'>,
+   *   config: SessionGuardConfig<'lucid'>,
+   *   implementation: SessionGuardContract<'lucid'>,
    * }
    *
    */
-  export interface AuthenticatorsList {
+  export interface GuardsList {
   }
 
   /*
@@ -368,23 +393,25 @@ declare module '@ioc:Adonis/Addons/Auth' {
   */
 
   /**
-   * Shape of config accepted by the Auth module. It relies on the authenticator
-   * list interface
+   * Shape of config accepted by the Auth module. It relies on the
+   * [[GuardsList]] interface
    */
-  export type AuthConfig = { [P in keyof AuthenticatorsList]: AuthenticatorsList[P]['config'] }
+  export type AuthConfig = {
+    [P in keyof GuardsList]: GuardsList[P]['config']
+  }
 
   /**
    * Instance of the auth contract. The `use` method can be used to obtain
-   * an instance of a given authenticator mapping
+   * an instance of a given guard mapping
    */
   export interface AuthContract<
-    Authenticators extends {
-      [P in keyof AuthenticatorsList]: AuthenticatorsList[P]['implementation']
+    Guards extends {
+      [key: string]: GuardContract<keyof ProvidersList, keyof GuardsList>,
     } = {
-      [P in keyof AuthenticatorsList]: AuthenticatorsList[P]['implementation']
+      [P in keyof GuardsList]: GuardsList[P]['implementation']
     },
   > {
-    use<K extends keyof Authenticators> (authenticator: K): Authenticators[K]
+    use<K extends keyof Guards> (guard: K): Guards[K]
   }
 
   /*
@@ -396,18 +423,18 @@ declare module '@ioc:Adonis/Addons/Auth' {
   /**
    * Shape of the callback accepted to add new user providers
    */
-  export type ExtendProviderCallback = (container: IocContract, config: any) => ProvidersContract<any>
+  export type ExtendProviderCallback = (container: IocContract, config: any) => ProviderContract<any>
 
   /**
-   * Shape of the callback accepted to add new authenticators
+   * Shape of the callback accepted to add new guards
    */
-  export type ExtendAuthenticatorCallback = (
+  export type ExtendGuardCallback = (
     container: IocContract,
     mapping: string,
     config: any,
+    provider: ProviderContract<any>,
     ctx: HttpContextContract,
-    provider: ProvidersContract<any>,
-  ) => any
+  ) => GuardContract<keyof ProvidersList, keyof GuardsList>
 
   /**
    * Shape of the auth manager to register custom drivers and providers and
@@ -422,16 +449,15 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * Make instance of a mapping
      */
-    makeMapping<K extends keyof AuthenticatorsList> (
-      ctx: HttpContextContract,
-      mapping: K,
-    ): AuthenticatorsList[K]['implementation']
+    makeMapping<
+      K extends keyof GuardsList
+    > (ctx: HttpContextContract, mapping: K): GuardsList[K]['implementation']
 
     /**
-     * Extend by adding custom providers and authenticators
+     * Extend by adding custom providers and guards
      */
     extend (type: 'provider', provider: string, callback: ExtendProviderCallback): void
-    extend (type: 'authenticator', authenticator: string, callback: ExtendAuthenticatorCallback): void
+    extend (type: 'guard', guard: string, callback: ExtendGuardCallback): void
   }
 
   /**
