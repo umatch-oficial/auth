@@ -10,6 +10,7 @@
 import { JWS } from 'jose'
 import { randomBytes } from 'crypto'
 import { Exception } from '@poppinss/utils'
+import { IocContract } from '@adonisjs/fold'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import {
@@ -31,26 +32,47 @@ import {
  * to opt for remember me token.
  */
 export class SessionDriver implements SessionDriverContract<any> {
+  /**
+   * The application key require to sign the JWS token.
+   */
+  private appKey = this.getAppKey()
+
+  /**
+   * Emitter instance
+   */
+  private emitter: EmitterContract = this.getEmitter()
+
   constructor (
+    private container: IocContract,
     private name: string,
-    private appKey: string,
     private config: SessionDriverConfig<any>,
-    private emitter: EmitterContract,
     public provider: ProvidersContract<any>,
     private ctx: HttpContextContract,
   ) {
-    this.ensureAppKey()
   }
 
   /**
-   * Ensures that app key exists.
+   * Verifies and returns the app secret key
    */
-  private ensureAppKey () {
-    if (this.appKey) {
-      return
+  private getAppKey (): string {
+    const appKey = this.container.use('Adonis/Core/Config').get('app.appKey') as string
+    if (!appKey) {
+      throw new Exception('"app.appKey" is required to initiate auth session driver', 500, 'E_MISSING_APP_KEY')
     }
 
-    throw new Exception('"app.appKey" is required to initiate auth session driver', 500, 'E_MISSING_APP_KEY')
+    return appKey
+  }
+
+  /**
+   * Verifies and returns an instance of the event emitter
+   */
+  private getEmitter () {
+    const emitter = this.container.use('Adonis/Core/Emitter')
+    if (!emitter) {
+      throw new Exception('"Adonis/Core/Emitter" is required to initiate auth session driver')
+    }
+
+    return emitter
   }
 
   /**
@@ -62,6 +84,17 @@ export class SessionDriver implements SessionDriverContract<any> {
    * Number of years for the remember me token expiry
    */
   private rememberMeTokenExpiry = 5
+
+  /**
+   * Whether or not the authentication has been attempted
+   * for the current request
+   */
+  public authenticationAttempted = false
+
+  /**
+   * Find if the user has been logged out in the current request
+   */
+  public isLoggedOut = false
 
   /**
    * A boolean to know if user is retrieved by authenticating
@@ -107,6 +140,13 @@ export class SessionDriver implements SessionDriverContract<any> {
    */
   public get isGuest () {
     return !this.isLoggedIn
+  }
+
+  /**
+   * Returns an instance of authenticable for a given user
+   */
+  private makeAuthenticatableFor (user: any) {
+    return this.container.make(this.config.provider.authenticatable, [user, this.config.provider])
   }
 
   /**
@@ -291,7 +331,7 @@ export class SessionDriver implements SessionDriverContract<any> {
      * them to instantiate and return an instance of authenticatable, so
      * we create one manually.
      */
-    const authenticatable = new this.config.provider.authenticatable(user, this.config.provider)
+    const authenticatable = this.makeAuthenticatableFor(user)
 
     /**
      * Update user reference
@@ -307,9 +347,12 @@ export class SessionDriver implements SessionDriverContract<any> {
        * Create and persist the user remember me token, when an existing one is missing
        */
       if (!authenticatable.getRememberMeToken()) {
+        this.ctx.logger.debug('generating fresh remember me token')
         authenticatable.setRememberMeToken(this.generateToken(20))
         await this.persistRememberMeToken(authenticatable)
       }
+
+      this.ctx.logger.debug('defining remember me cookie', { name: this.rememberMeKeyName })
       this.setRememberMeCookie(authenticatable)
     } else {
       /**
@@ -340,6 +383,11 @@ export class SessionDriver implements SessionDriverContract<any> {
    * session
    */
   public async authenticate (): Promise<void> {
+    if (this.authenticationAttempted) {
+      return
+    }
+
+    this.authenticationAttempted = true
     const sessionId = this.getRequestSessionId()
 
     /**
@@ -393,23 +441,58 @@ export class SessionDriver implements SessionDriverContract<any> {
   public async check (): Promise<boolean> {
     try {
       await this.authenticate()
-      return true
     } catch {
-      return false
     }
+    return this.isAuthenticated
   }
 
-  public async logout () {
-    const rememberMeToken = this.ctx.request.cookie(this.rememberMeKeyName)
+  private markUserAsLoggedOut () {
+    this.isLoggedOut = true
+    this.isAuthenticated = false
+    this.user = null
+  }
+
+  private clearUserFromStorage () {
     this.ctx.session.forget(this.sessionKeyName)
     this.clearRememberMeCookie()
+  }
 
-    if (!rememberMeToken) {
+  /**
+   * Logout by clearing session and cookies
+   */
+  public async logout (recycleRememberToken?: boolean) {
+    /**
+     * Return early when not attempting to re-generate the remember me token
+     */
+    if (!recycleRememberToken) {
+      this.clearUserFromStorage()
+      this.markUserAsLoggedOut()
       return
     }
 
-    try {
-    } catch (error) {
+    /**
+     * Attempt to authenticate the current request if not already authenticated. This
+     * will help us get an instance of the current user
+     */
+    if (!this.authenticationAttempted) {
+      await this.check()
     }
+
+    /**
+     * If authentication passed, then re-generate the remember me token
+     * for the current user.
+     */
+    if (this.user) {
+      const authenticatable = this.makeAuthenticatableFor(this.user)
+      this.ctx.logger.debug('re-generating remember me token')
+      authenticatable.setRememberMeToken(this.generateToken(20))
+      await this.persistRememberMeToken(authenticatable)
+    }
+
+    /**
+     * Logout user
+     */
+    this.clearUserFromStorage()
+    this.markUserAsLoggedOut()
   }
 }

@@ -252,6 +252,17 @@ declare module '@ioc:Adonis/Addons/Auth' {
     isAuthenticated: boolean
 
     /**
+     * Whether or not the authentication has been attempted
+     * for the current request
+     */
+    authenticationAttempted: boolean
+
+    /**
+     * Find if the user has been logged out in the current request
+     */
+    isLoggedOut: boolean
+
+    /**
      * A boolean to know if user is loggedin via remember me token
      * or not.
      */
@@ -299,7 +310,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * Logout user by clearing up the session and the tokens
      */
-    logout (): Promise<void>
+    logout (recycleRememberToken?: boolean): Promise<void>
   }
 
   /*

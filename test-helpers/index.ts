@@ -247,7 +247,7 @@ export function getSessionDriver (
     provider: providerConfig,
   }
 
-  return new SessionDriver('session', secret, config, emitter, provider, ctx)
+  return new SessionDriver(container, 'session', config, provider, ctx)
 }
 
 /**
