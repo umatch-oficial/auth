@@ -7,6 +7,7 @@
   "files": [
     "build/adonis-typings",
     "build/providers",
+    "build/templates",
     "build/src",
     "build/instructions.js"
   ],
@@ -17,7 +18,7 @@
     "clean": "del build",
     "copyfiles": "copyfiles \"templates/**/*.txt\" build",
     "compile": "npm run lint && npm run clean && tsc",
-    "build": "npm run compile",
+    "build": "npm run compile && npm run copyfiles",
     "commit": "git-cz",
     "release": "np",
     "version": "npm run build",
