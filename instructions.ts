@@ -9,8 +9,17 @@
 
 import { join } from 'path'
 import * as sinkStatic from '@adonisjs/sink'
-import { Application } from '@adonisjs/application/build/src/Application'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
+
+/**
+ * Base path to contract stub partials
+ */
+const CONTRACTS_PARTIALS_BASE = './templates/contract/partials'
+
+/**
+ * Base path to config stub partials
+ */
+const CONFIG_PARTIALS_BASE = './templates/config/partials'
 
 /**
  * Prompt choices for the provider selection
@@ -19,7 +28,7 @@ const PROVIDER_PROMPT_CHOICES = [
   {
     name: 'lucid',
     message: 'Lucid',
-    hint: ' (Uses Data models)',
+    hint: ' (Uses Data Models)',
   },
   {
     name: 'database',
@@ -33,8 +42,8 @@ const PROVIDER_PROMPT_CHOICES = [
  */
 const GUARD_PROMPT_CHOICES = [
   {
-    name: 'session',
-    message: 'Sessions',
+    name: 'web',
+    message: 'Web',
     hint: ' (Uses sessions for managing auth state)',
   },
 ]
@@ -42,11 +51,16 @@ const GUARD_PROMPT_CHOICES = [
 /**
  * Creates the model file
  */
-function makeModel (projectRoot: string, app: ApplicationContract, sink: typeof sinkStatic, modelName: string) {
+function makeModel (
+  projectRoot: string,
+  app: ApplicationContract,
+  sink: typeof sinkStatic,
+  modelName: string,
+) {
   const modelsDirectory = app.resolveNamespaceDirectory('models') || 'app/Models'
   const modelPath = join(modelsDirectory, `${modelName.replace(/\.ts$/, '')}.ts`)
 
-  const template = new sink.DotTemplate(projectRoot, modelPath, './templates/model.dot')
+  const template = new sink.files.MustacheFile(projectRoot, modelPath, './templates/model.txt')
   if (template.exists()) {
     sink.logger.skip(`${modelPath} file already exists`)
     return
@@ -65,14 +79,25 @@ function makeContract (
   sink: typeof sinkStatic,
   modelName: string | undefined,
   provider: 'lucid' | 'database',
-  guard: 'session',
+  guard: 'web',
 ) {
-  const modelsNamespace = app.namespacesMap.get('models')
-  const modelImportNamespace = modelName ? `${modelsNamespace}/${modelName}` : undefined
+  const modelNamespace = app.namespacesMap.get('models') || 'App/Models'
+  const modelImportNamespace = modelName ? `${modelNamespace}/${modelName}` : undefined
 
-  const template = new sink.DotTemplate(projectRoot, 'contracts/auth.ts', './templates/contract.dot')
+  const template = new sink.files.MustacheFile(
+    projectRoot,
+    'contracts/auth.ts',
+    './templates/contract/auth.txt',
+  )
   template.overwrite = true
-  template.apply({ provider, guard, modelImportNamespace, modelName }).commit()
+
+  template
+    .apply({ modelImportNamespace, modelName })
+    .partials({
+      guard: `${CONTRACTS_PARTIALS_BASE}/${guard}-guard.txt`,
+      provider: `${CONTRACTS_PARTIALS_BASE}/user-provider-${provider}.txt`,
+    })
+    .commit()
 
   sink.logger.create('contracts/auth.ts')
 }
@@ -86,14 +111,25 @@ function makeConfig (
   sink: typeof sinkStatic,
   modelName: string | undefined,
   provider: 'lucid' | 'database',
-  guard: 'session',
+  guard: 'web',
 ) {
-  const modelsNamespace = app.namespacesMap.get('models')
+  const modelsNamespace = app.namespacesMap.get('models') || 'App/Models'
   const modelImportNamespace = modelName ? `${modelsNamespace}/${modelName}` : undefined
 
-  const template = new sink.DotTemplate(projectRoot, 'config/auth.ts', './templates/config.dot')
+  const template = new sink.files.MustacheFile(
+    projectRoot,
+    'config/auth.ts',
+    './templates/config/auth.txt',
+  )
   template.overwrite = true
-  template.apply({ provider, guard, modelImportNamespace, modelName }).commit()
+
+  template
+    .apply({ modelImportNamespace, modelName })
+    .partials({
+      guard: `${CONFIG_PARTIALS_BASE}/${guard}-guard.txt`,
+      provider: `${CONFIG_PARTIALS_BASE}/user-provider-${provider}.txt`,
+    })
+    .commit()
 
   sink.logger.create('config/auth.ts')
 }
@@ -112,7 +148,7 @@ export default async function instructions (
 
   const guard = await sink
     .getPrompt()
-    .choice<'session'>('Select authentication guard', GUARD_PROMPT_CHOICES)
+    .choice<'web'>('Select authentication guard', GUARD_PROMPT_CHOICES)
 
   let modelName: string | undefined
 
@@ -131,6 +167,3 @@ export default async function instructions (
   makeContract(projectRoot, app, sink, modelName, provider, guard)
   makeConfig(projectRoot, app, sink, modelName, provider, guard)
 }
-
-instructions(__dirname, new Application(__dirname, {} as any, {} as any, {} as any), sinkStatic)
-  .catch(console.log)

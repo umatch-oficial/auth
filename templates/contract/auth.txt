@@ -4,9 +4,9 @@
  * Feel free to let us know via PR, if you find something broken in this
  * file.
  */
-
 {{#modelImportNamespace}}
-import {{ modelName }} from '{{ modelImportNamespace }}'
+
+import {{ modelName }} from '{{{ modelImportNamespace }}}'
 {{/modelImportNamespace}}
 
 declare module '@ioc:Adonis/Addons/Auth' {
