@@ -12,6 +12,7 @@ import { join } from 'path'
 import { Ioc } from '@adonisjs/fold'
 import { MarkOptional } from 'ts-essentials'
 import { Filesystem } from '@poppinss/dev-utils'
+import { LucidModel } from '@ioc:Adonis/Lucid/Model'
 import { Hash } from '@adonisjs/hash/build/standalone'
 import { ServerResponse, IncomingMessage } from 'http'
 import { Logger } from '@adonisjs/logger/build/standalone'
@@ -19,12 +20,11 @@ import { Database } from '@adonisjs/lucid/build/src/Database'
 import { Profiler } from '@adonisjs/profiler/build/standalone'
 import { Emitter } from '@adonisjs/events/build/standalone'
 import { Adapter } from '@adonisjs/lucid/build/src/Orm/Adapter'
+import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import { SessionConfig } from '@ioc:Adonis/Addons/Session'
 import { Encryption } from '@adonisjs/encryption/build/standalone'
 import { HttpContext } from '@adonisjs/http-server/build/standalone'
-import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { SessionConfigContract } from '@ioc:Adonis/Addons/Session'
 import { SessionManager } from '@adonisjs/session/build/src/SessionManager'
-import { ModelContract, ModelConstructorContract } from '@ioc:Adonis/Lucid/Model'
 import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 import { BaseModel as LucidBaseModel } from '@adonisjs/lucid/build/src/Orm/BaseModel'
 
@@ -43,7 +43,7 @@ import {
 const fs = new Filesystem(join(__dirname, '__app'))
 const logger = new Logger({ enabled: false, level: 'debug', name: 'adonis', prettyPrint: true })
 const profiler = new Profiler(__dirname, logger, {})
-const sessionConfig: SessionConfigContract = {
+const sessionConfig: SessionConfig = {
   driver: 'cookie',
   cookieName: 'adonis-session',
   clearWithBrowser: false,
@@ -55,7 +55,7 @@ const sessionConfig: SessionConfigContract = {
 
 export const container = new Ioc()
 export const secret = 'securelong32characterslongsecret'
-export const encryption = new Encryption(secret)
+export const encryption = new Encryption({ secret })
 export const hash = new Hash(container, {
   default: 'bcrypt' as const,
   list: {
@@ -135,17 +135,15 @@ export async function getDb () {
         connection: {
           filename: join(fs.basePath, 'primary.sqlite3'),
         },
-        debug: false,
       },
       secondary: {
         client: 'sqlite3',
         connection: {
           filename: join(fs.basePath, 'secondary.sqlite3'),
         },
-        debug: false,
       },
     },
-  }, logger, profiler) as unknown as DatabaseContract
+  }, logger, profiler, emitter) as unknown as DatabaseContract
 
   container.singleton('Adonis/Lucid/Database', () => db)
   return db
@@ -188,7 +186,7 @@ export async function reset (db: DatabaseContract) {
 export function getModel (db: DatabaseContract) {
   LucidBaseModel.$adapter = new Adapter(db)
   LucidBaseModel.$container = container
-  return LucidBaseModel as unknown as ModelConstructorContract<ModelContract>
+  return LucidBaseModel as unknown as LucidModel
 }
 
 /**
@@ -226,7 +224,7 @@ export function getCtx (req?: IncomingMessage, res?: ServerResponse) {
       encryption,
       req,
       res,
-      { secret: secret } as any,
+      {} as any,
     ) as unknown as HttpContextContract
 }
 
@@ -243,13 +241,13 @@ export function getSessionDriver (
     provider: providerConfig,
   }
 
-  return new SessionGuard('session', config, secret, emitter, provider, ctx)
+  return new SessionGuard('session', config, emitter, provider, ctx)
 }
 
 /**
  * Returns the user model
  */
-export function getUserModel (BaseModel: ModelConstructorContract<ModelContract>) {
+export function getUserModel (BaseModel: LucidModel) {
   const UserModel = class User extends BaseModel {
     public id: number
     public username: string
@@ -266,4 +264,40 @@ export function getUserModel (BaseModel: ModelConstructorContract<ModelContract>
   UserModel.$addColumn('rememberMeToken', {})
 
   return UserModel
+}
+
+/**
+ * Signs value to be set as cookie header
+ */
+export function signCookie (value: any, name: string) {
+  return `${name}=s:${encryption.verifier.sign(value, undefined, name)}`
+}
+
+/**
+ * Encrypt value to be set as cookie header
+ */
+export function encryptCookie (value: any, name: string) {
+  return `${name}=e:${encryption.encrypt(value, undefined, name)}`
+}
+
+/**
+ * Decrypt cookie
+ */
+export function decryptCookie (cookie: any, name: string) {
+  const cookieValue = decodeURIComponent(cookie.split(';')[0])
+    .replace(`${name}=`, '')
+    .slice(2)
+
+  return encryption.decrypt(cookieValue, name)
+}
+
+/**
+ * Unsign cookie
+ */
+export function unsignCookie (cookie: any, name: string) {
+  const cookieValue = decodeURIComponent(cookie.split(';')[0])
+    .replace(`${name}=`, '')
+    .slice(2)
+
+  return encryption.verifier.unsign(cookieValue, name)
 }

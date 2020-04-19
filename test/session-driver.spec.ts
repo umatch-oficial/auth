@@ -8,23 +8,22 @@
 */
 
 import test from 'japa'
-import { JWS } from 'jose'
 import supertest from 'supertest'
 import { createServer } from 'http'
-import { parse, pack } from '@poppinss/cookie'
 import cookieParser from 'set-cookie-parser'
-import { Store } from '@adonisjs/session/build/src/Store'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 import {
   hash,
   setup,
   reset,
   getDb,
-  secret,
   getCtx,
   emitter,
   cleanup,
   getModel,
+  unsignCookie,
+  decryptCookie,
+  encryptCookie,
   getUserModel,
   getSessionDriver,
   getLucidProvider,
@@ -119,8 +118,8 @@ test.group('Session Driver | attempt', (group) => {
     const User = getUserModel(BaseModel)
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
-    emitter.once('auth:session:login', ([mapping, user, _, token]) => {
-      assert.equal(mapping, 'session')
+    emitter.once('auth:session:login', ({ name, user, token }) => {
+      assert.equal(name, 'session')
       assert.instanceOf(user, User)
       assert.isNull(token)
     })
@@ -139,11 +138,9 @@ test.group('Session Driver | attempt', (group) => {
     })
 
     const { headers } = await supertest(server).get('/')
-    const sessionCookie = parse(headers['set-cookie'][2].split(';')[0], secret)
-    const sessionValueCookie = parse(headers['set-cookie'][3].split(';')[0], secret)
-
-    const sessionValue = sessionValueCookie.signedCookies[sessionCookie.signedCookies['adonis-session']]
-    assert.deepEqual(new Store(sessionValue).all(), { auth_session: 1 })
+    const sessionCookie = unsignCookie(headers['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(headers['set-cookie'][2], sessionCookie)
+    assert.deepEqual(sessionValue, { auth_session: 1 })
   })
 
   test('define remember me cookie when remember me is set to true', async (assert) => {
@@ -153,8 +150,8 @@ test.group('Session Driver | attempt', (group) => {
     const password = await hash.hash('secret')
     const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-    emitter.once('auth:session:login', ([mapping, model, _, token]) => {
-      assert.equal(mapping, 'session')
+    emitter.once('auth:session:login', ({ name, user: model, token }) => {
+      assert.equal(name, 'session')
       assert.instanceOf(model, User)
       assert.exists(token)
     })
@@ -173,16 +170,14 @@ test.group('Session Driver | attempt', (group) => {
     })
 
     const { headers } = await supertest(server).get('/')
-    const rememberMeCookie = parse(headers['set-cookie'][0].split(';')[0], secret)
-    const sessionCookie = parse(headers['set-cookie'][2].split(';')[0], secret)
-    const sessionValueCookie = parse(headers['set-cookie'][3].split(';')[0], secret)
+    const rememberMeCookie = decryptCookie(headers['set-cookie'][0], 'remember_session')
+    const sessionCookie = unsignCookie(headers['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(headers['set-cookie'][2], sessionCookie)
 
-    const sessionValue = sessionValueCookie.signedCookies[sessionCookie.signedCookies['adonis-session']]
-    const { token } = JWS.verify(rememberMeCookie.signedCookies.remember_session, secret) as { token: string }
     await user.refresh()
 
-    assert.deepEqual(new Store(sessionValue).all(), { auth_session: 1 })
-    assert.equal(user.rememberMeToken!, token)
+    assert.deepEqual(sessionValue, { auth_session: 1 })
+    assert.equal(user.rememberMeToken!, rememberMeCookie.token)
   })
 
   test('delete remember_me cookie explicitly when login with remember me is false', async (assert) => {
@@ -201,14 +196,16 @@ test.group('Session Driver | attempt', (group) => {
       ctx.response.finish()
     })
 
-    const rememberMeCookie = pack('1234', secret)
-    const { headers } = await supertest(server).get('/').set('cookie', `remember_me=${rememberMeCookie}`)
-    const sessionCookie = parse(headers['set-cookie'][2].split(';')[0], secret)
-    const sessionValueCookie = parse(headers['set-cookie'][3].split(';')[0], secret)
+    const rememberMeToken = encryptCookie('1234', 'remember_session')
+    const { headers } = await supertest(server).get('/').set('cookie', `remember_session=${rememberMeToken}`)
+    const sessionCookie = unsignCookie(headers['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(headers['set-cookie'][2], sessionCookie)
+    const [key, maxAge, expiry] = headers['set-cookie'][0].split(';')
 
-    const sessionValue = sessionValueCookie.signedCookies[sessionCookie.signedCookies['adonis-session']]
-    assert.deepEqual(new Store(sessionValue).all(), { auth_session: 1 })
-    assert.equal(headers['set-cookie'][0].split(';')[0], 'remember_session=')
+    assert.equal(expiry.trim(), 'Expires=Thu, 01 Jan 1970 00:00:00 GMT')
+    assert.equal(maxAge.trim(), 'Max-Age=-1')
+    assert.isTrue(key.startsWith('remember_session='))
+    assert.deepEqual(sessionValue, { auth_session: 1 })
   })
 })
 
@@ -228,14 +225,14 @@ test.group('Session Driver | authenticate', (group) => {
   })
 
   test('authenticate user session and load user from db', async (assert) => {
-    assert.plan(9)
+    assert.plan(8)
 
     const User = getUserModel(BaseModel)
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-    emitter.once('auth:session:authenticate', ([mapping, user, _, viaRemember]) => {
-      assert.equal(mapping, 'session')
+    emitter.once('auth:session:authenticate', ({ name, user, viaRemember }) => {
+      assert.equal(name, 'session')
       assert.instanceOf(user, User)
       assert.isFalse(viaRemember)
     })
@@ -268,9 +265,8 @@ test.group('Session Driver | authenticate', (group) => {
       .filter((cookie) => cookie.maxAge > 0)
       .map((cookie) => `${cookie.name}=${cookie.value};`)
 
-    const { body, headers: authHeaders } = await supertest(server).get('/').set('cookie', reqCookies)
+    const { body } = await supertest(server).get('/').set('cookie', reqCookies)
 
-    assert.deepEqual(authHeaders['set-cookie'], headers['set-cookie'].splice(2, 2))
     assert.equal(body.user.id, 1)
     assert.equal(body.user.username, 'virk')
     assert.equal(body.user.email, 'virk@adonisjs.com')
@@ -285,8 +281,8 @@ test.group('Session Driver | authenticate', (group) => {
     const password = await hash.hash('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-    emitter.once('auth:session:authenticate', ([mapping, user, _, viaRemember]) => {
-      assert.equal(mapping, 'session')
+    emitter.once('auth:session:authenticate', ({ name, user, viaRemember }) => {
+      assert.equal(name, 'session')
       assert.instanceOf(user, User)
       assert.isTrue(viaRemember)
     })
@@ -316,8 +312,9 @@ test.group('Session Driver | authenticate', (group) => {
     const { headers } = await supertest(server).get('/login')
     const cookies = cookieParser(headers['set-cookie'])
 
-    const reqCookies = `${cookies[0].name}=${cookies[0].value};`
-    const { body } = await supertest(server).get('/').set('cookie', reqCookies)
+    const rememberMeCookie = `${cookies[0].name}=${cookies[0].value};`
+    const { body } = await supertest(server).get('/').set('cookie', rememberMeCookie)
+
     assert.equal(body.user.id, 1)
     assert.equal(body.user.username, 'virk')
     assert.equal(body.user.email, 'virk@adonisjs.com')
@@ -378,12 +375,13 @@ test.group('Session Driver | logout', (group) => {
       .map((cookie) => `${cookie.name}=${cookie.value};`)
 
     const { body, headers: authHeaders } = await supertest(server).get('/').set('cookie', reqCookies)
-    const rememberMeCookie = authHeaders['set-cookie'][0].split(';')[0]
-    const sessionCookie = parse(authHeaders['set-cookie'][1].split(';')[0], secret)
-    const sessionValueCookie = authHeaders['set-cookie'][2].split(';')[0]
 
-    assert.equal(rememberMeCookie, 'remember_session=')
-    assert.equal(sessionValueCookie, `${sessionCookie.signedCookies['adonis-session']}=`)
+    const rememberMeCookie = decryptCookie(authHeaders['set-cookie'][0], 'remember_session')
+    const sessionCookie = unsignCookie(authHeaders['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(authHeaders['set-cookie'][2], sessionCookie)
+
+    assert.isNull(rememberMeCookie)
+    assert.deepEqual(sessionValue, {})
     assert.isNull(body.user)
     assert.isFalse(body.isAuthenticated)
     assert.isTrue(body.isLoggedOut)
@@ -430,12 +428,12 @@ test.group('Session Driver | logout', (group) => {
 
     const { body, headers: authHeaders } = await supertest(server).get('/').set('cookie', reqCookies)
 
-    const rememberMeCookie = authHeaders['set-cookie'][0].split(';')[0]
-    const sessionCookie = parse(authHeaders['set-cookie'][1].split(';')[0], secret)
-    const sessionValueCookie = authHeaders['set-cookie'][2].split(';')[0]
+    const rememberMeCookie = decryptCookie(authHeaders['set-cookie'][0], 'remember_session')
+    const sessionCookie = unsignCookie(authHeaders['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(authHeaders['set-cookie'][2], sessionCookie)
 
-    assert.equal(rememberMeCookie, 'remember_session=')
-    assert.equal(sessionValueCookie, `${sessionCookie.signedCookies['adonis-session']}=`)
+    assert.isNull(rememberMeCookie)
+    assert.deepEqual(sessionValue, {})
     assert.isNull(body.user)
     assert.isFalse(body.isAuthenticated)
     assert.isTrue(body.isLoggedOut)

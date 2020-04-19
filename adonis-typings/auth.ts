@@ -13,7 +13,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
   import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
   import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
   import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/DatabaseQueryBuilder'
-  import { ModelContract, ModelConstructorContract, ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Model'
+  import { LucidModel, LucidRow, ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Model'
 
   /*
   |--------------------------------------------------------------------------
@@ -22,9 +22,8 @@ declare module '@ioc:Adonis/Addons/Auth' {
   */
 
   /**
-   * Unwrap promise
+   * Unwraps user from the provider user
    */
-  type UnwrapPromise<T> = T extends PromiseLike<infer PT> ? PT : never
   type UnWrapProviderUser<T> = T extends ProviderUserContract<any> ? Exclude<T['user'], null> : T
 
   /**
@@ -92,10 +91,12 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * The shape of the user model accepted by the Lucid provider. The model
    * must have `password` and `rememberMeToken` attributes.
    */
-  export type LucidProviderModel = ModelConstructorContract<ModelContract & {
-    password: string,
-    rememberMeToken?: string | null,
-  }>
+  export type LucidProviderModel = LucidModel & {
+    new (): LucidRow & {
+      password: string,
+      rememberMeToken?: string | null,
+    }
+  }
 
   /**
    * Shape of the lucid provider user builder. It must return [[ProviderUserContract]]
@@ -206,8 +207,11 @@ declare module '@ioc:Adonis/Addons/Auth' {
   | Guards
   |--------------------------------------------------------------------------
   */
-  export interface GuardContract<Provider extends keyof ProvidersList, Name extends keyof GuardsList> {
-    name: Name,
+  export interface GuardContract<
+    Provider extends keyof ProvidersList,
+    Guard extends keyof GuardsList,
+  > {
+    name: Guard,
 
     /**
      * Reference to the logged in user.
@@ -294,16 +298,22 @@ declare module '@ioc:Adonis/Addons/Auth' {
   /**
    * Shape of data emitted by the login event
    */
-  export type SessionLoginEventData<Provider extends keyof ProvidersList> = [
-    string, GetProviderRealUser<Provider>, HttpContextContract, string | null,
-  ]
+  export type SessionLoginEventData<Provider extends keyof ProvidersList> = {
+    name: string,
+    user: GetProviderRealUser<Provider>,
+    ctx: HttpContextContract,
+    token: string | null,
+  }
 
   /**
    * Shape of data emitted by the authenticate event
    */
-  export type SessionAuthenticateEventData<Provider extends keyof ProvidersList> = [
-    string, GetProviderRealUser<Provider>, HttpContextContract, boolean,
-  ]
+  export type SessionAuthenticateEventData<Provider extends keyof ProvidersList> = {
+    name: string,
+    user: GetProviderRealUser<Provider>,
+    ctx: HttpContextContract,
+    viaRemember: boolean,
+  }
 
   /**
    * Shape of the session driver
@@ -466,4 +476,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
    */
   export const LucidUser: LucidProviderUserBuilder<LucidProviderModel>
   export const DatabaseUser: DatabaseProviderUserBuilder
+
+  const AuthManager: AuthManagerContract
+  export default AuthManager
 }

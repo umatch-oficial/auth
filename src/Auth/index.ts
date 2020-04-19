@@ -7,8 +7,8 @@
 * file that was distributed with this source code.
 */
 
-import { AuthContract, GuardsList, AuthManagerContract } from '@ioc:Adonis/Addons/Auth'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import { AuthContract, GuardsList, AuthManagerContract } from '@ioc:Adonis/Addons/Auth'
 
 /**
  * Auth class exposes the API to obtain guard instances for a given

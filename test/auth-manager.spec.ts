@@ -8,6 +8,7 @@
 */
 
 import test from 'japa'
+import 'reflect-metadata'
 import { ProviderContract } from '@ioc:Adonis/Addons/Auth'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 

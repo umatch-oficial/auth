@@ -44,18 +44,6 @@ export class AuthManager implements AuthManagerContract {
   }
 
   /**
-   * Verifies and returns the app secret key
-   */
-  private getAppKey (): string {
-    const appKey = this.container.use('Adonis/Core/Config').get('app.appKey') as string
-    if (!appKey) {
-      throw new Exception('"app.appKey" is required by the auth provider', 500, 'E_MISSING_APP_KEY')
-    }
-
-    return appKey
-  }
-
-  /**
    * Verifies and returns an instance of the event emitter
    */
   private getEmitter () {
@@ -122,7 +110,7 @@ export class AuthManager implements AuthManagerContract {
     ctx: HttpContextContract,
   ) {
     const { SessionGuard } = require('../Guards/Session')
-    return new SessionGuard(mapping, config, this.getAppKey(), this.getEmitter(), provider, ctx)
+    return new SessionGuard(mapping, config, this.getEmitter(), provider, ctx)
   }
 
   /**

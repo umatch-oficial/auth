@@ -33,7 +33,10 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
    */
   private connection?: string | QueryClientContract
 
-  constructor (private container: IocContract, private config: LucidProviderConfig<LucidProviderModel>) {
+  constructor (
+    private container: IocContract,
+    private config: LucidProviderConfig<LucidProviderModel>,
+  ) {
   }
 
   /**
@@ -78,7 +81,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
    * inside it
    */
   public getUserFor (user: InstanceType<LucidProviderModel> | null) {
-    return this.container.make((this.config.user || LucidUser) as any, [user, this.config])
+    return this.container.make(this.config.user || LucidUser, [user, this.config])
   }
 
   /**
@@ -132,11 +135,21 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
   }
 
   /**
-   * Updates the user remember me token
+   * Updates the user remember me token. The guard must called `setRememberMeToken`
+   * before invoking this method.
    */
   public async updateRememberMeToken (
-    authenticatable: ProviderUserContract<InstanceType<LucidProviderModel>>,
+    providerUser: ProviderUserContract<InstanceType<LucidProviderModel>>,
   ) {
-    await authenticatable.user!.save()
+    /**
+     * Extra check to find malformed guards
+     */
+    if (!providerUser.user!.$dirty.rememberMeToken) {
+      throw new Error(
+        'The guard must called "setRememberMeToken" before calling "updateRememberMeToken" on the Lucid provider',
+      )
+    }
+
+    await providerUser.user!.save()
   }
 }

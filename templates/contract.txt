@@ -1,11 +1,13 @@
 /**
  * Contract source: https://git.io/JvyKD
  *
- * Feel free to let us know via PR, if you find something broken in this config
+ * Feel free to let us know via PR, if you find something broken in this
  * file.
  */
 
-import User from 'App/Models/User'
+{{#modelImportNamespace}}
+import {{ modelName }} from '{{ modelImportNamespace }}'
+{{/modelImportNamespace}}
 
 declare module '@ioc:Adonis/Addons/Auth' {
   /*
@@ -14,42 +16,14 @@ declare module '@ioc:Adonis/Addons/Auth' {
   |--------------------------------------------------------------------------
   |
   | The providers are used to fetch users. The Auth module comes pre-bundled
-  | with two providers ie `Lucid` and `Database`, where both uses database
-  | for fetch user details. However, You can also create and register
-  | your own custom providers
+  | with two providers that are `Lucid` and `Database`. Both uses database
+  | to fetch user details.
+  |
+  | You can also create and register your own custom providers.
   |
   */
   interface ProvidersList {
-    /*
-    |--------------------------------------------------------------------------
-    | Lucid
-    |--------------------------------------------------------------------------
-    |
-    | The Lucid provider uses Lucid models for fetching user details from
-    | the database for authentication.
-    |
-    | You can create one or more providers using different models for fetching
-    | user details.
-    |
-    */
-    lucid: {
-      implementation: LucidProviderContract<typeof User>,
-      config: LucidProviderConfig<typeof User>,
-    },
-
-    /*
-    |--------------------------------------------------------------------------
-    | Database Provider
-    |--------------------------------------------------------------------------
-    |
-    | Uncomment the following snippet if you want to use the database provider
-    | without relying on Lucid models for authentication.
-    |
-    */
-    // database: {
-    //   config: DatabaseProviderConfig,
-    //   implementation: DatabaseProviderContract<any>,
-    // },
+{{> provider}}
   }
 
   /*
@@ -57,19 +31,18 @@ declare module '@ioc:Adonis/Addons/Auth' {
   | Guards
   |--------------------------------------------------------------------------
   |
-  | The guards are used for authenticating users using different
-  | drivers. The auth module comes with 4 different guards.
+  | The guards are used for authenticating users using different drivers.
+  | The auth module comes with 4 different guards.
   |
   | - SessionGuardContract
   | - BasicAuthGuardContract
   | - JwtGuardContract
   | - ApiTokensGuardContract
   |
+  | Every guard needs a provider for looking up users from the database.
+  |
   */
   interface GuardsList {
-    session: {
-      implementation: SessionDriverContract<'lucid'>,
-      config: SessionDriverConfig<'lucid'>,
-    },
+{{> guard}}
   }
 }

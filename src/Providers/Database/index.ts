@@ -37,7 +37,7 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
   private connection?: string | QueryClientContract
 
   /**
-   * Name of the member me token column
+   * Name of the remember_me_token column
    */
   private rememberMeColumn = 'remember_me_token'
 
@@ -55,7 +55,9 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
     if (!this.connection) {
       return this.db.connection(this.config.connection)
     }
-    return typeof (this.connection) === 'string' ? this.db.connection(this.connection) : this.connection
+    return typeof (this.connection) === 'string'
+      ? this.db.connection(this.connection)
+      : this.connection
   }
 
   /**
@@ -103,7 +105,7 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
    */
   public getUserFor (user: any): ProviderUserContract<DatabaseProviderRow> {
     this.ensureUserHasId(user)
-    return this.container.make((this.config.user || DatabaseUser) as any, [user, this.config])
+    return this.container.make(this.config.user || DatabaseUser, [user, this.config])
   }
 
   /**

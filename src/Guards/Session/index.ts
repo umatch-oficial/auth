@@ -7,9 +7,8 @@
 * file that was distributed with this source code.
 */
 
-import { JWS } from 'jose'
-import { randomBytes } from 'crypto'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
+import { randomString, Exception } from '@poppinss/utils'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
 import {
@@ -25,14 +24,13 @@ import { AuthenticationFailureException } from '../../Exceptions/AuthenticationF
 import { CredentialsVerficationException } from '../../Exceptions/CredentialsVerficationException'
 
 /**
- * Session authenticator enables user login using session. Also it allows user
- * to opt for remember me token.
+ * Session guard enables user login using sessions. Also it allows for
+ * setting remember me tokens for life long login
  */
 export class SessionGuard implements SessionGuardContract<any, any> {
   constructor (
     public name: string,
     private config: SessionGuardConfig<any>,
-    private appKey: string,
     private emitter: EmitterContract,
     public provider: ProviderContract<any>,
     private ctx: HttpContextContract,
@@ -40,14 +38,9 @@ export class SessionGuard implements SessionGuardContract<any, any> {
   }
 
   /**
-   * Algorithm for the JWS remember me token
-   */
-  private jwsAlg = 'HS256'
-
-  /**
    * Number of years for the remember me token expiry
    */
-  private rememberMeTokenExpiry = 5
+  private rememberMeTokenExpiry = '5y'
 
   /**
    * Whether or not the authentication has been attempted
@@ -116,30 +109,23 @@ export class SessionGuard implements SessionGuardContract<any, any> {
   }
 
   /**
-   * Creates a random string for a given length
+   * Generate remember me token
    */
-  private generateToken (length: number): string {
-    return randomBytes(Math.ceil(length * 0.5)).toString('hex').slice(0, length)
+  private generateRememberMeToken (): string {
+    return randomString(20)
   }
 
   /**
-   * Sets the remember me token cookie
+   * Sets the remember me cookie with the remember me token
    */
   private setRememberMeCookie (userId: string | number, token: string) {
-    const rememberMeToken = JWS.sign({
+    const value = {
       id: userId,
       token: token,
-    }, this.appKey, { alg: this.jwsAlg })
+    }
 
-    this.touchRememberMeCookie(rememberMeToken)
-  }
-
-  /**
-   * Touch the cookie to reset the expiry
-   */
-  private touchRememberMeCookie (value: string) {
-    this.ctx.response.cookie(this.rememberMeKeyName, value, {
-      maxAge: `${this.rememberMeTokenExpiry}y`,
+    this.ctx.response.encryptedCookie(this.rememberMeKeyName, value, {
+      maxAge: this.rememberMeTokenExpiry,
       httpOnly: true,
     })
   }
@@ -188,7 +174,12 @@ export class SessionGuard implements SessionGuardContract<any, any> {
    * - Remember me token (optional)
    */
   private getLoginEventData (user: any, token: string | null): SessionLoginEventData<any> {
-    return [this.name, user, this.ctx, token]
+    return {
+      name: this.name,
+      ctx: this.ctx,
+      user,
+      token,
+    }
   }
 
   /**
@@ -200,7 +191,12 @@ export class SessionGuard implements SessionGuardContract<any, any> {
    * - A boolean to tell if logged in viaRemember or not
    */
   private getAuthenticateEventData (user: any, viaRemember: boolean): SessionAuthenticateEventData<any> {
-    return [this.name, user, this.ctx, viaRemember]
+    return {
+      name: this.name,
+      ctx: this.ctx,
+      user,
+      viaRemember,
+    }
   }
 
   /**
@@ -238,15 +234,8 @@ export class SessionGuard implements SessionGuardContract<any, any> {
   /**
    * Verifies the remember me token
    */
-  private verifyRememberMeToken (rememberMeToken: string) {
-    try {
-      const payload = JWS.verify(rememberMeToken, this.appKey) as { id: string, token: string }
-      if (!payload || !payload.id || !payload.token) {
-        throw AuthenticationFailureException.missingSession()
-      }
-
-      return payload
-    } catch (error) {
+  private verifyRememberMeToken (rememberMeToken: any): asserts rememberMeToken is { id: string, token: string } {
+    if (!rememberMeToken || !rememberMeToken.id || !rememberMeToken.token) {
       throw AuthenticationFailureException.missingSession()
     }
   }
@@ -273,6 +262,24 @@ export class SessionGuard implements SessionGuardContract<any, any> {
     }
 
     return authenticatable
+  }
+
+  /**
+   * Returns the remember me token of the user that is persisted
+   * inside the db. If not persisted, we create one and persist
+   * it
+   */
+  private async getPersistedRememberMeToken (providerUser: ProviderUserContract<any>): Promise<string> {
+    /**
+     * Create and persist the user remember me token, when an existing one is missing
+     */
+    if (!providerUser.getRememberMeToken()) {
+      this.ctx.logger.trace('generating fresh remember me token')
+      providerUser.setRememberMeToken(this.generateRememberMeToken())
+      await this.provider.updateRememberMeToken(providerUser)
+    }
+
+    return providerUser.getRememberMeToken()!
   }
 
   /**
@@ -319,25 +326,25 @@ export class SessionGuard implements SessionGuardContract<any, any> {
     const providerUser = this.provider.getUserFor(user)
 
     /**
+     * Ensure id exists on the user
+     */
+    const id = providerUser.getId()
+    if (!id) {
+      throw new Exception(`Cannot login user. Value of "${this.config.provider.identifierKey}" is not defined`)
+    }
+
+    /**
      * Set session
      */
-    this.setSession(providerUser.getId()!)
+    this.setSession(id)
 
     /**
      * Set remember me token when enabled
      */
     if (remember) {
-      /**
-       * Create and persist the user remember me token, when an existing one is missing
-       */
-      if (!providerUser.getRememberMeToken()) {
-        this.ctx.logger.trace('generating fresh remember me token')
-        providerUser.setRememberMeToken(this.generateToken(20))
-        await this.provider.updateRememberMeToken(providerUser)
-      }
-
+      const rememberMeToken = await this.getPersistedRememberMeToken(providerUser)
       this.ctx.logger.trace('defining remember me cookie', { name: this.rememberMeKeyName })
-      this.setRememberMeCookie(providerUser.getId()!, providerUser.getRememberMeToken()!)
+      this.setRememberMeCookie(id, rememberMeToken)
     } else {
       /**
        * Clear remember me cookie, which may have been set previously.
@@ -345,6 +352,9 @@ export class SessionGuard implements SessionGuardContract<any, any> {
       this.clearRememberMeCookie()
     }
 
+    /**
+     * Emit login event. It can be used to track user logins and their devices.
+     */
     this.emitter.emit(
       'auth:session:login',
       this.getLoginEventData(providerUser.user, providerUser.getRememberMeToken()),
@@ -356,7 +366,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
 
   /**
    * Authenticates the current HTTP request by checking for the user
-   * session
+   * session.
    */
   public async authenticate (): Promise<void> {
     if (this.authenticationAttempted) {
@@ -368,7 +378,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
 
     /**
      * If session id exists, then attempt to login the user using the
-     * session
+     * session and return early
      */
     if (sessionId) {
       const providerUser = await this.getUserForSessionId(sessionId)
@@ -378,34 +388,28 @@ export class SessionGuard implements SessionGuardContract<any, any> {
     }
 
     /**
-     * Raise missing session exception when there is no remember me token.
+     * Otherwise look for remember me token. Raise exception, if both remember
+     * me token and session id are missing.
      */
-    const rememberMeToken = this.ctx.request.cookie(this.rememberMeKeyName)
+    const rememberMeToken = this.ctx.request.encryptedCookie(this.rememberMeKeyName)
     if (!rememberMeToken) {
       throw AuthenticationFailureException.missingSession()
     }
 
     /**
-     * Ensure remember me token is valid
+     * Ensure remember me token is valid after reading it from the cookie
      */
-    const { id, token } = this.verifyRememberMeToken(rememberMeToken)
+    this.verifyRememberMeToken(rememberMeToken)
 
     /**
      * Attempt to locate the user for remember me token
      */
-    const providerUser = await this.getUserForRememberMeToken(id, token)
-    this.markUserAsLoggedIn(providerUser.user, true, true)
-
-    /**
-     * Renew remember me cookie
-     */
-    this.touchRememberMeCookie(rememberMeToken)
-    this.emitter.emit('auth:session:authenticate', this.getAuthenticateEventData(providerUser.user, true))
-
-    /**
-     * Update the session to re-login the user
-     */
+    const providerUser = await this.getUserForRememberMeToken(rememberMeToken.id, rememberMeToken.token)
     this.setSession(providerUser.getId()!)
+    this.setRememberMeCookie(rememberMeToken.id, rememberMeToken.token)
+
+    this.markUserAsLoggedIn(providerUser.user, true, true)
+    this.emitter.emit('auth:session:authenticate', this.getAuthenticateEventData(providerUser.user, true))
   }
 
   /**
@@ -448,7 +452,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
       const providerUser = this.provider.getUserFor(this.user)
 
       this.ctx.logger.trace('re-generating remember me token')
-      providerUser.setRememberMeToken(this.generateToken(20))
+      providerUser.setRememberMeToken(this.generateRememberMeToken())
       await this.provider.updateRememberMeToken(providerUser)
     }
 
