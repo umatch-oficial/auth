@@ -3,6 +3,13 @@
   "version": "4.0.1",
   "description": "Offical authentication provider for Adonis framework",
   "types": "build/adonis-typings/index.d.ts",
+  "main": "build/providers/AuthProvider.js",
+  "files": [
+    "build/adonis-typings",
+    "build/providers",
+    "build/src",
+    "build/instructions.js"
+  ],
   "scripts": {
     "mrm": "mrm --preset=@adonisjs/mrm-preset",
     "pretest": "npm run lint",
@@ -92,37 +99,17 @@
   "dependencies": {
     "@poppinss/hooks": "^1.0.5",
     "@poppinss/utils": "^2.2.4",
-    "array-to-sentence": "^2.0.0",
-    "jose": "^1.26.0"
+    "array-to-sentence": "^2.0.0"
   },
   "publishConfig": {
     "access": "public",
     "tag": "alpha"
   },
   "adonisjs": {
-    "templates": {
-      "config": [
-        {
-          "src": "config.txt",
-          "dest": "auth"
-        }
-      ],
-      "contracts": [
-        {
-          "src": "contract.txt",
-          "dest": "auth"
-        }
-      ]
-    },
+    "instructions": "./build/instructions.js",
     "types": "@adonisjs/auth",
     "providers": [
       "@adonisjs/auth"
     ]
-  },
-  "main": "build/index.js",
-  "files": [
-    "build/src",
-    "build/index.d.ts",
-    "build/index.js"
-  ]
+  }
 }
