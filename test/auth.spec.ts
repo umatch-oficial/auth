@@ -49,13 +49,16 @@ test.group('Auth', (group) => {
     const User = getUserModel(BaseModel)
 
     const manager = new AuthManager(container, {
-      session: {
-        driver: 'session',
-        provider: getLucidProviderConfig({ model: User }),
-      },
-      sessionDb: {
-        driver: 'session',
-        provider: getDatabaseProviderConfig(),
+      guard: 'session',
+      list: {
+        session: {
+          driver: 'session',
+          provider: getLucidProviderConfig({ model: User }),
+        },
+        sessionDb: {
+          driver: 'session',
+          provider: getDatabaseProviderConfig(),
+        },
       },
     })
 

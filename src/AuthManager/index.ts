@@ -23,7 +23,10 @@ import {
 } from '@ioc:Adonis/Addons/Auth'
 
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+
 import { Auth } from '../Auth'
+import { LucidUser } from '../Providers/Lucid/User'
+import { DatabaseUser } from '../Providers/Database/User'
 
 /**
  * Auth manager to manage guards and providers object. The extend API can
@@ -40,7 +43,25 @@ export class AuthManager implements AuthManagerContract {
    */
   private extendedGuards: Map<string, ExtendGuardCallback> = new Map()
 
+  /**
+   * Reference to the default guard
+   */
+  public defaultGuard = this.config.guard
+
   constructor (private container: IocContract, private config: AuthConfig) {
+    if (!this.config.guard) {
+      throw new Exception('Invalid auth config. The value for "guard" is missing inside "config/auth" file')
+    }
+
+    if (!this.config.list) {
+      throw new Exception('Invalid auth config. The guards "list" is missing inside "config/auth" file')
+    }
+
+    if (!this.config.list[this.config.guard]) {
+      throw new Exception(
+        `Invalid auth config. The guard "${this.config.guard}" is not mentioned inside guards list`,
+      )
+    }
   }
 
   /**
@@ -156,7 +177,7 @@ export class AuthManager implements AuthManagerContract {
    * Make an instance of a given mapping for the current HTTP request.
    */
   public makeMapping (ctx: HttpContextContract, mapping: keyof GuardsList) {
-    const mappingConfig = this.config[mapping]
+    const mappingConfig = this.config.list[mapping]
     const provider = this.makeProviderInstance(mappingConfig.provider)
     return this.makeGuardInstance(mapping, mappingConfig, provider, ctx)
   }
@@ -186,4 +207,11 @@ export class AuthManager implements AuthManagerContract {
       this.extendedGuards.set(name, callback as ExtendGuardCallback)
     }
   }
+
+  /**
+   * Sharing for someone, who wants to define their own Provider User
+   * by extending the existing one's.
+   */
+  public LucidUser = LucidUser
+  public DatabaseUser = DatabaseUser
 }

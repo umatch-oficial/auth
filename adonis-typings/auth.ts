@@ -407,21 +407,18 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * [[GuardsList]] interface
    */
   export type AuthConfig = {
-    [P in keyof GuardsList]: GuardsList[P]['config']
+    guard: keyof GuardsList,
+    list: {
+      [P in keyof GuardsList]: GuardsList[P]['config']
+    },
   }
 
   /**
    * Instance of the auth contract. The `use` method can be used to obtain
    * an instance of a given guard mapping
    */
-  export interface AuthContract<
-    Guards extends {
-      [key: string]: GuardContract<keyof ProvidersList, keyof GuardsList>,
-    } = {
-      [P in keyof GuardsList]: GuardsList[P]['implementation']
-    },
-  > {
-    use<K extends keyof Guards> (guard: K): Guards[K]
+  export interface AuthContract {
+    use<K extends keyof GuardsList> (guard?: K): GuardsList[K]['implementation']
   }
 
   /*
@@ -452,30 +449,32 @@ declare module '@ioc:Adonis/Addons/Auth' {
    */
   export interface AuthManagerContract {
     /**
+     * The default guard
+     */
+    defaultGuard: keyof GuardsList
+
+    /**
      * Returns the instance of [[AuthContract]] for a given HTTP request
      */
-    getAuthForRequest (ctx: HttpContextContract): AuthContract,
+    getAuthForRequest (ctx: HttpContextContract): AuthContract
 
     /**
      * Make instance of a mapping
      */
-    makeMapping<
-      K extends keyof GuardsList
-    > (ctx: HttpContextContract, mapping: K): GuardsList[K]['implementation']
+    makeMapping<K extends keyof GuardsList> (
+      ctx: HttpContextContract,
+      mapping: K,
+    ): GuardsList[K]['implementation']
 
     /**
      * Extend by adding custom providers and guards
      */
     extend (type: 'provider', provider: string, callback: ExtendProviderCallback): void
     extend (type: 'guard', guard: string, callback: ExtendGuardCallback): void
-  }
 
-  /**
-   * The references one can pull from the container to create their
-   * own provider users.
-   */
-  export const LucidUser: LucidProviderUserBuilder<LucidProviderModel>
-  export const DatabaseUser: DatabaseProviderUserBuilder
+    LucidUser: LucidProviderUserBuilder<LucidProviderModel>
+    DatabaseUser: DatabaseProviderUserBuilder
+  }
 
   const AuthManager: AuthManagerContract
   export default AuthManager

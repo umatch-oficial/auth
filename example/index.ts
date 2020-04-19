@@ -2,22 +2,25 @@ import { User } from './models'
 import { AuthConfig, AuthContract } from '@ioc:Adonis/Addons/Auth'
 
 export const config: AuthConfig = {
-  session: {
-    driver: 'session',
-    provider: {
-      driver: 'lucid',
-      model: User,
-      identifierKey: 'id',
-      uids: ['email'],
+  guard: 'session',
+  list: {
+    session: {
+      driver: 'session',
+      provider: {
+        driver: 'lucid',
+        model: User,
+        identifierKey: 'id',
+        uids: ['email'],
+      },
     },
-  },
-  sessionDb: {
-    driver: 'session',
-    provider: {
-      driver: 'database',
-      usersTable: 'users',
-      identifierKey: 'id',
-      uids: ['email'],
+    sessionDb: {
+      driver: 'session',
+      provider: {
+        driver: 'database',
+        usersTable: 'users',
+        identifierKey: 'id',
+        uids: ['email'],
+      },
     },
   },
 }

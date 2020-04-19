@@ -53,13 +53,16 @@ test.group('Auth Manager', (group) => {
     const User = getUserModel(BaseModel)
 
     const manager = new AuthManager(container, {
-      session: {
-        driver: 'session',
-        provider: getLucidProviderConfig({ model: User }),
-      },
-      sessionDb: {
-        driver: 'session',
-        provider: getDatabaseProviderConfig(),
+      guard: 'session',
+      list: {
+        session: {
+          driver: 'session',
+          provider: getLucidProviderConfig({ model: User }),
+        },
+        sessionDb: {
+          driver: 'session',
+          provider: getDatabaseProviderConfig(),
+        },
       },
     })
 
@@ -74,13 +77,16 @@ test.group('Auth Manager', (group) => {
     const User = getUserModel(BaseModel)
 
     const manager = new AuthManager(container, {
-      session: {
-        driver: 'session',
-        provider: getLucidProviderConfig({ model: User }),
-      },
-      sessionDb: {
-        driver: 'session',
-        provider: getDatabaseProviderConfig(),
+      guard: 'session',
+      list: {
+        session: {
+          driver: 'session',
+          provider: getLucidProviderConfig({ model: User }),
+        },
+        sessionDb: {
+          driver: 'session',
+          provider: getDatabaseProviderConfig(),
+        },
       },
     })
 
@@ -95,13 +101,16 @@ test.group('Auth Manager', (group) => {
     const User = getUserModel(BaseModel)
 
     const manager = new AuthManager(container, {
-      session: {
-        driver: 'session',
-        provider: getLucidProviderConfig({ model: User }),
-      },
-      sessionDb: {
-        driver: 'session',
-        provider: getDatabaseProviderConfig(),
+      guard: 'session',
+      list: {
+        session: {
+          driver: 'session',
+          provider: getLucidProviderConfig({ model: User }),
+        },
+        sessionDb: {
+          driver: 'session',
+          provider: getDatabaseProviderConfig(),
+        },
       },
     })
 
@@ -125,10 +134,14 @@ test.group('Auth Manager', (group) => {
     }
 
     const manager = new AuthManager(container, {
-      admin: {
-        driver: 'session',
-        provider: {
-          driver: 'mongodb',
+      guard: 'session',
+      list: {
+        session: {},
+        admin: {
+          driver: 'session',
+          provider: {
+            driver: 'mongodb',
+          },
         },
       },
     } as any)
@@ -162,10 +175,14 @@ test.group('Auth Manager', (group) => {
     }
 
     const manager = new AuthManager(container, {
-      admin: {
-        driver: 'google',
-        provider: {
-          driver: 'mongodb',
+      guard: 'session',
+      list: {
+        session: {},
+        admin: {
+          driver: 'google',
+          provider: {
+            driver: 'mongodb',
+          },
         },
       },
     } as any)

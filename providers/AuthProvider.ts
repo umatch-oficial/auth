@@ -22,20 +22,9 @@ export default class AuthProvider {
    * Register auth binding
    */
   public register () {
-    this.container.singleton('Adonis/Addons/AuthManager', () => {
+    this.container.singleton('Adonis/Addons/Auth', () => {
       const authConfig = this.container.use('Adonis/Core/Config').get('auth')
       return new AuthManager(this.container, authConfig)
-    })
-
-    /**
-     * The main binding which returns the provider users that others can
-     * extend to define their own.
-     */
-    this.container.singleton('Adonis/Addons/Auth', () => {
-      return {
-        LucidUser: require('../src/Providers/Lucid/User').LucidUser,
-        DatabaseUser: require('../src/Providers/Database/User').DatabaseUser,
-      }
     })
   }
 
@@ -44,7 +33,7 @@ export default class AuthProvider {
    */
   public async boot () {
     this.container.with(
-      ['Adonis/Core/HttpContext', 'Adonis/Addons/AuthManager'],
+      ['Adonis/Core/HttpContext', 'Adonis/Addons/Auth'],
       (HttpContext: HttpContextConstructorContract, Auth: AuthManager) => {
         HttpContext.getter('auth', function auth () {
           return Auth.getAuthForRequest(this)
