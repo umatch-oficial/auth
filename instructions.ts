@@ -60,7 +60,11 @@ function makeModel (
   const modelsDirectory = app.resolveNamespaceDirectory('models') || 'app/Models'
   const modelPath = join(modelsDirectory, `${modelName.replace(/\.ts$/, '')}.ts`)
 
-  const template = new sink.files.MustacheFile(projectRoot, modelPath, './templates/model.txt')
+  const template = new sink.files.MustacheFile(
+    projectRoot,
+    modelPath,
+    join(__dirname, './templates/model.txt'),
+  )
   if (template.exists()) {
     sink.logger.skip(`${modelPath} file already exists`)
     return
@@ -87,15 +91,15 @@ function makeContract (
   const template = new sink.files.MustacheFile(
     projectRoot,
     'contracts/auth.ts',
-    './templates/contract/auth.txt',
+    join(__dirname, './templates/contract/auth.txt'),
   )
   template.overwrite = true
 
   template
     .apply({ modelImportNamespace, modelName })
     .partials({
-      guard: `${CONTRACTS_PARTIALS_BASE}/${guard}-guard.txt`,
-      provider: `${CONTRACTS_PARTIALS_BASE}/user-provider-${provider}.txt`,
+      guard: join(__dirname, CONTRACTS_PARTIALS_BASE, `${guard}-guard.txt`),
+      provider: join(__dirname, CONTRACTS_PARTIALS_BASE, `user-provider-${provider}.txt`),
     })
     .commit()
 
@@ -119,15 +123,15 @@ function makeConfig (
   const template = new sink.files.MustacheFile(
     projectRoot,
     'config/auth.ts',
-    './templates/config/auth.txt',
+    join(__dirname, './templates/config/auth.txt'),
   )
   template.overwrite = true
 
   template
     .apply({ modelImportNamespace, modelName })
     .partials({
-      guard: `${CONFIG_PARTIALS_BASE}/${guard}-guard.txt`,
-      provider: `${CONFIG_PARTIALS_BASE}/user-provider-${provider}.txt`,
+      guard: join(__dirname, CONFIG_PARTIALS_BASE, `${guard}-guard.txt`),
+      provider: join(__dirname, CONFIG_PARTIALS_BASE, `user-provider-${provider}.txt`),
     })
     .commit()
 
