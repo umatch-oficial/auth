@@ -141,9 +141,9 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
   }
 
   /**
-   * Returns a user row using a specific token type and value
+   * Returns a user from their remember me token
    */
-  public async findByToken (id: number | string, token: string) {
+  public async findByRememberMeToken (id: number | string, token: string) {
     const query = this
       .getUserQueryBuilder()
       .where(this.rememberMeColumn, token)

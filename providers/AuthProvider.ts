@@ -9,6 +9,7 @@
 
 import { IocContract } from '@adonisjs/fold'
 import { HttpContextConstructorContract } from '@ioc:Adonis/Core/HttpContext'
+
 import { AuthManager } from '../src/AuthManager'
 
 /**

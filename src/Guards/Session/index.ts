@@ -256,7 +256,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
    * Returns user for the remember me token
    */
   private async getUserForRememberMeToken (id: string, token: string) {
-    const authenticatable = await this.provider.findByToken(id, token)
+    const authenticatable = await this.provider.findByRememberMeToken(id, token)
     if (!authenticatable.user) {
       throw AuthenticationException.invalidSession(this.name, this.config.loginRoute)
     }
@@ -286,6 +286,10 @@ export class SessionGuard implements SessionGuardContract<any, any> {
    * Verifies user credentials
    */
   public async verifyCredentials (uid: string, password: string): Promise<any> {
+    if (!uid || !password) {
+      throw InvalidCredentialsException.invalidUid(this.name)
+    }
+
     const providerUser = await this.lookupUsingUid(uid)
     await this.verifyPassword(providerUser, password)
     return providerUser.user
@@ -295,10 +299,9 @@ export class SessionGuard implements SessionGuardContract<any, any> {
    * Verify user credentials and perform login
    */
   public async attempt (uid: string, password: string, remember?: boolean): Promise<any> {
-    const providerUser = await this.lookupUsingUid(uid)
-    await this.verifyPassword(providerUser, password)
-    await this.login(providerUser.user, remember)
-    return providerUser.user
+    const user = await this.verifyCredentials(uid, password)
+    await this.login(user, remember)
+    return user
   }
 
   /**
@@ -343,7 +346,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
      */
     if (remember) {
       const rememberMeToken = await this.getPersistedRememberMeToken(providerUser)
-      this.ctx.logger.trace('defining remember me cookie', { name: this.rememberMeKeyName })
+      this.ctx.logger.trace('setting remember me cookie', { name: this.rememberMeKeyName })
       this.setRememberMeCookie(id, rememberMeToken)
     } else {
       /**
@@ -368,9 +371,9 @@ export class SessionGuard implements SessionGuardContract<any, any> {
    * Authenticates the current HTTP request by checking for the user
    * session.
    */
-  public async authenticate (): Promise<void> {
+  public async authenticate (): Promise<any> {
     if (this.authenticationAttempted) {
-      return
+      return this.user
     }
 
     this.authenticationAttempted = true
@@ -384,7 +387,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
       const providerUser = await this.getUserForSessionId(sessionId)
       this.markUserAsLoggedIn(providerUser.user, true)
       this.emitter.emit('auth:session:authenticate', this.getAuthenticateEventData(providerUser.user, false))
-      return
+      return this.user
     }
 
     /**
@@ -410,10 +413,11 @@ export class SessionGuard implements SessionGuardContract<any, any> {
 
     this.markUserAsLoggedIn(providerUser.user, true, true)
     this.emitter.emit('auth:session:authenticate', this.getAuthenticateEventData(providerUser.user, true))
+    return this.user
   }
 
   /**
-   * Same as [[authenicate]] but returns a boolean over raising exceptions
+   * Same as [[authenticate]] but returns a boolean over raising exceptions
    */
   public async check (): Promise<boolean> {
     try {

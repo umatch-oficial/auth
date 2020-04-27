@@ -134,7 +134,7 @@ test.group('Auth Manager', (group) => {
 
       public getUserFor (): any {}
       public async findById (): Promise<any> {}
-      public async findByToken (): Promise<any> {}
+      public async findByRememberMeToken (): Promise<any> {}
       public async findByUid (): Promise<any> {}
       public async updateRememberMeToken () {}
     }
@@ -168,7 +168,7 @@ test.group('Auth Manager', (group) => {
 
       public getUserFor (): any {}
       public async findById (): Promise<any> {}
-      public async findByToken (): Promise<any> {}
+      public async findByRememberMeToken (): Promise<any> {}
       public async findByUid (): Promise<any> {}
       public async updateRememberMeToken () {}
     }

@@ -166,7 +166,7 @@ test.group('Lucid Provider | findByUids', (group) => {
   })
 })
 
-test.group('Lucid Provider | findByToken', (group) => {
+test.group('Lucid Provider | findByRememberMeToken', (group) => {
   group.before(async () => {
     db = await getDb()
     BaseModel = getModel(db)
@@ -192,7 +192,7 @@ test.group('Lucid Provider | findByToken', (group) => {
     lucidProvider.before('findUser', async (query) => assert.exists(query))
     lucidProvider.after('findUser', async (model) => assert.instanceOf(model, User))
 
-    const providerUser = await lucidProvider.findByToken(user.id, '123')
+    const providerUser = await lucidProvider.findByRememberMeToken(user.id, '123')
     assert.instanceOf(providerUser.user, User)
     assert.equal(providerUser.user!.username, 'virk')
     assert.equal(providerUser.user!.email, 'virk@adonisjs.com')
@@ -201,7 +201,7 @@ test.group('Lucid Provider | findByToken', (group) => {
   test('return null when user doesn\'t exists', async (assert) => {
     const User = getUserModel(BaseModel)
     const lucidProvider = getLucidProvider({ model: User })
-    const providerUser = await lucidProvider.findByToken(1, '123')
+    const providerUser = await lucidProvider.findByRememberMeToken(1, '123')
     assert.isNull(providerUser.user)
   })
 
@@ -219,7 +219,7 @@ test.group('Lucid Provider | findByToken', (group) => {
       throw new Error('not expected to be invoked')
     })
 
-    const providerUser = await lucidProvider.findByToken(user.id, '123')
+    const providerUser = await lucidProvider.findByRememberMeToken(user.id, '123')
     assert.isNull(providerUser.user)
   })
 
@@ -230,7 +230,7 @@ test.group('Lucid Provider | findByToken', (group) => {
     const lucidProvider = getLucidProvider({ model: User })
     lucidProvider.setConnection('secondary')
 
-    const providerUser = await lucidProvider.findByToken(user.id, '123')
+    const providerUser = await lucidProvider.findByRememberMeToken(user.id, '123')
     assert.isNull(providerUser.user)
   })
 
@@ -241,7 +241,7 @@ test.group('Lucid Provider | findByToken', (group) => {
     const lucidProvider = getLucidProvider({ model: User })
     lucidProvider.setConnection(db.connection('secondary'))
 
-    const providerUser = await lucidProvider.findByToken(user.id, '123')
+    const providerUser = await lucidProvider.findByRememberMeToken(user.id, '123')
     assert.isNull(providerUser.user)
   })
 })

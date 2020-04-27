@@ -119,7 +119,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
   /**
    * Returns a user instance using a specific token type and value
    */
-  public async findByToken (id: string | number, value: string) {
+  public async findByRememberMeToken (id: string | number, value: string) {
     const query = this.getModelQuery()
     return this.findUser(query.where(this.config.identifierKey, id).where('rememberMeToken', value))
   }

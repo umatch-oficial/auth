@@ -46,6 +46,7 @@ test.group('Session Driver | Verify Credentials', (group) => {
 
   group.afterEach(async () => {
     await reset(db)
+    emitter.clearAllListeners()
   })
 
   test('raise exception when unable to lookup user', async (assert) => {
@@ -109,6 +110,7 @@ test.group('Session Driver | attempt', (group) => {
   })
 
   group.afterEach(async () => {
+    emitter.clearAllListeners()
     await reset(db)
   })
 
@@ -221,6 +223,7 @@ test.group('Session Driver | authenticate', (group) => {
   })
 
   group.afterEach(async () => {
+    emitter.clearAllListeners()
     await reset(db)
   })
 
@@ -321,6 +324,36 @@ test.group('Session Driver | authenticate', (group) => {
     assert.isTrue(body.isAuthenticated)
     assert.isTrue(body.viaRemember)
   })
+
+  test('raise exception when unable to authenticate', async (assert) => {
+    const User = getUserModel(BaseModel)
+    const password = await hash.hash('secret')
+    await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+
+    emitter.once('auth:session:authenticate', () => {
+      throw new Error('Never expected to reach here')
+    })
+
+    const server = createServer(async (req, res) => {
+      const ctx = getCtx(req, res)
+      await ctx.session.initiate(false)
+      const lucidProvider = getLucidProvider({ model: User })
+      const sessionDriver = getSessionDriver(lucidProvider, getLucidProviderConfig({ model: User }), ctx)
+
+      try {
+        await sessionDriver.authenticate()
+      } catch (error) {
+        assert.equal(error.message, 'E_INVALID_AUTH_SESSION: Invalid session')
+        assert.equal(error.guard, 'session')
+        assert.equal(error.redirectTo, '/login')
+      }
+
+      await ctx.session.commit()
+      ctx.response.finish()
+    })
+
+    await supertest(server).get('/')
+  })
 })
 
 test.group('Session Driver | logout', (group) => {
@@ -335,6 +368,7 @@ test.group('Session Driver | logout', (group) => {
   })
 
   group.afterEach(async () => {
+    emitter.clearAllListeners()
     await reset(db)
   })
 

@@ -41,7 +41,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 
   /**
    * Provider user works as a bridge between the provider real user
-   * and the guard
+   * and the guard. It is never exposed to the end-user.
    */
   export interface ProviderUserContract<User extends any> {
     user: User | null,
@@ -73,7 +73,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * Find a user using the remember me token
      */
-    findByToken (userId: string | number, token: string): Promise<ProviderUserContract<User>>,
+    findByRememberMeToken (userId: string | number, token: string): Promise<ProviderUserContract<User>>,
 
     /**
      * Update remember token
@@ -275,7 +275,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
      * Attempts to authenticate the user for the current HTTP request. An exception
      * is raised when unable to do so
      */
-    authenticate (): Promise<void>
+    authenticate (): Promise<GetProviderRealUser<Provider>>
 
     /**
      * Attempts to authenticate the user for the current HTTP request and supresses

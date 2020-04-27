@@ -160,7 +160,7 @@ test.group('Database Provider | findByUids', (group) => {
   })
 })
 
-test.group('Database Provider | findByToken', (group) => {
+test.group('Database Provider | findByRememberMeToken', (group) => {
   group.before(async () => {
     db = await getDb()
     await setup(db)
@@ -187,7 +187,7 @@ test.group('Database Provider | findByToken', (group) => {
       assert.equal(user.email, 'virk@adonisjs.com')
     })
 
-    const providerUser = await dbProvider.findByToken(1, '123')
+    const providerUser = await dbProvider.findByRememberMeToken(1, '123')
     assert.equal(providerUser.user!.username, 'virk')
     assert.equal(providerUser.user!.email, 'virk@adonisjs.com')
   })
@@ -197,13 +197,13 @@ test.group('Database Provider | findByToken', (group) => {
     await db.table('users').insert({ username: 'nikk', email: 'nikk@adonisjs.com', remember_me_token: '123' })
 
     const dbProvider = getDatabaseProvider({})
-    const providerUser = await dbProvider.findByToken(1, '123')
+    const providerUser = await dbProvider.findByRememberMeToken(1, '123')
     assert.isNull(providerUser.user)
   })
 
   test('return null when user is missing', async (assert) => {
     const dbProvider = getDatabaseProvider({})
-    const providerUser = await dbProvider.findByToken(1, '123')
+    const providerUser = await dbProvider.findByRememberMeToken(1, '123')
     assert.isNull(providerUser.user)
   })
 
@@ -213,7 +213,7 @@ test.group('Database Provider | findByToken', (group) => {
 
     const dbProvider = getDatabaseProvider({})
     dbProvider.setConnection('secondary')
-    const providerUser = await dbProvider.findByToken(1, '123')
+    const providerUser = await dbProvider.findByRememberMeToken(1, '123')
     assert.isNull(providerUser.user)
   })
 
@@ -223,7 +223,7 @@ test.group('Database Provider | findByToken', (group) => {
 
     const dbProvider = getDatabaseProvider({})
     dbProvider.setConnection(db.connection('secondary'))
-    const providerUser = await dbProvider.findByToken(1, '123')
+    const providerUser = await dbProvider.findByRememberMeToken(1, '123')
     assert.isNull(providerUser.user)
   })
 })

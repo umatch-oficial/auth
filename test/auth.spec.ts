@@ -13,6 +13,7 @@ import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 import { AuthManager } from '../src/AuthManager'
 import { SessionGuard } from '../src/Guards/Session'
 import { LucidProvider } from '../src/Providers/Lucid'
+import { DatabaseProvider } from '../src/Providers/Database'
 
 import {
   setup,
@@ -72,5 +73,58 @@ test.group('Auth', (group) => {
     assert.equal(auth.use('session')['isCached'], true)
     assert.instanceOf(mapping, SessionGuard)
     assert.instanceOf(mapping.provider, LucidProvider)
+  })
+
+  test('proxy method to the default driver', (assert) => {
+    const User = getUserModel(BaseModel)
+
+    const manager = new AuthManager(container, {
+      guard: 'session',
+      list: {
+        session: {
+          driver: 'session',
+          loginRoute: '/login',
+          provider: getLucidProviderConfig({ model: User }),
+        },
+        sessionDb: {
+          driver: 'session',
+          loginRoute: '/login',
+          provider: getDatabaseProviderConfig(),
+        },
+      },
+    })
+
+    const ctx = getCtx()
+    const auth = manager.getAuthForRequest(ctx)
+
+    assert.equal(auth.name, 'session')
+    assert.instanceOf(auth.provider, LucidProvider)
+  })
+
+  test('update default guard', (assert) => {
+    const User = getUserModel(BaseModel)
+
+    const manager = new AuthManager(container, {
+      guard: 'session',
+      list: {
+        session: {
+          driver: 'session',
+          loginRoute: '/login',
+          provider: getLucidProviderConfig({ model: User }),
+        },
+        sessionDb: {
+          driver: 'session',
+          loginRoute: '/login',
+          provider: getDatabaseProviderConfig(),
+        },
+      },
+    })
+
+    const ctx = getCtx()
+    const auth = manager.getAuthForRequest(ctx)
+    auth.updateDefaultGuard('sessionDb')
+
+    assert.equal(auth.name, 'sessionDb')
+    assert.instanceOf(auth.provider, DatabaseProvider)
   })
 })

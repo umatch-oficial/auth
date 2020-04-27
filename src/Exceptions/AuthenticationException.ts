@@ -15,16 +15,24 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
  */
 export class AuthenticationException extends Exception {
   public guard: string
-  public redirectTo: string
+  public redirectTo: string = '/login'
+
+  /**
+   * Raise exception with message and redirect url
+   */
+  constructor (message: string, code: string, redirectTo?: string) {
+    super(message, 401, code)
+    if (redirectTo) {
+      this.redirectTo = redirectTo
+    }
+  }
 
   /**
    * Missing session or unable to lookup user from session
    */
   public static invalidSession (guard: string, redirectTo: string) {
-    const error = new this('Invalid session', 401, 'E_INVALID_AUTH_SESSION')
+    const error = new this('Invalid session', 'E_INVALID_AUTH_SESSION', redirectTo)
     error.guard = guard
-    error.redirectTo = redirectTo
-
     return error
   }
 
@@ -43,7 +51,7 @@ export class AuthenticationException extends Exception {
    * Flash error message and redirect the user back
    */
   protected respondWithRedirect (ctx: HttpContextContract) {
-    if (!ctx.session || !this.redirectTo) {
+    if (!ctx.session) {
       return ctx.response.status(this.status).send(this.message)
     }
 
