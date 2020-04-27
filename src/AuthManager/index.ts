@@ -7,8 +7,8 @@
 * file that was distributed with this source code.
 */
 
-import { Exception } from '@poppinss/utils'
 import { IocContract } from '@adonisjs/fold'
+import { Exception, ManagerConfigValidator } from '@poppinss/utils'
 
 import {
   AuthConfig,
@@ -23,10 +23,7 @@ import {
 } from '@ioc:Adonis/Addons/Auth'
 
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-
 import { Auth } from '../Auth'
-import { LucidUser } from '../Providers/Lucid/User'
-import { DatabaseUser } from '../Providers/Database/User'
 
 /**
  * Auth manager to manage guards and providers object. The extend API can
@@ -46,22 +43,12 @@ export class AuthManager implements AuthManagerContract {
   /**
    * Reference to the default guard
    */
-  public defaultGuard = this.config.guard
+  public defaultGuardName = this.config.guard
 
   constructor (private container: IocContract, private config: AuthConfig) {
-    if (!this.config.guard) {
-      throw new Exception('Invalid auth config. The value for "guard" is missing inside "config/auth" file')
-    }
-
-    if (!this.config.list) {
-      throw new Exception('Invalid auth config. The guards "list" is missing inside "config/auth" file')
-    }
-
-    if (!this.config.list[this.config.guard]) {
-      throw new Exception(
-        `Invalid auth config. The guard "${this.config.guard}" is not mentioned inside guards list`,
-      )
-    }
+    const validator = new ManagerConfigValidator(config, 'auth', 'config/auth')
+    validator.validateDefault('guard')
+    validator.validateList('list', 'guard')
   }
 
   /**
@@ -207,11 +194,4 @@ export class AuthManager implements AuthManagerContract {
       this.extendedGuards.set(name, callback as ExtendGuardCallback)
     }
   }
-
-  /**
-   * Sharing for someone, who wants to define their own Provider User
-   * by extending the existing one's.
-   */
-  public LucidUser = LucidUser
-  public DatabaseUser = DatabaseUser
 }

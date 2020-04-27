@@ -53,10 +53,12 @@ test.group('Auth', (group) => {
       list: {
         session: {
           driver: 'session',
+          loginRoute: '/login',
           provider: getLucidProviderConfig({ model: User }),
         },
         sessionDb: {
           driver: 'session',
+          loginRoute: '/login',
           provider: getDatabaseProviderConfig(),
         },
       },

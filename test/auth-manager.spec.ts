@@ -57,10 +57,12 @@ test.group('Auth Manager', (group) => {
       list: {
         session: {
           driver: 'session',
+          loginRoute: '/login',
           provider: getLucidProviderConfig({ model: User }),
         },
         sessionDb: {
           driver: 'session',
+          loginRoute: '/login',
           provider: getDatabaseProviderConfig(),
         },
       },
@@ -81,10 +83,12 @@ test.group('Auth Manager', (group) => {
       list: {
         session: {
           driver: 'session',
+          loginRoute: '/login',
           provider: getLucidProviderConfig({ model: User }),
         },
         sessionDb: {
           driver: 'session',
+          loginRoute: '/login',
           provider: getDatabaseProviderConfig(),
         },
       },
@@ -105,10 +109,12 @@ test.group('Auth Manager', (group) => {
       list: {
         session: {
           driver: 'session',
+          loginRoute: '/login',
           provider: getLucidProviderConfig({ model: User }),
         },
         sessionDb: {
           driver: 'session',
+          loginRoute: '/login',
           provider: getDatabaseProviderConfig(),
         },
       },

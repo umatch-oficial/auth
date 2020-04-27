@@ -238,6 +238,7 @@ export function getSessionDriver (
 ) {
   const config = {
     driver: 'session' as const,
+    loginRoute: '/login',
     provider: providerConfig,
   }
 

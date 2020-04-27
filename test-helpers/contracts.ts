@@ -8,7 +8,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
     },
     database: {
       config: DatabaseProviderConfig,
-      implementation: DatabaseProviderContract<any>,
+      implementation: DatabaseProviderContract<DatabaseProviderRow>,
     },
   }
 

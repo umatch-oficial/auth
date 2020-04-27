@@ -316,7 +316,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
   }
 
   /**
-   * Shape of the session driver
+   * Shape of the session guard
    */
   export interface SessionGuardContract<
     Provider extends keyof ProvidersList,
@@ -353,6 +353,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
    */
   export type SessionGuardConfig<Provider extends keyof ProvidersList> = {
     driver: 'session',
+    loginRoute: string,
     provider: ProvidersList[Provider]['config'],
   }
 
@@ -415,10 +416,13 @@ declare module '@ioc:Adonis/Addons/Auth' {
 
   /**
    * Instance of the auth contract. The `use` method can be used to obtain
-   * an instance of a given guard mapping
+   * an instance of a given guard mapping for a single HTTP request
    */
-  export interface AuthContract {
-    use<K extends keyof GuardsList> (guard?: K): GuardsList[K]['implementation']
+  export interface AuthContract extends GuardContract<keyof ProvidersList, keyof GuardsList> {
+    updateDefaultGuard (guard: string): this
+    updateDefaultGuard<K extends keyof GuardsList> (guard: K): this
+    use (guard?: string): GuardContract<keyof ProvidersList, keyof GuardsList>
+    use<K extends keyof GuardsList> (guard: K): GuardsList[K]['implementation']
   }
 
   /*
@@ -451,7 +455,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * The default guard
      */
-    defaultGuard: keyof GuardsList
+    defaultGuardName: keyof GuardsList
 
     /**
      * Returns the instance of [[AuthContract]] for a given HTTP request
@@ -461,6 +465,10 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * Make instance of a mapping
      */
+    makeMapping (
+      ctx: HttpContextContract,
+      mapping: string,
+    ): GuardContract<keyof ProvidersList, keyof GuardsList>
     makeMapping<K extends keyof GuardsList> (
       ctx: HttpContextContract,
       mapping: K,
@@ -471,9 +479,6 @@ declare module '@ioc:Adonis/Addons/Auth' {
      */
     extend (type: 'provider', provider: string, callback: ExtendProviderCallback): void
     extend (type: 'guard', guard: string, callback: ExtendGuardCallback): void
-
-    LucidUser: LucidProviderUserBuilder<LucidProviderModel>
-    DatabaseUser: DatabaseProviderUserBuilder
   }
 
   const AuthManager: AuthManagerContract
