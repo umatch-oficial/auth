@@ -5,9 +5,9 @@
 * file.
 */
 
-{{#modelImportNamespace}}
-import {{ modelName }} from '{{{ modelImportNamespace }}}'
-{{/modelImportNamespace}}
+{{#modelNamespace}}
+import {{ modelName }} from '{{{ modelNamespace }}}'
+{{/modelNamespace}}
 import { AuthConfig } from '@ioc:Adonis/Addons/Auth'
 
 /*
@@ -20,7 +20,10 @@ import { AuthConfig } from '@ioc:Adonis/Addons/Auth'
 |
 */
 const authConfig: AuthConfig = {
+  guard: 'web',
+  list: {
 {{> guard}}
+  },
 }
 
 export default authConfig

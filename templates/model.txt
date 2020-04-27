@@ -6,7 +6,7 @@ import {
   BaseModel,
 } from '@ioc:Adonis/Lucid/Orm'
 
-export default class User extends BaseModel {
+export default class {{ modelName }} extends BaseModel {
   @column({ isPrimary: true })
   public id: number
 
@@ -26,9 +26,9 @@ export default class User extends BaseModel {
   public updatedAt: DateTime
 
   @beforeSave()
-  public static async hashPassword (user: User) {
-    if (user.$dirty.password) {
-      user.password = await Hash.hash(user.password)
+  public static async hashPassword ({{ modelReference }}: {{ modelName }}) {
+    if ({{ modelReference }}.$dirty.password) {
+      {{ modelReference }}.password = await Hash.hash({{ modelReference }}.password)
     }
   }
 }

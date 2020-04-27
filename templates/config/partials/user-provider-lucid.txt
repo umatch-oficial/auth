@@ -39,4 +39,4 @@
       | The model to use for fetching or finding users
       |
       */
-      model: User,
+      model: {{ modelName }},
