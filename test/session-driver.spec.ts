@@ -48,7 +48,7 @@ test.group('Session Driver | Verify Credentials', (group) => {
     await reset(db)
   })
 
-  test('return error when unable to lookup user', async (assert) => {
+  test('raise exception when unable to lookup user', async (assert) => {
     assert.plan(1)
 
     const User = getUserModel(BaseModel)
@@ -59,11 +59,11 @@ test.group('Session Driver | Verify Credentials', (group) => {
     try {
       await sessionDriver.verifyCredentials('virk@adonisjs.com', 'password')
     } catch (error) {
-      assert.deepEqual(error.message, 'E_INVALID_AUTH_UID: Invalid username or email')
+      assert.deepEqual(error.message, 'E_INVALID_AUTH_UID: User not found')
     }
   })
 
-  test('return error when password is incorrect', async (assert) => {
+  test('raise exception when password is incorrect', async (assert) => {
     assert.plan(1)
 
     const User = getUserModel(BaseModel)

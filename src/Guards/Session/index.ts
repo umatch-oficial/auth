@@ -14,14 +14,14 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import {
   ProviderContract,
   SessionGuardConfig,
+  SessionGuardContract,
   ProviderUserContract,
   SessionLoginEventData,
-  SessionGuardContract,
   SessionAuthenticateEventData,
 } from '@ioc:Adonis/Addons/Auth'
 
-import { AuthenticationFailureException } from '../../Exceptions/AuthenticationFailureException'
-import { CredentialsVerficationException } from '../../Exceptions/CredentialsVerficationException'
+import { AuthenticationException } from '../../Exceptions/AuthenticationException'
+import { InvalidCredentialsException } from '../../Exceptions/InvalidCredentialsException'
 
 /**
  * Session guard enables user login using sessions. Also it allows for
@@ -205,7 +205,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
   private async lookupUsingUid (uid: string): Promise<ProviderUserContract<any>> {
     const providerUser = await this.provider.findByUid(uid)
     if (!providerUser.user) {
-      throw CredentialsVerficationException.invalidUid(this.config.provider.uids)
+      throw InvalidCredentialsException.invalidUid(this.name)
     }
 
     return providerUser
@@ -220,7 +220,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
      */
     const verified = await providerUser.verifyPassword(password)
     if (!verified) {
-      throw CredentialsVerficationException.invalidPassword()
+      throw InvalidCredentialsException.invalidPassword(this.name)
     }
   }
 
@@ -236,7 +236,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
    */
   private verifyRememberMeToken (rememberMeToken: any): asserts rememberMeToken is { id: string, token: string } {
     if (!rememberMeToken || !rememberMeToken.id || !rememberMeToken.token) {
-      throw AuthenticationFailureException.missingSession()
+      throw AuthenticationException.invalidSession(this.name, this.config.loginRoute)
     }
   }
 
@@ -246,7 +246,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
   private async getUserForSessionId (id: string | number) {
     const authenticatable = await this.provider.findById(id)
     if (!authenticatable.user) {
-      throw AuthenticationFailureException.missingUser()
+      throw AuthenticationException.invalidSession(this.name, this.config.loginRoute)
     }
 
     return authenticatable
@@ -258,7 +258,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
   private async getUserForRememberMeToken (id: string, token: string) {
     const authenticatable = await this.provider.findByToken(id, token)
     if (!authenticatable.user) {
-      throw AuthenticationFailureException.missingUser()
+      throw AuthenticationException.invalidSession(this.name, this.config.loginRoute)
     }
 
     return authenticatable
@@ -307,7 +307,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
   public async loginViaId (id: string | number, remember?: boolean): Promise<void> {
     const providerUser = await this.provider.findById(id)
     if (!providerUser.user) {
-      throw CredentialsVerficationException.invalidId(this.config.provider.identifierKey, id)
+      throw InvalidCredentialsException.invalidUid(this.name)
     }
 
     await this.login(providerUser.user, remember)
@@ -393,7 +393,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
      */
     const rememberMeToken = this.ctx.request.encryptedCookie(this.rememberMeKeyName)
     if (!rememberMeToken) {
-      throw AuthenticationFailureException.missingSession()
+      throw AuthenticationException.invalidSession(this.name, this.config.loginRoute)
     }
 
     /**
