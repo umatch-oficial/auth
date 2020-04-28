@@ -236,7 +236,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
    */
   private verifyRememberMeToken (rememberMeToken: any): asserts rememberMeToken is { id: string, token: string } {
     if (!rememberMeToken || !rememberMeToken.id || !rememberMeToken.token) {
-      throw AuthenticationException.invalidSession(this.name, this.config.loginRoute)
+      throw AuthenticationException.invalidSession(this.name)
     }
   }
 
@@ -246,7 +246,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
   private async getUserForSessionId (id: string | number) {
     const authenticatable = await this.provider.findById(id)
     if (!authenticatable.user) {
-      throw AuthenticationException.invalidSession(this.name, this.config.loginRoute)
+      throw AuthenticationException.invalidSession(this.name)
     }
 
     return authenticatable
@@ -258,7 +258,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
   private async getUserForRememberMeToken (id: string, token: string) {
     const authenticatable = await this.provider.findByRememberMeToken(id, token)
     if (!authenticatable.user) {
-      throw AuthenticationException.invalidSession(this.name, this.config.loginRoute)
+      throw AuthenticationException.invalidSession(this.name)
     }
 
     return authenticatable
@@ -396,7 +396,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
      */
     const rememberMeToken = this.ctx.request.encryptedCookie(this.rememberMeKeyName)
     if (!rememberMeToken) {
-      throw AuthenticationException.invalidSession(this.name, this.config.loginRoute)
+      throw AuthenticationException.invalidSession(this.name)
     }
 
     /**

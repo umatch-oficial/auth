@@ -43,7 +43,7 @@ export class AuthManager implements AuthManagerContract {
   /**
    * Reference to the default guard
    */
-  public defaultGuardName = this.config.guard
+  public defaultGuard = this.config.guard
 
   constructor (private container: IocContract, private config: AuthConfig) {
     const validator = new ManagerConfigValidator(config, 'auth', 'config/auth')

@@ -353,7 +353,6 @@ declare module '@ioc:Adonis/Addons/Auth' {
    */
   export type SessionGuardConfig<Provider extends keyof ProvidersList> = {
     driver: 'session',
-    loginRoute: string,
     provider: ProvidersList[Provider]['config'],
   }
 
@@ -419,8 +418,14 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * an instance of a given guard mapping for a single HTTP request
    */
   export interface AuthContract extends GuardContract<keyof ProvidersList, keyof GuardsList> {
-    updateDefaultGuard (guard: string): this
-    updateDefaultGuard<K extends keyof GuardsList> (guard: K): this
+    /**
+     * The default guard for the current request
+     */
+    defaultGuard: string
+
+    /**
+     * Use a given guard
+     */
     use (guard?: string): GuardContract<keyof ProvidersList, keyof GuardsList>
     use<K extends keyof GuardsList> (guard: K): GuardsList[K]['implementation']
   }
@@ -455,7 +460,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * The default guard
      */
-    defaultGuardName: keyof GuardsList
+    defaultGuard: string
 
     /**
      * Returns the instance of [[AuthContract]] for a given HTTP request

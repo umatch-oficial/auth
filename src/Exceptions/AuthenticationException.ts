@@ -30,8 +30,8 @@ export class AuthenticationException extends Exception {
   /**
    * Missing session or unable to lookup user from session
    */
-  public static invalidSession (guard: string, redirectTo: string) {
-    const error = new this('Invalid session', 'E_INVALID_AUTH_SESSION', redirectTo)
+  public static invalidSession (guard: string) {
+    const error = new this('Invalid session', 'E_INVALID_AUTH_SESSION')
     error.guard = guard
     return error
   }

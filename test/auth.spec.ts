@@ -54,12 +54,10 @@ test.group('Auth', (group) => {
       list: {
         session: {
           driver: 'session',
-          loginRoute: '/login',
           provider: getLucidProviderConfig({ model: User }),
         },
         sessionDb: {
           driver: 'session',
-          loginRoute: '/login',
           provider: getDatabaseProviderConfig(),
         },
       },
@@ -83,12 +81,10 @@ test.group('Auth', (group) => {
       list: {
         session: {
           driver: 'session',
-          loginRoute: '/login',
           provider: getLucidProviderConfig({ model: User }),
         },
         sessionDb: {
           driver: 'session',
-          loginRoute: '/login',
           provider: getDatabaseProviderConfig(),
         },
       },
@@ -109,12 +105,10 @@ test.group('Auth', (group) => {
       list: {
         session: {
           driver: 'session',
-          loginRoute: '/login',
           provider: getLucidProviderConfig({ model: User }),
         },
         sessionDb: {
           driver: 'session',
-          loginRoute: '/login',
           provider: getDatabaseProviderConfig(),
         },
       },
@@ -122,7 +116,7 @@ test.group('Auth', (group) => {
 
     const ctx = getCtx()
     const auth = manager.getAuthForRequest(ctx)
-    auth.updateDefaultGuard('sessionDb')
+    auth.defaultGuard = 'sessionDb'
 
     assert.equal(auth.name, 'sessionDb')
     assert.instanceOf(auth.provider, DatabaseProvider)

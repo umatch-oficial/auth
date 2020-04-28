@@ -24,25 +24,16 @@ export class Auth implements AuthContract {
    * The default guard is always the one defined inside the config, until
    * manually overwritten by the user
    */
-  private defaultGuardForTheRequest: string = this.manager.defaultGuardName
+  public defaultGuard: string = this.manager.defaultGuard
 
   constructor (private manager: AuthManagerContract, private ctx: HttpContextContract) {
-  }
-
-  /**
-   * Updates the guard name for the current request. After which all methods
-   * on this class points to that default guard.
-   */
-  public updateDefaultGuard (name: string): this {
-    this.defaultGuardForTheRequest = name
-    return this
   }
 
   /**
    * Returns an instance of a named or the default mapping
    */
   public use (mapping?: string) {
-    mapping = mapping || this.defaultGuardForTheRequest
+    mapping = mapping || this.defaultGuard
 
     if (!this.mappingsCache.has(mapping)) {
       this.ctx.logger.trace('instantiating auth mapping', { name: mapping })
