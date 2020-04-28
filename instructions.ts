@@ -247,6 +247,15 @@ async function getTableName (sink: typeof sinkStatic): Promise<string> {
 }
 
 /**
+ * Prompts user for the table name
+ */
+async function getMigrationConsent (sink: typeof sinkStatic, tableName: string): Promise<string> {
+  return sink
+    .getPrompt()
+    .confirm(`Create migration for the ${sink.colors.underline(tableName)} table?`)
+}
+
+/**
  * Instructions to be executed when setting up the package.
  */
 export default async function instructions (
@@ -278,6 +287,8 @@ export default async function instructions (
     state.tableName = await getTableName(sink)
   }
 
+  const migrationConstent = await getMigrationConsent(sink, state.tableName)
+
   /**
    * Pascal case
    */
@@ -294,7 +305,9 @@ export default async function instructions (
   /**
    * Make migration file
    */
-  makeMigration(projectRoot, app, sink, state)
+  if (migrationConstent) {
+    makeMigration(projectRoot, app, sink, state)
+  }
 
   /**
    * Make contract file
