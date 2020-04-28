@@ -5,7 +5,6 @@ export const config: AuthConfig = {
   guard: 'session',
   list: {
     session: {
-      loginRoute: '/login',
       driver: 'session',
       provider: {
         driver: 'lucid',
@@ -15,7 +14,6 @@ export const config: AuthConfig = {
       },
     },
     sessionDb: {
-      loginRoute: '/login',
       driver: 'session',
       provider: {
         driver: 'database',
