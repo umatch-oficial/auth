@@ -11,7 +11,6 @@ import { join } from 'path'
 import pluralize from 'pluralize'
 import { lodash } from '@poppinss/utils'
 import * as sinkStatic from '@adonisjs/sink'
-import { Application } from '@adonisjs/application/build/standalone'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 type InstructionsState = {
@@ -312,6 +311,3 @@ export default async function instructions (
    */
   makeMiddleware(projectRoot, app, sink, state)
 }
-
-instructions(__dirname, new Application(__dirname, {} as any, {} as any, {} as any), sinkStatic)
-  .catch(console.error)
