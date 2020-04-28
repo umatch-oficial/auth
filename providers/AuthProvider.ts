@@ -8,6 +8,7 @@
 */
 
 import { IocContract } from '@adonisjs/fold'
+import { ServerContract } from '@ioc:Adonis/Core/Server'
 import { HttpContextConstructorContract } from '@ioc:Adonis/Core/HttpContext'
 
 import { AuthManager } from '../src/AuthManager'
@@ -41,5 +42,11 @@ export default class AuthProvider {
         }, true)
       },
     )
+
+    this.container.with(['Adonis/Core/Server', 'Adonis/Core/View'], (Server: ServerContract) => {
+      Server.hooks.before(async (ctx) => {
+        ctx['view'].share({ auth: ctx.auth })
+      })
+    })
   }
 }
