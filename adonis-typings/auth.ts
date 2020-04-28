@@ -287,6 +287,11 @@ declare module '@ioc:Adonis/Addons/Auth' {
      * Logout user
      */
     logout (...args: any[]): Promise<void>
+
+    /**
+     * Serialize guard to JSON
+     */
+    toJSON (): any
   }
 
   /*

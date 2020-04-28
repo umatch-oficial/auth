@@ -152,4 +152,17 @@ export class Auth implements AuthContract {
   public async logout (...args: any[]) {
     return this.use().logout(...args)
   }
+
+  /**
+   * Serialize toJSON
+   */
+  public toJSON (): any {
+    return {
+      defaultGuard: this.defaultGuard,
+      guards: [...this.mappingsCache.keys()].reduce((result, key) => {
+        result[key] = this.mappingsCache.get(key).toJSON()
+        return result
+      }, {}),
+    }
+  }
 }

@@ -121,4 +121,41 @@ test.group('Auth', (group) => {
     assert.equal(auth.name, 'sessionDb')
     assert.instanceOf(auth.provider, DatabaseProvider)
   })
+
+  test('serialize toJSON', (assert) => {
+    const User = getUserModel(BaseModel)
+
+    const manager = new AuthManager(container, {
+      guard: 'session',
+      list: {
+        session: {
+          driver: 'session',
+          provider: getLucidProviderConfig({ model: User }),
+        },
+        sessionDb: {
+          driver: 'session',
+          provider: getDatabaseProviderConfig(),
+        },
+      },
+    })
+
+    const ctx = getCtx()
+    const auth = manager.getAuthForRequest(ctx)
+    auth.defaultGuard = 'sessionDb'
+    auth.use()
+
+    assert.deepEqual(auth.toJSON(), {
+      defaultGuard: 'sessionDb',
+      guards: {
+        sessionDb: {
+          isLoggedIn: false,
+          isGuest: true,
+          viaRemember: false,
+          user: undefined,
+          authenticationAttempted: false,
+          isAuthenticated: false,
+        },
+      },
+    })
+  })
 })

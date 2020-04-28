@@ -466,4 +466,18 @@ export class SessionGuard implements SessionGuardContract<any, any> {
     this.clearUserFromStorage()
     this.markUserAsLoggedOut()
   }
+
+  /**
+   * Serialize toJSON for JSON.stringify
+   */
+  public toJSON () {
+    return {
+      isLoggedIn: this.isLoggedIn,
+      isGuest: this.isGuest,
+      viaRemember: this.viaRemember,
+      authenticationAttempted: this.authenticationAttempted,
+      isAuthenticated: this.isAuthenticated,
+      user: this.user,
+    }
+  }
 }
