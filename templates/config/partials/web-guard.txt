@@ -11,17 +11,6 @@
     web: {
       driver: 'session',
 
-      /*
-      |--------------------------------------------------------------------------
-      | Login Route
-      |--------------------------------------------------------------------------
-      |
-      | The route is used to redirect the user when they are trying to access a
-      | protected route, but doesn't have a valid session
-      |
-      */
-      loginRoute: '/login',
-
       provider: {
   {{> provider}}
       },

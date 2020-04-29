@@ -10,7 +10,8 @@
     "build/templates",
     "build/src",
     "build/instructions.js",
-    "build/standalone"
+    "build/standalone.js",
+    "build/standalone.d.ts"
   ],
   "scripts": {
     "mrm": "mrm --preset=@adonisjs/mrm-preset",
