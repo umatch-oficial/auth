@@ -56,8 +56,8 @@ export class InvalidCredentialsException extends Exception {
     ctx.session.flashExcept(['_csrf'])
     ctx.session.flash('auth', {
       errors: {
-        uid: this.code === 'E_INVALID_AUTH_UID' ? 'Invalid login id' : null,
-        password: this.code === 'E_INVALID_AUTH_PASSWORD' ? 'Invalid password' : null,
+        uid: this.code === 'E_INVALID_AUTH_UID' ? ['Invalid login id'] : null,
+        password: this.code === 'E_INVALID_AUTH_PASSWORD' ? ['Invalid password'] : null,
       },
     })
     ctx.response.redirect('back', true)
