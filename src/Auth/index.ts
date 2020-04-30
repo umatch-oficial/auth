@@ -113,7 +113,7 @@ export class Auth implements AuthContract {
    * Attempt to verify user credentials and perform login
    */
   public async attempt (uid: string, password: string, ...args: any[]) {
-    return this.use().verifyCredentials(uid, password, ...args)
+    return this.use().attempt(uid, password, ...args)
   }
 
   /**

@@ -302,3 +302,27 @@ export function unsignCookie (cookie: any, name: string) {
 
   return encryption.verifier.unsign(cookieValue, name)
 }
+
+/**
+ * Mocks action on a object
+ */
+export function mockAction (collection: any, name: string, verifier: any) {
+  collection[name] = function (...args: any[]) {
+    verifier(...args)
+    delete collection[name]
+  }
+}
+
+/**
+ * Mocks property on a object
+ */
+export function mockProperty (collection: any, name: string, value: any) {
+  Object.defineProperty(collection, name, {
+    get () {
+      delete collection[name]
+      return value
+    },
+    enumerable: true,
+    configurable: true,
+  })
+}

@@ -8,6 +8,7 @@
 */
 
 import test from 'japa'
+import 'reflect-metadata'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 
 import { AuthManager } from '../src/AuthManager'
@@ -21,8 +22,10 @@ import {
   getDb,
   getCtx,
   cleanup,
-  container,
   getModel,
+  container,
+  mockAction,
+  mockProperty,
   getUserModel,
   getLucidProviderConfig,
   getDatabaseProviderConfig,
@@ -73,12 +76,16 @@ test.group('Auth', (group) => {
     assert.instanceOf(mapping.provider, LucidProvider)
   })
 
-  test('proxy method to the default driver', (assert) => {
+  test('proxy all methods to the default driver', async (assert) => {
     const User = getUserModel(BaseModel)
 
     const manager = new AuthManager(container, {
-      guard: 'session',
+      guard: 'custom',
       list: {
+        custom: {
+          driver: 'custom',
+          provider: getLucidProviderConfig({ model: User }),
+        },
         session: {
           driver: 'session',
           provider: getLucidProviderConfig({ model: User }),
@@ -88,13 +95,109 @@ test.group('Auth', (group) => {
           provider: getDatabaseProviderConfig(),
         },
       },
-    })
+    } as any)
+
+    class CustomGuard {
+    }
+    const guardInstance = new CustomGuard()
 
     const ctx = getCtx()
     const auth = manager.getAuthForRequest(ctx)
 
-    assert.equal(auth.name, 'session')
-    assert.instanceOf(auth.provider, LucidProvider)
+    manager.extend('guard', 'custom', () => {
+      return guardInstance as any
+    })
+
+    /**
+     * Test attempt
+     */
+    mockAction(guardInstance, 'attempt', function (uid: string, secret: string, rememberMe: boolean) {
+      assert.equal(uid, 'foo')
+      assert.equal(secret, 'secret')
+      assert.equal(rememberMe, true)
+    })
+    await auth.attempt('foo', 'secret', true)
+
+    /**
+     * Test verify credentails
+     */
+    mockAction(guardInstance, 'verifyCredentials', function (uid: string, secret: string) {
+      assert.equal(uid, 'foo')
+      assert.equal(secret, 'secret')
+    })
+    await auth.verifyCredentials('foo', 'secret')
+
+    /**
+     * Test login
+     */
+    mockAction(guardInstance, 'login', function (user: any, rememberMe: boolean) {
+      assert.deepEqual(user, { id: 1 })
+      assert.equal(rememberMe, true)
+    })
+    await auth.login({ id: 1 }, true)
+
+    /**
+     * Test loginViaId
+     */
+    mockAction(guardInstance, 'loginViaId', function (id: number, rememberMe: boolean) {
+      assert.deepEqual(id, 1)
+      assert.equal(rememberMe, true)
+    })
+    await auth.loginViaId(1, true)
+
+    /**
+     * Test logout
+     */
+    mockAction(guardInstance, 'logout', function (renewToken: boolean) {
+      assert.equal(renewToken, true)
+    })
+    await auth.logout(true)
+
+    /**
+     * Test authenticate
+     */
+    mockAction(guardInstance, 'authenticate', function () {
+      assert.isTrue(true)
+    })
+    await auth.authenticate()
+
+    /**
+     * Test check
+     */
+    mockAction(guardInstance, 'check', function () {
+      assert.isTrue(true)
+    })
+    await auth.check()
+
+    /**
+     * Test isGuest
+     */
+    mockProperty(guardInstance, 'isGuest', false)
+    assert.isFalse(auth.isGuest)
+
+    /**
+     * Test user
+     */
+    mockProperty(guardInstance, 'user', { id: 1 })
+    assert.deepEqual(auth.user, { id: 1 })
+
+    /**
+     * Test isLoggedIn
+     */
+    mockProperty(guardInstance, 'isLoggedIn', true)
+    assert.isTrue(auth.isLoggedIn)
+
+    /**
+     * Test isLoggedOut
+     */
+    mockProperty(guardInstance, 'isLoggedOut', true)
+    assert.isTrue(auth.isLoggedOut)
+
+    /**
+     * Test authenticationAttempted
+     */
+    mockProperty(guardInstance, 'authenticationAttempted', true)
+    assert.isTrue(auth.authenticationAttempted)
   })
 
   test('update default guard', (assert) => {
