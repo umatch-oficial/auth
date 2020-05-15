@@ -9,6 +9,7 @@
 
 import { Hooks } from '@poppinss/hooks'
 import { IocContract } from '@adonisjs/fold'
+import { ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Model'
 import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 import {
   LucidProviderModel,
@@ -65,7 +66,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
    * Executes the query to find the user, calls the registered hooks
    * and wraps the result inside [[ProviderUserContract]]
    */
-  private async findUser (query: ReturnType<LucidProviderModel['query']>) {
+  private async findUser (query: ModelQueryBuilderContract<LucidProviderModel>) {
     await this.hooks.exec('before', 'findUser', query)
 
     const user = await query.first()

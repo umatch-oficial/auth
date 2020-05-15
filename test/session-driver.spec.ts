@@ -68,7 +68,7 @@ test.group('Session Driver | Verify Credentials', (group) => {
     assert.plan(1)
 
     const User = getUserModel(BaseModel)
-    const password = await hash.hash('secret')
+    const password = await hash.make('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
     const ctx = getCtx()
@@ -86,7 +86,7 @@ test.group('Session Driver | Verify Credentials', (group) => {
     assert.plan(1)
 
     const User = getUserModel(BaseModel)
-    const password = await hash.hash('secret')
+    const password = await hash.make('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
     const ctx = getCtx()
@@ -118,7 +118,7 @@ test.group('Session Driver | attempt', (group) => {
     assert.plan(4)
 
     const User = getUserModel(BaseModel)
-    const password = await hash.hash('secret')
+    const password = await hash.make('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
     emitter.once('auth:session:login', ({ name, user, token }) => {
       assert.equal(name, 'session')
@@ -149,7 +149,7 @@ test.group('Session Driver | attempt', (group) => {
     assert.plan(5)
 
     const User = getUserModel(BaseModel)
-    const password = await hash.hash('secret')
+    const password = await hash.make('secret')
     const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
     emitter.once('auth:session:login', ({ name, user: model, token }) => {
@@ -184,7 +184,7 @@ test.group('Session Driver | attempt', (group) => {
 
   test('delete remember_me cookie explicitly when login with remember me is false', async (assert) => {
     const User = getUserModel(BaseModel)
-    const password = await hash.hash('secret')
+    const password = await hash.make('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
     const server = createServer(async (req, res) => {
@@ -231,7 +231,7 @@ test.group('Session Driver | authenticate', (group) => {
     assert.plan(8)
 
     const User = getUserModel(BaseModel)
-    const password = await hash.hash('secret')
+    const password = await hash.make('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
     emitter.once('auth:session:authenticate', ({ name, user, viaRemember }) => {
@@ -281,7 +281,7 @@ test.group('Session Driver | authenticate', (group) => {
     assert.plan(8)
 
     const User = getUserModel(BaseModel)
-    const password = await hash.hash('secret')
+    const password = await hash.make('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
     emitter.once('auth:session:authenticate', ({ name, user, viaRemember }) => {
@@ -327,7 +327,7 @@ test.group('Session Driver | authenticate', (group) => {
 
   test('raise exception when unable to authenticate', async (assert) => {
     const User = getUserModel(BaseModel)
-    const password = await hash.hash('secret')
+    const password = await hash.make('secret')
     await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
     emitter.once('auth:session:authenticate', () => {
@@ -374,7 +374,7 @@ test.group('Session Driver | logout', (group) => {
 
   test('logout the user by clearing up the session and removing remember_me cookie', async (assert) => {
     const User = getUserModel(BaseModel)
-    const password = await hash.hash('secret')
+    const password = await hash.make('secret')
     const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
     const server = createServer(async (req, res) => {
@@ -426,7 +426,7 @@ test.group('Session Driver | logout', (group) => {
 
   test('logout and recycle user remember me token', async (assert) => {
     const User = getUserModel(BaseModel)
-    const password = await hash.hash('secret')
+    const password = await hash.make('secret')
     const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
     const server = createServer(async (req, res) => {

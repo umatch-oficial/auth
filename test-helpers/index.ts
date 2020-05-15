@@ -23,7 +23,7 @@ import { Adapter } from '@adonisjs/lucid/build/src/Orm/Adapter'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { SessionConfig } from '@ioc:Adonis/Addons/Session'
 import { Encryption } from '@adonisjs/encryption/build/standalone'
-import { HttpContext } from '@adonisjs/http-server/build/standalone'
+import { HttpContext, Router } from '@adonisjs/http-server/build/standalone'
 import { SessionManager } from '@adonisjs/session/build/src/SessionManager'
 import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 import { BaseModel as LucidBaseModel } from '@adonisjs/lucid/build/src/Orm/BaseModel'
@@ -215,6 +215,8 @@ export function getDatabaseProvider (config: Partial<DatabaseProviderConfig>) {
  */
 export function getCtx (req?: IncomingMessage, res?: ServerResponse) {
   const httpRow = profiler.create('http:request')
+  const router = new Router(encryption)
+
   return HttpContext
     .create(
       '/',
@@ -222,6 +224,7 @@ export function getCtx (req?: IncomingMessage, res?: ServerResponse) {
       logger,
       httpRow,
       encryption,
+      router,
       req,
       res,
       {} as any,
@@ -289,7 +292,7 @@ export function decryptCookie (cookie: any, name: string) {
     .replace(`${name}=`, '')
     .slice(2)
 
-  return encryption.decrypt(cookieValue, name)
+  return encryption.decrypt<any>(cookieValue, name)
 }
 
 /**
@@ -300,7 +303,7 @@ export function unsignCookie (cookie: any, name: string) {
     .replace(`${name}=`, '')
     .slice(2)
 
-  return encryption.verifier.unsign(cookieValue, name)
+  return encryption.verifier.unsign<any>(cookieValue, name)
 }
 
 /**

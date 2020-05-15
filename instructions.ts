@@ -40,12 +40,12 @@ const CONFIG_PARTIALS_BASE = './config/partials'
  */
 const PROVIDER_PROMPT_CHOICES = [
   {
-    name: 'lucid',
+    name: 'lucid' as const,
     message: 'Lucid',
     hint: ' (Uses Data Models)',
   },
   {
-    name: 'database',
+    name: 'database' as const,
     message: 'Database',
     hint: ' (Uses Database QueryBuilder)',
   },
@@ -56,7 +56,7 @@ const PROVIDER_PROMPT_CHOICES = [
  */
 const GUARD_PROMPT_CHOICES = [
   {
-    name: 'web',
+    name: 'web' as const,
     message: 'Web',
     hint: ' (Uses sessions for managing auth state)',
   },
@@ -212,7 +212,7 @@ function makeConfig (
 async function getProvider (sink: typeof sinkStatic) {
   return sink
     .getPrompt()
-    .choice<'lucid' | 'database'>('Select provider for finding users', PROVIDER_PROMPT_CHOICES)
+    .choice('Select provider for finding users', PROVIDER_PROMPT_CHOICES)
 }
 
 /**
@@ -221,7 +221,7 @@ async function getProvider (sink: typeof sinkStatic) {
 async function getGuard (sink: typeof sinkStatic) {
   return sink
     .getPrompt()
-    .choice<'web'>('Select authentication guard', GUARD_PROMPT_CHOICES)
+    .choice('Select authentication guard', GUARD_PROMPT_CHOICES)
 }
 
 /**

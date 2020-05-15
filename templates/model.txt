@@ -28,7 +28,7 @@ export default class {{ modelName }} extends BaseModel {
   @beforeSave()
   public static async hashPassword ({{ modelReference }}: {{ modelName }}) {
     if ({{ modelReference }}.$dirty.password) {
-      {{ modelReference }}.password = await Hash.hash({{ modelReference }}.password)
+      {{ modelReference }}.password = await Hash.make({{ modelReference }}.password)
     }
   }
 }
