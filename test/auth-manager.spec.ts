@@ -55,6 +55,14 @@ test.group('Auth Manager', (group) => {
     const manager = new AuthManager(container, {
       guard: 'session',
       list: {
+        api: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getLucidProviderConfig({ model: User }),
+        },
         session: {
           driver: 'session',
           provider: getLucidProviderConfig({ model: User }),
@@ -79,6 +87,14 @@ test.group('Auth Manager', (group) => {
     const manager = new AuthManager(container, {
       guard: 'session',
       list: {
+        api: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getLucidProviderConfig({ model: User }),
+        },
         session: {
           driver: 'session',
           provider: getLucidProviderConfig({ model: User }),
@@ -103,6 +119,14 @@ test.group('Auth Manager', (group) => {
     const manager = new AuthManager(container, {
       guard: 'session',
       list: {
+        api: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getLucidProviderConfig({ model: User }),
+        },
         session: {
           driver: 'session',
           provider: getLucidProviderConfig({ model: User }),
