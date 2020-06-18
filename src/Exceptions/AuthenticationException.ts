@@ -28,15 +28,6 @@ export class AuthenticationException extends Exception {
   }
 
   /**
-   * Missing session or unable to lookup user from session
-   */
-  public static invalidSession (guard: string) {
-    const error = new this('Invalid session', 'E_INVALID_AUTH_SESSION')
-    error.guard = guard
-    return error
-  }
-
-  /**
    * Send response as an array of errors
    */
   protected respondWithJson (ctx: HttpContextContract) {
@@ -73,6 +64,24 @@ export class AuthenticationException extends Exception {
         },
       ],
     })
+  }
+
+  /**
+   * Missing session or unable to lookup user from session
+   */
+  public static invalidSession (guard: string) {
+    const error = new this('Invalid session', 'E_INVALID_AUTH_SESSION')
+    error.guard = guard
+    return error
+  }
+
+  /**
+   * Missing/Invalid token or unable to lookup user from the token
+   */
+  public static invalidToken (guard: string) {
+    const error = new this('Invalid API Token', 'E_INVALID_API_TOKEN')
+    error.guard = guard
+    return error
   }
 
   /**

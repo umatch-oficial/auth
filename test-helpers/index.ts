@@ -28,14 +28,17 @@ import { SessionManager } from '@adonisjs/session/build/src/SessionManager'
 import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 import { BaseModel as LucidBaseModel } from '@adonisjs/lucid/build/src/Orm/BaseModel'
 
-import { LucidProvider } from '../src/Providers/Lucid'
-import { DatabaseProvider } from '../src/Providers/Database'
+import { OATGuard } from '../src/Guards/Oat'
 import { SessionGuard } from '../src/Guards/Session'
+import { LucidProvider } from '../src/UserProviders/Lucid'
+import { DatabaseProvider } from '../src/UserProviders/Database'
+import { TokenDatabaseProvider } from '../src/TokenProviders/Database'
 
 import {
   LucidProviderModel,
   LucidProviderConfig,
   LucidProviderContract,
+  TokenProviderContract,
   DatabaseProviderConfig,
   DatabaseProviderContract,
 } from '@ioc:Adonis/Addons/Auth'
@@ -90,6 +93,23 @@ async function createUsersTable (client: QueryClientContract) {
     table.string('remember_me_token').nullable()
     table.boolean('is_active').notNullable().defaultTo(1)
     table.string('country').notNullable().defaultTo('IN')
+  })
+}
+
+/**
+ * Create the api tokens tables
+ */
+async function createTokensTable (client: QueryClientContract) {
+  await client.schema.createTable('api_tokens', (table) => {
+    table.increments('id').notNullable().primary()
+    table.integer('user_id').notNullable().unsigned()
+    table.string('name').notNullable()
+    table.string('type').notNullable()
+    table.string('token').notNullable()
+    table.dateTime('expires_at').nullable()
+    table.string('ip_address').nullable()
+    table.string('device_name').nullable()
+    table.timestamps(true)
   })
 }
 
@@ -155,6 +175,8 @@ export async function getDb () {
 export async function setup (db: DatabaseContract) {
   await createUsersTable(db.connection())
   await createUsersTable(db.connection('secondary'))
+  await createTokensTable(db.connection())
+  await createTokensTable(db.connection('secondary'))
 
   HttpContext.getter('session', function session () {
     const sessionManager = new SessionManager(container, sessionConfig)
@@ -178,6 +200,9 @@ export async function cleanup (db: DatabaseContract) {
 export async function reset (db: DatabaseContract) {
   await db.connection().truncate('users')
   await db.connection('secondary').truncate('users')
+
+  await db.connection().truncate('api_tokens')
+  await db.connection('secondary').truncate('api_tokens')
 }
 
 /**
@@ -246,6 +271,37 @@ export function getSessionDriver (
   }
 
   return new SessionGuard('session', config, emitter, provider, ctx)
+}
+
+/**
+ * Returns an instance of the api tokens guard.
+ */
+export function getApiTokensGuard (
+  provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
+  providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
+  ctx: HttpContextContract,
+  tokensProvider: TokenProviderContract,
+) {
+  const config = {
+    driver: 'oat' as const,
+    tokenProvider: {
+      driver: 'database' as const,
+      table: 'api_tokens',
+    },
+    provider: providerConfig,
+  }
+
+  return new OATGuard('api', config, emitter, provider, ctx, tokensProvider)
+}
+
+/**
+ * Returns the database token provider
+ */
+export function getTokensDbProvider (db: DatabaseContract) {
+  return new TokenDatabaseProvider({
+    table: 'api_tokens',
+    driver: 'database',
+  }, db)
 }
 
 /**

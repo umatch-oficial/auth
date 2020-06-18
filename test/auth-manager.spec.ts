@@ -9,13 +9,13 @@
 
 import test from 'japa'
 import 'reflect-metadata'
-import { ProviderContract } from '@ioc:Adonis/Addons/Auth'
+import { UserProviderContract } from '@ioc:Adonis/Addons/Auth'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 
 import { Auth } from '../src/Auth'
 import { AuthManager } from '../src/AuthManager'
-import { LucidProvider } from '../src/Providers/Lucid'
-import { DatabaseProvider } from '../src/Providers/Database'
+import { LucidProvider } from '../src/UserProviders/Lucid'
+import { DatabaseProvider } from '../src/UserProviders/Database'
 import { SessionGuard } from '../src/Guards/Session'
 
 import {
@@ -121,7 +121,7 @@ test.group('Auth Manager', (group) => {
   })
 
   test('extend by adding custom provider', (assert) => {
-    class MongoDBProvider implements ProviderContract<any> {
+    class MongoDBProvider implements UserProviderContract<any> {
       constructor (config: any) {
         assert.deepEqual(config, { driver: 'mongodb' })
       }
@@ -155,7 +155,7 @@ test.group('Auth Manager', (group) => {
   })
 
   test('extend by adding custom guard', (assert) => {
-    class MongoDBProvider implements ProviderContract<any> {
+    class MongoDBProvider implements UserProviderContract<any> {
       constructor (config: any) {
         assert.deepEqual(config, { driver: 'mongodb' })
       }

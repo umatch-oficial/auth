@@ -9,7 +9,13 @@
 
 import test from 'japa'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
-import { getDatabaseProvider, getDb, cleanup, setup, reset } from '../test-helpers'
+import {
+  getDb,
+  setup,
+  reset,
+  cleanup,
+  getDatabaseProvider,
+} from '../../test-helpers'
 
 let db: DatabaseContract
 

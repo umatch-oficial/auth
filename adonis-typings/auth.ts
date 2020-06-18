@@ -8,6 +8,7 @@
 */
 
 declare module '@ioc:Adonis/Addons/Auth' {
+  import { DateTime } from 'luxon'
   import { IocContract } from '@adonisjs/fold'
   import { HashersList } from '@ioc:Adonis/Core/Hash'
   import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
@@ -35,7 +36,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 
   /*
   |--------------------------------------------------------------------------
-  | Providers
+  | User Providers
   |--------------------------------------------------------------------------
   */
 
@@ -54,7 +55,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
   /**
    * The interface that every provider must implement
    */
-  export interface ProviderContract<User extends any> {
+  export interface UserProviderContract<User extends any> {
     /**
      * Return an instance of the user wrapped inside the Provider user contract
      */
@@ -79,6 +80,85 @@ declare module '@ioc:Adonis/Addons/Auth' {
      * Update remember token
      */
     updateRememberMeToken (authenticatable: ProviderUserContract<User>): Promise<void>
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | Token Providers
+  |--------------------------------------------------------------------------
+  */
+
+  /**
+   * Shape of the token sent to/read from the tokens provider
+   */
+  export interface ProviderTokenContract {
+    /**
+     * Persisted token value. It is a sha256 hash
+     */
+    tokenHash: string,
+
+    /**
+     * Token name
+     */
+    name: string,
+
+    /**
+     * Token type
+     */
+    type: string,
+
+    /**
+     * UserId for which the token was saved
+     */
+    userId: string | number,
+
+    /**
+     * Expiry date
+     */
+    expiresAt?: DateTime,
+
+    /**
+     * All other token details
+     */
+    meta?: any
+  }
+
+  /**
+   * Token providers provides the API to create/fetch and delete tokens
+   * for a given user. Any token based implementation can use token
+   * providers, given they only store a single token.
+   */
+  export interface TokenProviderContract {
+    /**
+     * Saves the token to some persistance storage and returns an lookup
+     * id. We introduced the concept of lookup ids, since lookups by
+     * cryptographic tokens can have performance impacts on certain
+     * databases.
+     *
+     * Also note that the return lookup id is also prepended to the raw
+     * token, so that we can later extract the id for reads. The
+     * real message is to keep the lookup ids small.
+     */
+    write (token: ProviderTokenContract): Promise<string>
+
+    /**
+     * Find token using the lookup id or the token value
+     */
+    read (lookupId: string, token: string, type: string): Promise<ProviderTokenContract | null>
+
+    /**
+     * Delete token using the lookup id or the token value
+     */
+    destroy (lookupId: string, token: string, type: string): Promise<void>
+  }
+
+  /**
+   * Config for the database token provider
+   */
+  export type DatabaseTokenProviderConfig = {
+    driver: 'database',
+    table: string,
+    connection?: string,
   }
 
   /*
@@ -112,7 +192,9 @@ declare module '@ioc:Adonis/Addons/Auth' {
   /**
    * Lucid provider
    */
-  export interface LucidProviderContract<User extends LucidProviderModel> extends ProviderContract<InstanceType<User>> {
+  export interface LucidProviderContract<
+    User extends LucidProviderModel
+  > extends UserProviderContract<InstanceType<User>> {
     /**
      * Define a custom connection for all the provider queries
      */
@@ -121,12 +203,18 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * Before hooks
      */
-    before (event: 'findUser', callback: (query: ModelQueryBuilderContract<User>) => Promise<void>): this
+    before (
+      event: 'findUser',
+      callback: (query: ModelQueryBuilderContract<User>) => Promise<void>,
+    ): this
 
     /**
      * After hooks
      */
-    after (event: 'findUser', callback: (user: InstanceType<User>) => Promise<void>): this
+    after (
+      event: 'findUser',
+      callback: (user: InstanceType<User>) => Promise<void>,
+    ): this
   }
 
   /**
@@ -172,7 +260,9 @@ declare module '@ioc:Adonis/Addons/Auth' {
   /**
    * Database provider
    */
-  export interface DatabaseProviderContract<User extends DatabaseProviderRow> extends ProviderContract<User> {
+  export interface DatabaseProviderContract<
+    User extends DatabaseProviderRow
+  > extends UserProviderContract<User> {
     /**
      * Define a custom connection for all the provider queries
      */
@@ -181,12 +271,18 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * Before hooks
      */
-    before (event: 'findUser', callback: (query: DatabaseQueryBuilderContract) => Promise<void>): this
+    before (
+      event: 'findUser',
+      callback: (query: DatabaseQueryBuilderContract) => Promise<void>,
+    ): this
 
     /**
      * After hooks
      */
-    after (event: 'findUser', callback: (user: DatabaseProviderRow) => Promise<void>): this
+    after (
+      event: 'findUser',
+      callback: (user: DatabaseProviderRow) => Promise<void>,
+    ): this
   }
 
   /**
@@ -363,6 +459,153 @@ declare module '@ioc:Adonis/Addons/Auth' {
 
   /*
   |--------------------------------------------------------------------------
+  | OAT Token Guard
+  |--------------------------------------------------------------------------
+  |
+  | OAT stands for `Opaque Access Token`. The abbrevation is not a standard,
+  | however, the "Opaque Access Token" is a widely accepted term.
+  */
+
+  /**
+   * Opaque token is generated during the login call by the OpaqueTokensGuard
+   */
+  export interface OpaqueTokenContract<User extends any> {
+    /**
+     * Always a bearer token
+     */
+    type: 'bearer',
+
+    /**
+     * The user for which the token was generated
+     */
+    user: User,
+
+    /**
+     * Date/time when the token will be expired
+     */
+    expiresAt?: DateTime,
+
+    /**
+     * Time in seconds until the token is valid
+     */
+    expiresIn?: number,
+
+    /**
+     * Any meta-data attached with the token
+     */
+    meta: any,
+
+    /**
+     * Token name
+     */
+    name: string,
+
+    /**
+     * Token public value
+     */
+    token: string,
+
+    /**
+     * Token hash (persisted to the db as well)
+     */
+    tokenHash: string,
+
+    /**
+     * Serialize token
+     */
+    toJSON (): {
+      type: 'bearer',
+      token: string,
+      expires_at?: string,
+      expires_in?: number,
+    }
+  }
+
+  /**
+   * Login options
+   */
+  export type OATLoginOptions = {
+    name?: string,
+    expiresIn?: number | string,
+  } & { [key: string]: any }
+
+  /**
+   * Shape of data emitted by the login event
+   */
+  export type OATLoginEventData<Provider extends keyof ProvidersList> = {
+    name: string,
+    user: GetProviderRealUser<Provider>,
+    ctx: HttpContextContract,
+    token: OpaqueTokenContract<GetProviderRealUser<Provider>>,
+  }
+
+  /**
+   * Shape of the data emitted by the authenticate event
+   */
+  export type OATAuthenticateEventData<Provider extends keyof ProvidersList> = {
+    name: string,
+    user: GetProviderRealUser<Provider>,
+    ctx: HttpContextContract,
+    token: ProviderTokenContract,
+  }
+
+  /**
+   * Shape of the OAT guard
+   */
+  export interface OATGuardContract<
+    Provider extends keyof ProvidersList,
+    Name extends keyof GuardsList,
+  > extends GuardContract<Provider, Name> {
+    token?: ProviderTokenContract
+
+    /**
+     * Attempt to verify user credentials and perform login
+     */
+    attempt (
+      uid: string,
+      password: string,
+      options?: OATLoginOptions,
+    ): Promise<OpaqueTokenContract<GetProviderRealUser<Provider>>>
+
+    /**
+     * Login a user without any verification
+     */
+    login (
+      user: GetProviderRealUser<Provider>,
+      options?: OATLoginOptions,
+    ): Promise<OpaqueTokenContract<GetProviderRealUser<Provider>>>
+
+    /**
+     * Login a user using their id
+     */
+    loginViaId (
+      id: string | number,
+      options?: OATLoginOptions,
+    ): Promise<OpaqueTokenContract<GetProviderRealUser<Provider>>>
+  }
+
+  /**
+   * Shape of OAT guard config.
+   */
+  export type OATGuardConfig<Provider extends keyof ProvidersList> = {
+    /**
+     * Driver name is always constant
+     */
+    driver: 'oat',
+
+    /**
+     * Provider for managing tokens
+     */
+    tokenProvider: DatabaseTokenProviderConfig,
+
+    /**
+     * User provider
+     */
+    provider: ProvidersList[Provider]['config']
+  }
+
+  /*
+  |--------------------------------------------------------------------------
   | Auth User Land List
   |--------------------------------------------------------------------------
   */
@@ -444,7 +687,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
   /**
    * Shape of the callback accepted to add new user providers
    */
-  export type ExtendProviderCallback = (container: IocContract, config: any) => ProviderContract<any>
+  export type ExtendProviderCallback = (container: IocContract, config: any) => UserProviderContract<any>
 
   /**
    * Shape of the callback accepted to add new guards
@@ -453,7 +696,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
     container: IocContract,
     mapping: string,
     config: any,
-    provider: ProviderContract<any>,
+    provider: UserProviderContract<any>,
     ctx: HttpContextContract,
   ) => GuardContract<keyof ProvidersList, keyof GuardsList>
 

@@ -13,8 +13,9 @@ import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 
 import { AuthManager } from '../src/AuthManager'
 import { SessionGuard } from '../src/Guards/Session'
-import { LucidProvider } from '../src/Providers/Lucid'
-import { DatabaseProvider } from '../src/Providers/Database'
+import { LucidProvider } from '../src/UserProviders/Lucid'
+import { DatabaseProvider } from '../src/UserProviders/Database'
+import { TokenDatabaseProvider } from '../src/TokenProviders/Database'
 
 import {
   setup,
@@ -55,6 +56,14 @@ test.group('Auth', (group) => {
     const manager = new AuthManager(container, {
       guard: 'session',
       list: {
+        api: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getLucidProviderConfig({ model: User }),
+        },
         session: {
           driver: 'session',
           provider: getLucidProviderConfig({ model: User }),
@@ -210,6 +219,14 @@ test.group('Auth', (group) => {
           driver: 'session',
           provider: getLucidProviderConfig({ model: User }),
         },
+        api: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getLucidProviderConfig({ model: User }),
+        },
         sessionDb: {
           driver: 'session',
           provider: getDatabaseProviderConfig(),
@@ -233,6 +250,14 @@ test.group('Auth', (group) => {
       list: {
         session: {
           driver: 'session',
+          provider: getLucidProviderConfig({ model: User }),
+        },
+        api: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
           provider: getLucidProviderConfig({ model: User }),
         },
         sessionDb: {
@@ -260,5 +285,38 @@ test.group('Auth', (group) => {
         },
       },
     })
+  })
+
+  test('make oat guard', (assert) => {
+    const User = getUserModel(BaseModel)
+
+    const manager = new AuthManager(container, {
+      guard: 'api',
+      list: {
+        api: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getLucidProviderConfig({ model: User }),
+        },
+        session: {
+          driver: 'session',
+          provider: getLucidProviderConfig({ model: User }),
+        },
+        sessionDb: {
+          driver: 'session',
+          provider: getDatabaseProviderConfig(),
+        },
+      },
+    })
+
+    const ctx = getCtx()
+    const auth = manager.getAuthForRequest(ctx).use('api')
+
+    assert.equal(auth.name, 'api')
+    assert.instanceOf(auth.provider, LucidProvider)
+    assert.instanceOf(auth.tokenProvider, TokenDatabaseProvider)
   })
 })

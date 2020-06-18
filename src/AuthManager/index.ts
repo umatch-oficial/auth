@@ -13,11 +13,12 @@ import { Exception, ManagerConfigValidator } from '@poppinss/utils'
 import {
   AuthConfig,
   GuardsList,
-  ProviderContract,
+  OATGuardConfig,
   SessionGuardConfig,
   LucidProviderConfig,
   AuthManagerContract,
   ExtendGuardCallback,
+  UserProviderContract,
   DatabaseProviderConfig,
   ExtendProviderCallback,
 } from '@ioc:Adonis/Addons/Auth'
@@ -67,7 +68,7 @@ export class AuthManager implements AuthManagerContract {
    * Lazily makes an instance of the lucid provider
    */
   private makeLucidProvider (config: LucidProviderConfig<any>) {
-    return new (require('../Providers/Lucid').LucidProvider)(this.container, config)
+    return new (require('../UserProviders/Lucid').LucidProvider)(this.container, config)
   }
 
   /**
@@ -75,7 +76,7 @@ export class AuthManager implements AuthManagerContract {
    */
   private makeDatabaseProvider (config: DatabaseProviderConfig) {
     const Database = this.container.use('Adonis/Lucid/Database')
-    return new (require('../Providers/Database').DatabaseProvider)(this.container, config, Database)
+    return new (require('../UserProviders/Database').DatabaseProvider)(this.container, config, Database)
   }
 
   /**
@@ -91,9 +92,61 @@ export class AuthManager implements AuthManagerContract {
   }
 
   /**
+   * Lazily makes an instance of the token database provider
+   */
+  private makeTokenDatabaseProvider (config: DatabaseProviderConfig) {
+    const Database = this.container.use('Adonis/Lucid/Database')
+    return new (require('../TokenProviders/Database').TokenDatabaseProvider)(config, Database)
+  }
+
+  /**
+   * Returns an instance of the session guard
+   */
+  private makeSessionGuard (
+    mapping: string,
+    config: SessionGuardConfig<any>,
+    provider: UserProviderContract<any>,
+    ctx: HttpContextContract,
+  ) {
+    const { SessionGuard } = require('../Guards/Session')
+    return new SessionGuard(mapping, config, this.getEmitter(), provider, ctx)
+  }
+
+  /**
+   * Returns an instance of the session guard
+   */
+  private makeOatGuard (
+    mapping: string,
+    config: OATGuardConfig<any>,
+    provider: UserProviderContract<any>,
+    ctx: HttpContextContract,
+  ) {
+    const { OATGuard } = require('../Guards/Oat')
+    const tokenProvider = this.makeTokenProviderInstance(config.tokenProvider)
+    return new OATGuard(mapping, config, this.getEmitter(), provider, ctx, tokenProvider)
+  }
+
+  /**
+   * Returns an instance of the extended guard
+   */
+  private makeExtendedGuard (
+    mapping: string,
+    config: any,
+    provider: UserProviderContract<any>,
+    ctx: HttpContextContract,
+  ) {
+    const guardCallback = this.extendedGuards.get(config.driver)
+    if (!guardCallback) {
+      throw new Exception(`Invalid guard driver "${config.driver}" property`)
+    }
+
+    return guardCallback(this.container, mapping, config, provider, ctx)
+  }
+
+  /**
    * Makes instance of a provider based upon the driver value
    */
-  private makeProviderInstance (providerConfig: any) {
+  public makeUserProviderInstance (providerConfig: any) {
     if (!providerConfig || !providerConfig.driver) {
       throw new Exception('Invalid auth config, missing "provider" or "provider.driver" property')
     }
@@ -109,43 +162,27 @@ export class AuthManager implements AuthManagerContract {
   }
 
   /**
-   * Returns an instance of the session guard
+   * Makes instance of a provider based upon the driver value
    */
-  private makeSessionGuard (
-    mapping: string,
-    config: SessionGuardConfig<any>,
-    provider: ProviderContract<any>,
-    ctx: HttpContextContract,
-  ) {
-    const { SessionGuard } = require('../Guards/Session')
-    return new SessionGuard(mapping, config, this.getEmitter(), provider, ctx)
-  }
-
-  /**
-   * Returns an instance of the extended guard
-   */
-  private makeExtendedGuard (
-    mapping: string,
-    config: any,
-    provider: ProviderContract<any>,
-    ctx: HttpContextContract,
-  ) {
-    const guardCallback = this.extendedGuards.get(config.driver)
-    if (!guardCallback) {
-      throw new Exception(`Invalid guard driver "${config.driver}" property`)
+  public makeTokenProviderInstance (providerConfig: any) {
+    if (!providerConfig || !providerConfig.driver) {
+      throw new Exception('Invalid auth config, missing "tokenProvider" or "tokenProvider.driver" property')
     }
 
-    return guardCallback(this.container, mapping, config, provider, ctx)
+    switch (providerConfig.driver) {
+      case 'database':
+        return this.makeTokenDatabaseProvider(providerConfig)
+    }
   }
 
   /**
    * Makes guard instance for the defined driver inside the
    * mapping config.
    */
-  private makeGuardInstance (
+  public makeGuardInstance (
     mapping: string,
     mappingConfig: any,
-    provider: ProviderContract<any>,
+    provider: UserProviderContract<any>,
     ctx: HttpContextContract,
   ) {
     if (!mappingConfig || !mappingConfig.driver) {
@@ -155,6 +192,8 @@ export class AuthManager implements AuthManagerContract {
     switch (mappingConfig.driver) {
       case 'session':
         return this.makeSessionGuard(mapping, mappingConfig, provider, ctx)
+      case 'oat':
+        return this.makeOatGuard(mapping, mappingConfig, provider, ctx)
       default:
         return this.makeExtendedGuard(mapping, mappingConfig, provider, ctx)
     }
@@ -165,7 +204,7 @@ export class AuthManager implements AuthManagerContract {
    */
   public makeMapping (ctx: HttpContextContract, mapping: keyof GuardsList) {
     const mappingConfig = this.config.list[mapping]
-    const provider = this.makeProviderInstance(mappingConfig.provider)
+    const provider = this.makeUserProviderInstance(mappingConfig.provider)
     return this.makeGuardInstance(mapping, mappingConfig, provider, ctx)
   }
 

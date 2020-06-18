@@ -28,7 +28,7 @@ import {
   getSessionDriver,
   getLucidProvider,
   getLucidProviderConfig,
-} from '../test-helpers'
+} from '../../test-helpers'
 
 let db: DatabaseContract
 let BaseModel: ReturnType<typeof getModel>
@@ -139,9 +139,9 @@ test.group('Session Driver | attempt', (group) => {
       ctx.response.finish()
     })
 
-    const { headers } = await supertest(server).get('/')
-    const sessionCookie = unsignCookie(headers['set-cookie'][1], 'adonis-session')
-    const sessionValue = decryptCookie(headers['set-cookie'][2], sessionCookie)
+    const { header } = await supertest(server).get('/')
+    const sessionCookie = unsignCookie(header['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(header['set-cookie'][2], sessionCookie)
     assert.deepEqual(sessionValue, { auth_session: 1 })
   })
 
@@ -171,10 +171,10 @@ test.group('Session Driver | attempt', (group) => {
       ctx.response.finish()
     })
 
-    const { headers } = await supertest(server).get('/')
-    const rememberMeCookie = decryptCookie(headers['set-cookie'][0], 'remember_session')
-    const sessionCookie = unsignCookie(headers['set-cookie'][1], 'adonis-session')
-    const sessionValue = decryptCookie(headers['set-cookie'][2], sessionCookie)
+    const { header } = await supertest(server).get('/')
+    const rememberMeCookie = decryptCookie(header['set-cookie'][0], 'remember_session')
+    const sessionCookie = unsignCookie(header['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(header['set-cookie'][2], sessionCookie)
 
     await user.refresh()
 
@@ -199,10 +199,10 @@ test.group('Session Driver | attempt', (group) => {
     })
 
     const rememberMeToken = encryptCookie('1234', 'remember_session')
-    const { headers } = await supertest(server).get('/').set('cookie', `remember_session=${rememberMeToken}`)
-    const sessionCookie = unsignCookie(headers['set-cookie'][1], 'adonis-session')
-    const sessionValue = decryptCookie(headers['set-cookie'][2], sessionCookie)
-    const [key, maxAge, expiry] = headers['set-cookie'][0].split(';')
+    const { header } = await supertest(server).get('/').set('cookie', `remember_session=${rememberMeToken}`)
+    const sessionCookie = unsignCookie(header['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(header['set-cookie'][2], sessionCookie)
+    const [key, maxAge, expiry] = header['set-cookie'][0].split(';')
 
     assert.equal(expiry.trim(), 'Expires=Thu, 01 Jan 1970 00:00:00 GMT')
     assert.equal(maxAge.trim(), 'Max-Age=-1')
@@ -262,8 +262,8 @@ test.group('Session Driver | authenticate', (group) => {
       }
     })
 
-    const { headers } = await supertest(server).get('/login')
-    const cookies = cookieParser(headers['set-cookie'])
+    const { header } = await supertest(server).get('/login')
+    const cookies = cookieParser(header['set-cookie'])
     const reqCookies = cookies
       .filter((cookie) => cookie.maxAge > 0)
       .map((cookie) => `${cookie.name}=${cookie.value};`)
@@ -312,8 +312,8 @@ test.group('Session Driver | authenticate', (group) => {
       }
     })
 
-    const { headers } = await supertest(server).get('/login')
-    const cookies = cookieParser(headers['set-cookie'])
+    const { header } = await supertest(server).get('/login')
+    const cookies = cookieParser(header['set-cookie'])
 
     const rememberMeCookie = `${cookies[0].name}=${cookies[0].value};`
     const { body } = await supertest(server).get('/').set('cookie', rememberMeCookie)
@@ -399,16 +399,16 @@ test.group('Session Driver | logout', (group) => {
       }
     })
 
-    const { headers } = await supertest(server).get('/login')
+    const { header } = await supertest(server).get('/login')
     await user.refresh()
 
     const initialToken = user.rememberMeToken
-    const cookies = cookieParser(headers['set-cookie'])
+    const cookies = cookieParser(header['set-cookie'])
     const reqCookies = cookies
       .filter((cookie) => cookie.maxAge > 0)
       .map((cookie) => `${cookie.name}=${cookie.value};`)
 
-    const { body, headers: authHeaders } = await supertest(server).get('/').set('cookie', reqCookies)
+    const { body, header: authHeaders } = await supertest(server).get('/').set('cookie', reqCookies)
 
     const rememberMeCookie = decryptCookie(authHeaders['set-cookie'][0], 'remember_session')
     const sessionCookie = unsignCookie(authHeaders['set-cookie'][1], 'adonis-session')
@@ -451,16 +451,16 @@ test.group('Session Driver | logout', (group) => {
       }
     })
 
-    const { headers } = await supertest(server).get('/login')
+    const { header } = await supertest(server).get('/login')
     await user.refresh()
 
     const initialToken = user.rememberMeToken
-    const cookies = cookieParser(headers['set-cookie'])
+    const cookies = cookieParser(header['set-cookie'])
     const reqCookies = cookies
       .filter((cookie) => cookie.maxAge > 0)
       .map((cookie) => `${cookie.name}=${cookie.value};`)
 
-    const { body, headers: authHeaders } = await supertest(server).get('/').set('cookie', reqCookies)
+    const { body, header: authHeaders } = await supertest(server).get('/').set('cookie', reqCookies)
 
     const rememberMeCookie = decryptCookie(authHeaders['set-cookie'][0], 'remember_session')
     const sessionCookie = unsignCookie(authHeaders['set-cookie'][1], 'adonis-session')

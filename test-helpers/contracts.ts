@@ -17,6 +17,10 @@ declare module '@ioc:Adonis/Addons/Auth' {
       implementation: SessionGuardContract<'lucid', 'session'>,
       config: SessionGuardConfig<'lucid'>,
     },
+    api: {
+      implementation: OATGuardContract<'lucid', 'session'>,
+      config: OATGuardConfig<'lucid'>,
+    },
     sessionDb: {
       implementation: SessionGuardContract<'database', 'sessionDb'>,
       config: SessionGuardConfig<'database'>,

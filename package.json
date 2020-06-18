@@ -55,7 +55,9 @@
     "@adonisjs/sink": "^3.0.2",
     "@phc/bcrypt": "^1.0.2",
     "@poppinss/dev-utils": "^1.0.6",
-    "@types/node": "^14.0.11",
+    "@types/ms": "^0.7.31",
+    "@types/node": "^14.0.13",
+    "@types/supertest": "^2.0.9",
     "commitizen": "^4.1.2",
     "copyfiles": "^2.3.0",
     "cz-conventional-changelog": "^3.2.0",
@@ -66,13 +68,13 @@
     "husky": "^4.2.5",
     "japa": "^3.1.1",
     "mrm": "^2.3.1",
-    "np": "^5.2.1",
+    "np": "^6.2.4",
     "pino-pretty": "^4.0.0",
     "reflect-metadata": "^0.1.13",
     "set-cookie-parser": "^2.4.6",
     "sqlite3": "^4.2.0",
     "supertest": "^4.0.2",
-    "ts-essentials": "^6.0.5",
+    "ts-essentials": "^6.0.7",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.5"
   },
@@ -101,8 +103,10 @@
   },
   "dependencies": {
     "@poppinss/hooks": "^1.0.5",
-    "@poppinss/utils": "^2.2.6",
+    "@poppinss/utils": "^2.2.7",
     "array-to-sentence": "^2.0.0",
+    "hashids": "^2.2.1",
+    "luxon": "^1.24.1",
     "pluralize": "^8.0.0"
   },
   "publishConfig": {

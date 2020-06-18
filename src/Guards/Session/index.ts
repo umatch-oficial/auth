@@ -7,12 +7,12 @@
 * file that was distributed with this source code.
 */
 
+import { randomString } from '@poppinss/utils'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
-import { randomString, Exception } from '@poppinss/utils'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
 import {
-  ProviderContract,
+  UserProviderContract,
   SessionGuardConfig,
   SessionGuardContract,
   ProviderUserContract,
@@ -20,55 +20,28 @@ import {
   SessionAuthenticateEventData,
 } from '@ioc:Adonis/Addons/Auth'
 
+import { BaseGuard } from '../Base'
 import { AuthenticationException } from '../../Exceptions/AuthenticationException'
-import { InvalidCredentialsException } from '../../Exceptions/InvalidCredentialsException'
 
 /**
  * Session guard enables user login using sessions. Also it allows for
  * setting remember me tokens for life long login
  */
-export class SessionGuard implements SessionGuardContract<any, any> {
+export class SessionGuard extends BaseGuard implements SessionGuardContract<any, any> {
   constructor (
     public name: string,
     private config: SessionGuardConfig<any>,
     private emitter: EmitterContract,
-    public provider: ProviderContract<any>,
+    public provider: UserProviderContract<any>,
     private ctx: HttpContextContract,
   ) {
+    super(name, provider)
   }
 
   /**
    * Number of years for the remember me token expiry
    */
   private rememberMeTokenExpiry = '5y'
-
-  /**
-   * Whether or not the authentication has been attempted
-   * for the current request
-   */
-  public authenticationAttempted = false
-
-  /**
-   * Find if the user has been logged out in the current request
-   */
-  public isLoggedOut = false
-
-  /**
-   * A boolean to know if user is retrieved by authenticating
-   * the current request or not
-   */
-  public isAuthenticated = false
-
-  /**
-   * A boolean to know if user is loggedin via remember me token
-   * or not.
-   */
-  public viaRemember = false
-
-  /**
-   * Logged in or authenticated user
-   */
-  public user?: any
 
   /**
    * The name of the session key name
@@ -82,21 +55,6 @@ export class SessionGuard implements SessionGuardContract<any, any> {
    */
   public get rememberMeKeyName () {
     return `remember_${this.name}`
-  }
-
-  /**
-   * Accessor to know if user is logged in
-   */
-  public get isLoggedIn () {
-    return !!this.user
-  }
-
-  /**
-   * Accessor to know if user is a guest. It is always opposite
-   * of [[isLoggedIn]]
-   */
-  public get isGuest () {
-    return !this.isLoggedIn
   }
 
   /**
@@ -138,26 +96,6 @@ export class SessionGuard implements SessionGuardContract<any, any> {
   }
 
   /**
-   * Marks the user as logged out
-   */
-  private markUserAsLoggedOut () {
-    this.isLoggedOut = true
-    this.isAuthenticated = false
-    this.viaRemember = false
-    this.user = null
-  }
-
-  /**
-   * Marks user as logged-in
-   */
-  private markUserAsLoggedIn (user: any, authenticated?: boolean, viaRemember?: boolean) {
-    this.user = user
-    this.isLoggedOut = false
-    authenticated && (this.isAuthenticated = true)
-    viaRemember && (this.viaRemember = true)
-  }
-
-  /**
    * Clears user session and remember me cookie
    */
   private clearUserFromStorage () {
@@ -196,31 +134,6 @@ export class SessionGuard implements SessionGuardContract<any, any> {
       ctx: this.ctx,
       user,
       viaRemember,
-    }
-  }
-
-  /**
-   * Lookup user using UID
-   */
-  private async lookupUsingUid (uid: string): Promise<ProviderUserContract<any>> {
-    const providerUser = await this.provider.findByUid(uid)
-    if (!providerUser.user) {
-      throw InvalidCredentialsException.invalidUid(this.name)
-    }
-
-    return providerUser
-  }
-
-  /**
-   * Verify user password
-   */
-  private async verifyPassword (providerUser: ProviderUserContract<any>, password: string): Promise<void> {
-    /**
-     * Verify password or raise exception
-     */
-    const verified = await providerUser.verifyPassword(password)
-    if (!verified) {
-      throw InvalidCredentialsException.invalidPassword(this.name)
     }
   }
 
@@ -283,19 +196,6 @@ export class SessionGuard implements SessionGuardContract<any, any> {
   }
 
   /**
-   * Verifies user credentials
-   */
-  public async verifyCredentials (uid: string, password: string): Promise<any> {
-    if (!uid || !password) {
-      throw InvalidCredentialsException.invalidUid(this.name)
-    }
-
-    const providerUser = await this.lookupUsingUid(uid)
-    await this.verifyPassword(providerUser, password)
-    return providerUser.user
-  }
-
-  /**
    * Verify user credentials and perform login
    */
   public async attempt (uid: string, password: string, remember?: boolean): Promise<any> {
@@ -308,11 +208,7 @@ export class SessionGuard implements SessionGuardContract<any, any> {
    * Login user using their id
    */
   public async loginViaId (id: string | number, remember?: boolean): Promise<void> {
-    const providerUser = await this.provider.findById(id)
-    if (!providerUser.user) {
-      throw InvalidCredentialsException.invalidUid(this.name)
-    }
-
+    const providerUser = await this.findById(id)
     await this.login(providerUser.user, remember)
     return providerUser.user
   }
@@ -326,15 +222,13 @@ export class SessionGuard implements SessionGuardContract<any, any> {
      * them to instantiate and return an instance of authenticatable, so
      * we create one manually.
      */
-    const providerUser = this.provider.getUserFor(user)
+    const providerUser = this.getUserForLogin(user, this.config.provider.identifierKey)
 
     /**
-     * Ensure id exists on the user
+     * getUserForLogin raises exception when id is missing, so we can
+     * safely assume it is defined
      */
-    const id = providerUser.getId()
-    if (!id) {
-      throw new Exception(`Cannot login user. Value of "${this.config.provider.identifierKey}" is not defined`)
-    }
+    const id = providerUser.getId()!
 
     /**
      * Set session
