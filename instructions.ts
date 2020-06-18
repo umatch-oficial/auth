@@ -208,7 +208,7 @@ function makeContract (
   template.overwrite = true
 
   const partials: any = {
-    provider: getStub(CONTRACTS_PARTIALS_BASE, `user-provider-${state.provider}.txt`)
+    provider: getStub(CONTRACTS_PARTIALS_BASE, `user-provider-${state.provider}.txt`),
   }
 
   state.guards.forEach((guard) => {
@@ -235,7 +235,7 @@ function makeConfig (
   template.overwrite = true
 
   const partials: any = {
-    provider: getStub(CONFIG_PARTIALS_BASE, `user-provider-${state.provider}.txt`)
+    provider: getStub(CONFIG_PARTIALS_BASE, `user-provider-${state.provider}.txt`),
   }
 
   state.guards.forEach((guard) => {
@@ -313,7 +313,7 @@ export default async function instructions (
     hasGuard: {
       web: false,
       api: false,
-    }
+    },
   }
 
   state.provider = await getProvider(sink)
