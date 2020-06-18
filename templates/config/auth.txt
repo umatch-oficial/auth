@@ -20,9 +20,14 @@ import { AuthConfig } from '@ioc:Adonis/Addons/Auth'
 |
 */
 const authConfig: AuthConfig = {
-  guard: 'web',
+  guard: '{{ guards.0 }}',
   list: {
-{{> guard}}
+{{#hasGuard.web}}
+{{> web_guard}}
+{{/hasGuard.web}}
+{{#hasGuard.api}}
+{{> api_guard}}
+{{/hasGuard.api}}
   },
 }
 

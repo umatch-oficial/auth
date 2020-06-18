@@ -17,13 +17,24 @@ type InstructionsState = {
   modelName?: string,
   modelReference?: string,
   modelNamespace?: string,
-  tableName: string,
-  schemaName: string,
+
+  usersTableName: string,
+  usersSchemaName: string,
+
+  tokensTableName: string,
+  tokensSchemaName: string,
+
   provider: 'lucid' | 'database',
-  guard: 'web',
+  guards: ('web' | 'api')[],
+
+  hasGuard: {
+    web: boolean,
+    api: boolean,
+  },
 }
 
-const MIGRATION_TIME_PREFIX = '1587988332388'
+const USER_MIGRATION_TIME_PREFIX = '1587988332388'
+const TOKENS_MIGRATION_TIME_PREFIX = '1592489784670'
 
 /**
  * Base path to contract stub partials
@@ -60,6 +71,11 @@ const GUARD_PROMPT_CHOICES = [
     message: 'Web',
     hint: ' (Uses sessions for managing auth state)',
   },
+  {
+    name: 'api' as const,
+    message: 'API tokens',
+    hint: ' (Uses database backed opaque tokens)',
+  },
 ]
 
 /**
@@ -95,16 +111,38 @@ function makeModel (
 /**
  * Create the migration file
  */
-function makeMigration (
+function makeUsersMigration (
   projectRoot: string,
   app: ApplicationContract,
   sink: typeof sinkStatic,
   state: InstructionsState,
 ) {
   const migrationsDirectory = app.directoriesMap.get('migrations') || 'database'
-  const migrationPath = join(migrationsDirectory, `${MIGRATION_TIME_PREFIX}_${state.tableName}.ts`)
+  const migrationPath = join(migrationsDirectory, `${USER_MIGRATION_TIME_PREFIX}_${state.usersTableName}.ts`)
 
   const template = new sink.files.MustacheFile(projectRoot, migrationPath, getStub('migrations/auth.txt'))
+  if (template.exists()) {
+    sink.logger.skip(`${migrationPath} file already exists`)
+    return
+  }
+
+  template.apply(state).commit()
+  sink.logger.create(migrationPath)
+}
+
+/**
+ * Create the migration file
+ */
+function makeTokensMigration (
+  projectRoot: string,
+  app: ApplicationContract,
+  sink: typeof sinkStatic,
+  state: InstructionsState,
+) {
+  const migrationsDirectory = app.directoriesMap.get('migrations') || 'database'
+  const migrationPath = join(migrationsDirectory, `${TOKENS_MIGRATION_TIME_PREFIX}_${state.tokensTableName}.ts`)
+
+  const template = new sink.files.MustacheFile(projectRoot, migrationPath, getStub('migrations/api_tokens.txt'))
   if (template.exists()) {
     sink.logger.skip(`${migrationPath} file already exists`)
     return
@@ -169,14 +207,15 @@ function makeContract (
   const template = new sink.files.MustacheFile(projectRoot, contractPath, getStub('contract/auth.txt'))
   template.overwrite = true
 
-  template
-    .apply(state)
-    .partials({
-      guard: getStub(CONTRACTS_PARTIALS_BASE, `${state.guard}-guard.txt`),
-      provider: getStub(CONTRACTS_PARTIALS_BASE, `user-provider-${state.provider}.txt`),
-    })
-    .commit()
+  const partials: any = {
+    provider: getStub(CONTRACTS_PARTIALS_BASE, `user-provider-${state.provider}.txt`)
+  }
 
+  state.guards.forEach((guard) => {
+    partials[`${guard}_guard`] = getStub(CONTRACTS_PARTIALS_BASE, `${guard}-guard.txt`)
+  })
+
+  template.apply(state).partials(partials).commit()
   sink.logger.create(contractPath)
 }
 
@@ -195,14 +234,15 @@ function makeConfig (
   const template = new sink.files.MustacheFile(projectRoot, configPath, getStub('config/auth.txt'))
   template.overwrite = true
 
-  template
-    .apply(state)
-    .partials({
-      guard: getStub(CONFIG_PARTIALS_BASE, `${state.guard}-guard.txt`),
-      provider: getStub(CONFIG_PARTIALS_BASE, `user-provider-${state.provider}.txt`),
-    })
-    .commit()
+  const partials: any = {
+    provider: getStub(CONFIG_PARTIALS_BASE, `user-provider-${state.provider}.txt`)
+  }
 
+  state.guards.forEach((guard) => {
+    partials[`${guard}_guard`] = getStub(CONFIG_PARTIALS_BASE, `${guard}-guard.txt`)
+  })
+
+  template.apply(state).partials(partials).commit()
   sink.logger.create(configPath)
 }
 
@@ -221,7 +261,7 @@ async function getProvider (sink: typeof sinkStatic) {
 async function getGuard (sink: typeof sinkStatic) {
   return sink
     .getPrompt()
-    .choice('Select authentication guard', GUARD_PROMPT_CHOICES)
+    .multiple('Select authentication guard', GUARD_PROMPT_CHOICES)
 }
 
 /**
@@ -249,7 +289,7 @@ async function getTableName (sink: typeof sinkStatic): Promise<string> {
 /**
  * Prompts user for the table name
  */
-async function getMigrationConsent (sink: typeof sinkStatic, tableName: string): Promise<string> {
+async function getMigrationConsent (sink: typeof sinkStatic, tableName: string): Promise<boolean> {
   return sink
     .getPrompt()
     .confirm(`Create migration for the ${sink.colors.underline(tableName)} table?`)
@@ -264,14 +304,25 @@ export default async function instructions (
   sink: typeof sinkStatic,
 ) {
   const state: InstructionsState = {
-    tableName: '',
-    schemaName: '',
+    usersTableName: '',
+    tokensTableName: 'api_tokens',
+    tokensSchemaName: 'ApiTokens',
+    usersSchemaName: '',
     provider: 'lucid',
-    guard: 'web',
+    guards: [],
+    hasGuard: {
+      web: false,
+      api: false,
+    }
   }
 
   state.provider = await getProvider(sink)
-  state.guard = await getGuard(sink)
+  state.guards = await getGuard(sink)
+
+  /**
+   * Need booleans for mustache templates
+   */
+  state.guards.forEach((guard) => state.hasGuard[guard] = true)
 
   /**
    * Make model when provider is lucid otherwise prompt for the database
@@ -280,20 +331,28 @@ export default async function instructions (
   if (state.provider === 'lucid') {
     const modelName = await getModelName(sink)
     state.modelName = modelName.replace(/(\.ts|\.js)$/, '')
-    state.tableName = pluralize(lodash.snakeCase(state.modelName))
+    state.usersTableName = pluralize(lodash.snakeCase(state.modelName))
     state.modelReference = lodash.camelCase(state.modelName)
     state.modelNamespace = `${app.namespacesMap.get('models') || 'App/Models'}/${state.modelName}`
   } else {
-    state.tableName = await getTableName(sink)
+    state.usersTableName = await getTableName(sink)
   }
 
-  const migrationConstent = await getMigrationConsent(sink, state.tableName)
+  const usersMigrationConsent = await getMigrationConsent(sink, state.usersTableName)
+  let tokensMigrationConsent = false
+
+  /**
+   * Only ask for the consent when using the api guard
+   */
+  if (state.hasGuard.api) {
+    tokensMigrationConsent = await getMigrationConsent(sink, state.tokensTableName)
+  }
 
   /**
    * Pascal case
    */
-  const camelCaseSchemaName = lodash.camelCase(`${state.tableName}_schema`)
-  state.schemaName = `${camelCaseSchemaName.charAt(0).toUpperCase()}${camelCaseSchemaName.slice(1)}`
+  const camelCaseSchemaName = lodash.camelCase(`${state.usersTableName}_schema`)
+  state.usersSchemaName = `${camelCaseSchemaName.charAt(0).toUpperCase()}${camelCaseSchemaName.slice(1)}`
 
   /**
    * Make model when prompted for it
@@ -303,10 +362,17 @@ export default async function instructions (
   }
 
   /**
-   * Make migration file
+   * Make users migration file
    */
-  if (migrationConstent) {
-    makeMigration(projectRoot, app, sink, state)
+  if (usersMigrationConsent) {
+    makeUsersMigration(projectRoot, app, sink, state)
+  }
+
+  /**
+   * Make tokens migration file
+   */
+  if (tokensMigrationConsent) {
+    makeTokensMigration(projectRoot, app, sink, state)
   }
 
   /**
@@ -324,3 +390,10 @@ export default async function instructions (
    */
   makeMiddleware(projectRoot, app, sink, state)
 }
+
+import { Application } from '@adonisjs/application/build/standalone'
+instructions(
+  join(__dirname, 'sample'),
+  new Application(join(__dirname, 'sample'), {} as any, {} as any, {} as any),
+  sinkStatic,
+).catch(console.log)
