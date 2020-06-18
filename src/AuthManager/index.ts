@@ -172,6 +172,8 @@ export class AuthManager implements AuthManagerContract {
     switch (providerConfig.driver) {
       case 'database':
         return this.makeTokenDatabaseProvider(providerConfig)
+      default:
+        throw new Exception(`Invalid token provider "${providerConfig.driver}"`)
     }
   }
 
