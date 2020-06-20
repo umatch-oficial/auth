@@ -13,6 +13,19 @@ export const config: AuthConfig = {
         uids: ['email'],
       },
     },
+    api: {
+      driver: 'oat',
+      tokenProvider: {
+        driver: 'database',
+        table: 'api_tokens',
+      },
+      provider: {
+        driver: 'lucid',
+        model: User,
+        identifierKey: 'id',
+        uids: ['email'],
+      },
+    },
     sessionDb: {
       driver: 'session',
       provider: {
