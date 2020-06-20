@@ -43,7 +43,7 @@
     "url": "https://github.com/adonisjs/adonis-auth/issues"
   },
   "devDependencies": {
-    "@adonisjs/core": "^5.0.0-preview-rc-1.6",
+    "@adonisjs/core": "^5.0.0-preview-rc-1.7",
     "@adonisjs/encryption": "^2.0.4",
     "@adonisjs/events": "^2.0.3",
     "@adonisjs/fold": "^6.3.5",
@@ -51,7 +51,7 @@
     "@adonisjs/lucid": "^8.1.1",
     "@adonisjs/mrm-preset": "^2.3.0",
     "@adonisjs/profiler": "^3.0.4",
-    "@adonisjs/session": "^3.0.3",
+    "@adonisjs/session": "^3.0.4",
     "@adonisjs/sink": "^3.0.2",
     "@phc/bcrypt": "^1.0.2",
     "@poppinss/dev-utils": "^1.0.6",
