@@ -67,9 +67,17 @@ export class TokenDatabaseProvider implements TokenProviderContract {
     }
 
     const { name, user_id, token: value, expires_at, type, ...meta } = tokenRow
+    const expiresAt = expires_at ? DateTime.fromFormat(expires_at, client.dialect.dateTimeFormat) : undefined
+
+    /**
+     * Ensure token isn't expired
+     */
+    if (expiresAt && expiresAt.diff(DateTime.local(), 'millisecond').milliseconds <= 0) {
+      return null
+    }
 
     const token = new ProviderToken(name, value, user_id, type)
-    token.expiresAt = expires_at ? DateTime.fromFormat(expires_at, client.dialect.dateTimeFormat) : undefined
+    token.expiresAt = expiresAt
     token.meta = meta
     return token
   }
