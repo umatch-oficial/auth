@@ -390,10 +390,3 @@ export default async function instructions (
    */
   makeMiddleware(projectRoot, app, sink, state)
 }
-
-import { Application } from '@adonisjs/application/build/standalone'
-instructions(
-  join(__dirname, 'sample'),
-  new Application(join(__dirname, 'sample'), {} as any, {} as any, {} as any),
-  sinkStatic,
-).catch(console.log)
