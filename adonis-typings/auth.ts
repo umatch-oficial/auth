@@ -576,6 +576,14 @@ declare module '@ioc:Adonis/Addons/Auth' {
     ): Promise<OpaqueTokenContract<GetProviderRealUser<Provider>>>
 
     /**
+     * Generate token for a user without any verification
+     */
+    generate (
+      user: GetProviderRealUser<Provider>,
+      options?: OATLoginOptions,
+    ): Promise<OpaqueTokenContract<GetProviderRealUser<Provider>>>
+
+    /**
      * Login a user using their id
      */
     loginViaId (

@@ -279,6 +279,13 @@ export class OATGuard extends BaseGuard implements OATGuardContract<any, any> {
   }
 
   /**
+   * Generate token for a user. It is merely an alias for `login`
+   */
+  public async generate (user: any, options?: OATLoginOptions) {
+    return this.login(user, options)
+  }
+
+  /**
    * Login a user
    */
   public async login (user: any, options?: OATLoginOptions): Promise<any> {
