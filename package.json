@@ -48,7 +48,7 @@
     "@adonisjs/events": "^2.0.3",
     "@adonisjs/fold": "^6.3.5",
     "@adonisjs/hash": "^3.1.1",
-    "@adonisjs/lucid": "^8.2.1",
+    "@adonisjs/lucid": "^8.2.2",
     "@adonisjs/mrm-preset": "^2.3.0",
     "@adonisjs/profiler": "^3.0.4",
     "@adonisjs/session": "^3.0.4",
