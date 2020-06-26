@@ -106,7 +106,7 @@ async function createTokensTable (client: QueryClientContract) {
     table.string('name').notNullable()
     table.string('type').notNullable()
     table.string('token').notNullable()
-    table.dateTime('expires_at').nullable()
+    table.timestamp('expires_at', { useTz: true }).nullable()
     table.string('ip_address').nullable()
     table.string('device_name').nullable()
     table.timestamps(true)

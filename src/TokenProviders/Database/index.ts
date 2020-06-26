@@ -67,7 +67,18 @@ export class TokenDatabaseProvider implements TokenProviderContract {
     }
 
     const { name, user_id, token: value, expires_at, type, ...meta } = tokenRow
-    const expiresAt = expires_at ? DateTime.fromFormat(expires_at, client.dialect.dateTimeFormat) : undefined
+    let expiresAt: undefined | DateTime
+
+    /**
+     * Parse dialect date to an instance of Luxon
+     */
+    if (expires_at instanceof Date) {
+      expiresAt = DateTime.fromJSDate(expires_at)
+    } else if (expires_at && typeof (expires_at) === 'string') {
+      expiresAt = DateTime.fromFormat(expires_at, client.dialect.dateTimeFormat)
+    } else if (expires_at && typeof (expires_at) === 'number') {
+      expiresAt = DateTime.fromMillis(expires_at)
+    }
 
     /**
      * Ensure token isn't expired

@@ -669,6 +669,111 @@ test.group('OAT Guard | authenticate', (group) => {
       errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API Token' }],
     })
   })
+
+  test('raise error when token is expired', async (assert) => {
+    const User = getUserModel(BaseModel)
+    const user = await User.create({
+      username: 'virk',
+      email: 'virk@adonisjs.com',
+      password: await hash.make('secret'),
+    })
+
+    const apiTokensGuard = getApiTokensGuard(
+      getLucidProvider({ model: User }),
+      getLucidProviderConfig({ model: User }),
+      getCtx(),
+      getTokensDbProvider(db),
+    )
+
+    const token = await apiTokensGuard.loginViaId(user.id, {
+      device_name: 'Android',
+      ip_address: '192.168.1.1',
+    })
+
+    await db.from('api_tokens').update({
+      expires_at: DateTime.local().minus({ days: 1 }).toJSDate(),
+    })
+
+    const server = createServer(async (req, res) => {
+      const ctx = getCtx(req, res)
+      const oat1 = getApiTokensGuard(
+        getLucidProvider({ model: User }),
+        getLucidProviderConfig({ model: User }),
+        ctx,
+        getTokensDbProvider(db),
+      )
+
+      try {
+        await oat1.authenticate()
+        ctx.response.send(oat1.token)
+      } catch (error) {
+        error.handle(error, ctx)
+      }
+
+      ctx.response.finish()
+    })
+
+    const { body } = await supertest(server)
+      .get('/')
+      .set('Accept', 'application/json')
+      .set('Authorization', `${token.type} ${token.token}`)
+      .expect(401)
+
+    assert.deepEqual(body, {
+      errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API Token' }],
+    })
+  })
+
+  test('work fine when token is not expired', async (assert) => {
+    const User = getUserModel(BaseModel)
+    const user = await User.create({
+      username: 'virk',
+      email: 'virk@adonisjs.com',
+      password: await hash.make('secret'),
+    })
+
+    const apiTokensGuard = getApiTokensGuard(
+      getLucidProvider({ model: User }),
+      getLucidProviderConfig({ model: User }),
+      getCtx(),
+      getTokensDbProvider(db),
+    )
+
+    const token = await apiTokensGuard.loginViaId(user.id, {
+      device_name: 'Android',
+      ip_address: '192.168.1.1',
+      expiresIn: '30 mins',
+    })
+
+    const server = createServer(async (req, res) => {
+      const ctx = getCtx(req, res)
+      const oat1 = getApiTokensGuard(
+        getLucidProvider({ model: User }),
+        getLucidProviderConfig({ model: User }),
+        ctx,
+        getTokensDbProvider(db),
+      )
+
+      try {
+        await oat1.authenticate()
+        ctx.response.send(oat1.token)
+      } catch (error) {
+        error.handle(error, ctx)
+      }
+
+      ctx.response.finish()
+    })
+
+    const { body } = await supertest(server)
+      .get('/')
+      .set('Accept', 'application/json')
+      .set('Authorization', `${token.type} ${token.token}`)
+      .expect(200)
+
+    assert.equal(body.name, 'Opaque Access Token')
+    assert.equal(body.type, 'opaque_token')
+    assert.exists(body.tokenHash)
+  })
 })
 
 test.group('OAT Guard | logout', (group) => {
