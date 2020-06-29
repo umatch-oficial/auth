@@ -261,7 +261,7 @@ async function getProvider (sink: typeof sinkStatic) {
 async function getGuard (sink: typeof sinkStatic) {
   return sink
     .getPrompt()
-    .multiple('Select authentication guard', GUARD_PROMPT_CHOICES)
+    .multiple('Select which guard you need for authentication (select using space)', GUARD_PROMPT_CHOICES)
 }
 
 /**
