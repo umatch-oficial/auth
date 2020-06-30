@@ -66,6 +66,7 @@ export class TokenDatabaseProvider implements TokenProviderContract {
       return null
     }
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const { name, user_id, token: value, expires_at, type, ...meta } = tokenRow
     let expiresAt: undefined | DateTime
 
