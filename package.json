@@ -43,40 +43,36 @@
     "url": "https://github.com/adonisjs/adonis-auth/issues"
   },
   "devDependencies": {
-    "@adonisjs/core": "^5.0.0-preview-rc-1.9",
-    "@adonisjs/encryption": "^2.0.4",
-    "@adonisjs/events": "^2.0.3",
+    "@adonisjs/core": "^5.0.0-preview-rc-1.11",
     "@adonisjs/fold": "^6.3.5",
-    "@adonisjs/hash": "^3.1.1",
-    "@adonisjs/lucid": "^8.2.2",
-    "@adonisjs/mrm-preset": "^2.3.4",
-    "@adonisjs/profiler": "^3.0.4",
-    "@adonisjs/session": "^3.0.4",
+    "@adonisjs/lucid": "^8.3.1",
+    "@adonisjs/mrm-preset": "^2.4.0",
+    "@adonisjs/session": "^3.0.7",
     "@adonisjs/sink": "^3.0.2",
     "@phc/bcrypt": "^1.0.2",
-    "@poppinss/dev-utils": "^1.0.6",
+    "@poppinss/dev-utils": "^1.0.8",
     "@types/ms": "^0.7.31",
-    "@types/node": "^14.0.14",
+    "@types/node": "^14.0.27",
     "@types/supertest": "^2.0.10",
     "commitizen": "^4.1.2",
     "copyfiles": "^2.3.0",
     "cz-conventional-changelog": "^3.2.0",
     "del-cli": "^3.0.1",
     "doctoc": "^1.4.0",
-    "eslint": "^7.3.1",
+    "eslint": "^7.6.0",
     "eslint-plugin-adonis": "^1.0.14",
     "husky": "^4.2.5",
     "japa": "^3.1.1",
     "mrm": "^2.3.3",
-    "np": "^6.2.5",
-    "pino-pretty": "^4.0.0",
+    "np": "^6.3.2",
+    "pino-pretty": "^4.1.0",
     "reflect-metadata": "^0.1.13",
     "set-cookie-parser": "^2.4.6",
-    "sqlite3": "^4.2.0",
+    "sqlite3": "^5.0.0",
     "supertest": "^4.0.2",
     "ts-essentials": "^7.0.0",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.5"
+    "typescript": "^3.9.7"
   },
   "nyc": {
     "exclude": [
@@ -102,12 +98,9 @@
     "anyBranch": false
   },
   "dependencies": {
-    "@poppinss/hooks": "^1.0.5",
-    "@poppinss/utils": "^2.2.7",
-    "array-to-sentence": "^2.0.0",
-    "hashids": "^2.2.1",
-    "luxon": "^1.24.1",
-    "pluralize": "^8.0.0"
+    "@poppinss/hooks": "^1.1.1",
+    "@poppinss/utils": "^2.5.2",
+    "luxon": "^1.24.1"
   },
   "publishConfig": {
     "access": "public",
