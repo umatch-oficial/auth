@@ -1,11 +1,11 @@
 /*
-* @adonis-auth
-*
-* (c) Harminder Virk <virk@adonisjs.com>
-*
-* For the full copyright and license information, please view the LICENSE
-* file that was distributed with this source code.
-*/
+ * @adonis-auth
+ *
+ * (c) Harminder Virk <virk@adonisjs.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 import 'reflect-metadata'
 import { join } from 'path'
@@ -35,38 +35,38 @@ import { DatabaseProvider } from '../src/UserProviders/Database'
 import { TokenDatabaseProvider } from '../src/TokenProviders/Database'
 
 import {
-  LucidProviderModel,
-  LucidProviderConfig,
-  LucidProviderContract,
-  TokenProviderContract,
-  DatabaseProviderConfig,
-  DatabaseProviderContract,
+	LucidProviderModel,
+	LucidProviderConfig,
+	LucidProviderContract,
+	TokenProviderContract,
+	DatabaseProviderConfig,
+	DatabaseProviderContract,
 } from '@ioc:Adonis/Addons/Auth'
 
 const fs = new Filesystem(join(__dirname, '__app'))
 const logger = new Logger({ enabled: false, level: 'debug', name: 'adonis', prettyPrint: true })
 const profiler = new Profiler(__dirname, logger, {})
 const sessionConfig: SessionConfig = {
-  driver: 'cookie',
-  cookieName: 'adonis-session',
-  clearWithBrowser: false,
-  age: '2h',
-  cookie: {
-    path: '/',
-  },
+	driver: 'cookie',
+	cookieName: 'adonis-session',
+	clearWithBrowser: false,
+	age: '2h',
+	cookie: {
+		path: '/',
+	},
 }
 
 export const container = new Ioc()
 export const secret = 'securelong32characterslongsecret'
 export const encryption = new Encryption({ secret })
 export const hash = new Hash(container, {
-  default: 'bcrypt' as const,
-  list: {
-    bcrypt: {
-      driver: 'bcrypt',
-      rounds: 10,
-    },
-  },
+	default: 'bcrypt' as const,
+	list: {
+		bcrypt: {
+			driver: 'bcrypt',
+			rounds: 10,
+		},
+	},
 })
 
 export const emitter = new Emitter(container)
@@ -74,314 +74,325 @@ container.singleton('Adonis/Core/Event', () => emitter)
 container.singleton('Adonis/Core/Encryption', () => encryption)
 container.singleton('Adonis/Core/Hash', () => hash)
 container.singleton('Adonis/Core/Config', () => {
-  return {
-    get () {
-      return secret
-    },
-  }
+	return {
+		get() {
+			return secret
+		},
+	}
 })
 
 /**
  * Create the users tables
  */
-async function createUsersTable (client: QueryClientContract) {
-  await client.schema.createTable('users', (table) => {
-    table.increments('id').notNullable().primary()
-    table.string('username').notNullable().unique()
-    table.string('email').notNullable().unique()
-    table.string('password')
-    table.string('remember_me_token').nullable()
-    table.boolean('is_active').notNullable().defaultTo(1)
-    table.string('country').notNullable().defaultTo('IN')
-  })
+async function createUsersTable(client: QueryClientContract) {
+	await client.schema.createTable('users', (table) => {
+		table.increments('id').notNullable().primary()
+		table.string('username').notNullable().unique()
+		table.string('email').notNullable().unique()
+		table.string('password')
+		table.string('remember_me_token').nullable()
+		table.boolean('is_active').notNullable().defaultTo(1)
+		table.string('country').notNullable().defaultTo('IN')
+	})
 }
 
 /**
  * Create the api tokens tables
  */
-async function createTokensTable (client: QueryClientContract) {
-  await client.schema.createTable('api_tokens', (table) => {
-    table.increments('id').notNullable().primary()
-    table.integer('user_id').notNullable().unsigned()
-    table.string('name').notNullable()
-    table.string('type').notNullable()
-    table.string('token').notNullable()
-    table.timestamp('expires_at', { useTz: true }).nullable()
-    table.string('ip_address').nullable()
-    table.string('device_name').nullable()
-    table.timestamps(true)
-  })
+async function createTokensTable(client: QueryClientContract) {
+	await client.schema.createTable('api_tokens', (table) => {
+		table.increments('id').notNullable().primary()
+		table.integer('user_id').notNullable().unsigned()
+		table.string('name').notNullable()
+		table.string('type').notNullable()
+		table.string('token').notNullable()
+		table.timestamp('expires_at', { useTz: true }).nullable()
+		table.string('ip_address').nullable()
+		table.string('device_name').nullable()
+		table.timestamps(true)
+	})
 }
 
 /**
  * Returns default config for the lucid provider
  */
-export function getLucidProviderConfig <User extends LucidProviderModel> (
-  config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'user'>,
+export function getLucidProviderConfig<User extends LucidProviderModel>(
+	config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'user'>
 ) {
-  const defaults: LucidProviderConfig<User> = {
-    driver: 'lucid' as const,
-    uids: ['username', 'email' as any],
-    model: config.model,
-    identifierKey: 'id',
-  }
-  return defaults
+	const defaults: LucidProviderConfig<User> = {
+		driver: 'lucid' as const,
+		uids: ['username', 'email' as any],
+		model: config.model,
+		identifierKey: 'id',
+	}
+	return defaults
 }
 
 /**
  * Returns default config for the database provider
  */
-export function getDatabaseProviderConfig () {
-  const defaults: DatabaseProviderConfig = {
-    driver: 'database' as const,
-    uids: ['username', 'email'],
-    identifierKey: 'id',
-    usersTable: 'users',
-  }
-  return defaults
+export function getDatabaseProviderConfig() {
+	const defaults: DatabaseProviderConfig = {
+		driver: 'database' as const,
+		uids: ['username', 'email'],
+		identifierKey: 'id',
+		usersTable: 'users',
+	}
+	return defaults
 }
 
 /**
  * Returns instance of database
  */
-export async function getDb () {
-  await fs.ensureRoot()
+export async function getDb() {
+	await fs.ensureRoot()
 
-  const db = new Database({
-    connection: 'primary',
-    connections: {
-      primary: {
-        client: 'sqlite3',
-        connection: {
-          filename: join(fs.basePath, 'primary.sqlite3'),
-        },
-      },
-      secondary: {
-        client: 'sqlite3',
-        connection: {
-          filename: join(fs.basePath, 'secondary.sqlite3'),
-        },
-      },
-    },
-  }, logger, profiler, emitter) as unknown as DatabaseContract
+	const db = (new Database(
+		{
+			connection: 'primary',
+			connections: {
+				primary: {
+					client: 'sqlite3',
+					connection: {
+						filename: join(fs.basePath, 'primary.sqlite3'),
+					},
+				},
+				secondary: {
+					client: 'sqlite3',
+					connection: {
+						filename: join(fs.basePath, 'secondary.sqlite3'),
+					},
+				},
+			},
+		},
+		logger,
+		profiler,
+		emitter
+	) as unknown) as DatabaseContract
 
-  container.singleton('Adonis/Lucid/Database', () => db)
-  return db
+	container.singleton('Adonis/Lucid/Database', () => db)
+	return db
 }
 
 /**
  * Performs an initial setup
  */
-export async function setup (db: DatabaseContract) {
-  await createUsersTable(db.connection())
-  await createUsersTable(db.connection('secondary'))
-  await createTokensTable(db.connection())
-  await createTokensTable(db.connection('secondary'))
+export async function setup(db: DatabaseContract) {
+	await createUsersTable(db.connection())
+	await createUsersTable(db.connection('secondary'))
+	await createTokensTable(db.connection())
+	await createTokensTable(db.connection('secondary'))
 
-  HttpContext.getter('session', function session () {
-    const sessionManager = new SessionManager(container, sessionConfig)
-    return sessionManager.create(this)
-  }, true)
+	HttpContext.getter(
+		'session',
+		function session() {
+			const sessionManager = new SessionManager(container, sessionConfig)
+			return sessionManager.create(this)
+		},
+		true
+	)
 }
 
 /**
  * Performs cleanup
  */
-export async function cleanup (db: DatabaseContract) {
-  await db.connection().schema.dropTableIfExists('users')
-  await db.connection('secondary').schema.dropTableIfExists('users')
-  await db.manager.closeAll()
-  await fs.cleanup()
+export async function cleanup(db: DatabaseContract) {
+	await db.connection().schema.dropTableIfExists('users')
+	await db.connection('secondary').schema.dropTableIfExists('users')
+	await db.manager.closeAll()
+	await fs.cleanup()
 }
 
 /**
  * Reset database tables
  */
-export async function reset (db: DatabaseContract) {
-  await db.connection().truncate('users')
-  await db.connection('secondary').truncate('users')
+export async function reset(db: DatabaseContract) {
+	await db.connection().truncate('users')
+	await db.connection('secondary').truncate('users')
 
-  await db.connection().truncate('api_tokens')
-  await db.connection('secondary').truncate('api_tokens')
+	await db.connection().truncate('api_tokens')
+	await db.connection('secondary').truncate('api_tokens')
 }
 
 /**
  * Returns Base model that other models can extend
  */
-export function getModel (db: DatabaseContract) {
-  LucidBaseModel.$adapter = new Adapter(db)
-  LucidBaseModel.$container = container
-  return LucidBaseModel as unknown as LucidModel
+export function getModel(db: DatabaseContract) {
+	LucidBaseModel.$adapter = new Adapter(db)
+	LucidBaseModel.$container = container
+	return (LucidBaseModel as unknown) as LucidModel
 }
 
 /**
  * Returns an instance of the lucid provider
  */
-export function getLucidProvider<User extends LucidProviderModel> (
-  config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'user'>,
+export function getLucidProvider<User extends LucidProviderModel>(
+	config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'user'>
 ) {
-  const defaults = getLucidProviderConfig(config)
-  const normalizedConfig = Object.assign(defaults, config) as LucidProviderConfig<User>
-  return new LucidProvider(container, normalizedConfig) as unknown as LucidProviderContract<User>
+	const defaults = getLucidProviderConfig(config)
+	const normalizedConfig = Object.assign(defaults, config) as LucidProviderConfig<User>
+	return (new LucidProvider(container, normalizedConfig) as unknown) as LucidProviderContract<User>
 }
 
 /**
  * Returns an instance of the database provider
  */
-export function getDatabaseProvider (config: Partial<DatabaseProviderConfig>) {
-  const defaults = getDatabaseProviderConfig()
-  const normalizedConfig = Object.assign(defaults, config) as DatabaseProviderConfig
-  const db = container.use('Adonis/Lucid/Database')
-  return new DatabaseProvider(container, normalizedConfig, db) as unknown as DatabaseProviderContract<any>
+export function getDatabaseProvider(config: Partial<DatabaseProviderConfig>) {
+	const defaults = getDatabaseProviderConfig()
+	const normalizedConfig = Object.assign(defaults, config) as DatabaseProviderConfig
+	const db = container.use('Adonis/Lucid/Database')
+	return (new DatabaseProvider(
+		container,
+		normalizedConfig,
+		db
+	) as unknown) as DatabaseProviderContract<any>
 }
 
 /**
  * Returns an instance of ctx
  */
-export function getCtx (req?: IncomingMessage, res?: ServerResponse) {
-  const httpRow = profiler.create('http:request')
-  const router = new Router(encryption)
+export function getCtx(req?: IncomingMessage, res?: ServerResponse) {
+	const httpRow = profiler.create('http:request')
+	const router = new Router(encryption)
 
-  return HttpContext
-    .create(
-      '/',
-      {},
-      logger,
-      httpRow,
-      encryption,
-      router,
-      req,
-      res,
-      {} as any,
-    ) as unknown as HttpContextContract
+	return (HttpContext.create(
+		'/',
+		{},
+		logger,
+		httpRow,
+		encryption,
+		router,
+		req,
+		res,
+		{} as any
+	) as unknown) as HttpContextContract
 }
 
 /**
  * Returns an instance of the session driver.
  */
-export function getSessionDriver (
-  provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
-  providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
-  ctx: HttpContextContract,
+export function getSessionDriver(
+	provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
+	providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
+	ctx: HttpContextContract
 ) {
-  const config = {
-    driver: 'session' as const,
-    loginRoute: '/login',
-    provider: providerConfig,
-  }
+	const config = {
+		driver: 'session' as const,
+		loginRoute: '/login',
+		provider: providerConfig,
+	}
 
-  return new SessionGuard('session', config, emitter, provider, ctx)
+	return new SessionGuard('session', config, emitter, provider, ctx)
 }
 
 /**
  * Returns an instance of the api tokens guard.
  */
-export function getApiTokensGuard (
-  provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
-  providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
-  ctx: HttpContextContract,
-  tokensProvider: TokenProviderContract,
+export function getApiTokensGuard(
+	provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
+	providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
+	ctx: HttpContextContract,
+	tokensProvider: TokenProviderContract
 ) {
-  const config = {
-    driver: 'oat' as const,
-    tokenProvider: {
-      driver: 'database' as const,
-      table: 'api_tokens',
-    },
-    provider: providerConfig,
-  }
+	const config = {
+		driver: 'oat' as const,
+		tokenProvider: {
+			driver: 'database' as const,
+			table: 'api_tokens',
+		},
+		provider: providerConfig,
+	}
 
-  return new OATGuard('api', config, emitter, provider, ctx, tokensProvider)
+	return new OATGuard('api', config, emitter, provider, ctx, tokensProvider)
 }
 
 /**
  * Returns the database token provider
  */
-export function getTokensDbProvider (db: DatabaseContract) {
-  return new TokenDatabaseProvider({
-    table: 'api_tokens',
-    driver: 'database',
-  }, db)
+export function getTokensDbProvider(db: DatabaseContract) {
+	return new TokenDatabaseProvider(
+		{
+			table: 'api_tokens',
+			driver: 'database',
+		},
+		db
+	)
 }
 
 /**
  * Returns the user model
  */
-export function getUserModel (BaseModel: LucidModel) {
-  const UserModel = class User extends BaseModel {
-    public id: number
-    public username: string
-    public password: string
-    public email: string
-    public rememberMeToken: string
-  }
+export function getUserModel(BaseModel: LucidModel) {
+	const UserModel = class User extends BaseModel {
+		public id: number
+		public username: string
+		public password: string
+		public email: string
+		public rememberMeToken: string
+	}
 
-  UserModel.boot()
-  UserModel.$addColumn('id', { isPrimary: true })
-  UserModel.$addColumn('username', {})
-  UserModel.$addColumn('email', {})
-  UserModel.$addColumn('password', {})
-  UserModel.$addColumn('rememberMeToken', {})
+	UserModel.boot()
+	UserModel.$addColumn('id', { isPrimary: true })
+	UserModel.$addColumn('username', {})
+	UserModel.$addColumn('email', {})
+	UserModel.$addColumn('password', {})
+	UserModel.$addColumn('rememberMeToken', {})
 
-  return UserModel
+	return UserModel
 }
 
 /**
  * Signs value to be set as cookie header
  */
-export function signCookie (value: any, name: string) {
-  return `${name}=s:${encryption.verifier.sign(value, undefined, name)}`
+export function signCookie(value: any, name: string) {
+	return `${name}=s:${encryption.verifier.sign(value, undefined, name)}`
 }
 
 /**
  * Encrypt value to be set as cookie header
  */
-export function encryptCookie (value: any, name: string) {
-  return `${name}=e:${encryption.encrypt(value, undefined, name)}`
+export function encryptCookie(value: any, name: string) {
+	return `${name}=e:${encryption.encrypt(value, undefined, name)}`
 }
 
 /**
  * Decrypt cookie
  */
-export function decryptCookie (cookie: any, name: string) {
-  const cookieValue = decodeURIComponent(cookie.split(';')[0])
-    .replace(`${name}=`, '')
-    .slice(2)
+export function decryptCookie(cookie: any, name: string) {
+	const cookieValue = decodeURIComponent(cookie.split(';')[0]).replace(`${name}=`, '').slice(2)
 
-  return encryption.decrypt<any>(cookieValue, name)
+	return encryption.decrypt<any>(cookieValue, name)
 }
 
 /**
  * Unsign cookie
  */
-export function unsignCookie (cookie: any, name: string) {
-  const cookieValue = decodeURIComponent(cookie.split(';')[0])
-    .replace(`${name}=`, '')
-    .slice(2)
+export function unsignCookie(cookie: any, name: string) {
+	const cookieValue = decodeURIComponent(cookie.split(';')[0]).replace(`${name}=`, '').slice(2)
 
-  return encryption.verifier.unsign<any>(cookieValue, name)
+	return encryption.verifier.unsign<any>(cookieValue, name)
 }
 
 /**
  * Mocks action on a object
  */
-export function mockAction (collection: any, name: string, verifier: any) {
-  collection[name] = function (...args: any[]) {
-    verifier(...args)
-    delete collection[name]
-  }
+export function mockAction(collection: any, name: string, verifier: any) {
+	collection[name] = function (...args: any[]) {
+		verifier(...args)
+		delete collection[name]
+	}
 }
 
 /**
  * Mocks property on a object
  */
-export function mockProperty (collection: any, name: string, value: any) {
-  Object.defineProperty(collection, name, {
-    get () {
-      delete collection[name]
-      return value
-    },
-    enumerable: true,
-    configurable: true,
-  })
+export function mockProperty(collection: any, name: string, value: any) {
+	Object.defineProperty(collection, name, {
+		get() {
+			delete collection[name]
+			return value
+		},
+		enumerable: true,
+		configurable: true,
+	})
 }

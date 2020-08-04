@@ -1,11 +1,11 @@
 /*
-* @adonisjs/auth
-*
-* (c) Harminder Virk <virk@adonisjs.com>
-*
-* For the full copyright and license information, please view the LICENSE
-* file that was distributed with this source code.
-*/
+ * @adonisjs/auth
+ *
+ * (c) Harminder Virk <virk@adonisjs.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 import { IocContract } from '@adonisjs/fold'
 import { ServerContract } from '@ioc:Adonis/Core/Server'
@@ -17,36 +17,39 @@ import { AuthManager } from '../src/AuthManager'
  * Auth provider to register the auth binding
  */
 export default class AuthProvider {
-  constructor (protected container: IocContract) {
-  }
+	constructor(protected container: IocContract) {}
 
-  /**
-   * Register auth binding
-   */
-  public register () {
-    this.container.singleton('Adonis/Addons/Auth', () => {
-      const authConfig = this.container.use('Adonis/Core/Config').get('auth')
-      return new AuthManager(this.container, authConfig)
-    })
-  }
+	/**
+	 * Register auth binding
+	 */
+	public register() {
+		this.container.singleton('Adonis/Addons/Auth', () => {
+			const authConfig = this.container.use('Adonis/Core/Config').get('auth')
+			return new AuthManager(this.container, authConfig)
+		})
+	}
 
-  /**
-   * Hook into boot to register auth macro
-   */
-  public async boot () {
-    this.container.with(
-      ['Adonis/Core/HttpContext', 'Adonis/Addons/Auth'],
-      (HttpContext: HttpContextConstructorContract, Auth: AuthManager) => {
-        HttpContext.getter('auth', function auth () {
-          return Auth.getAuthForRequest(this)
-        }, true)
-      },
-    )
+	/**
+	 * Hook into boot to register auth macro
+	 */
+	public async boot() {
+		this.container.with(
+			['Adonis/Core/HttpContext', 'Adonis/Addons/Auth'],
+			(HttpContext: HttpContextConstructorContract, Auth: AuthManager) => {
+				HttpContext.getter(
+					'auth',
+					function auth() {
+						return Auth.getAuthForRequest(this)
+					},
+					true
+				)
+			}
+		)
 
-    this.container.with(['Adonis/Core/Server', 'Adonis/Core/View'], (Server: ServerContract) => {
-      Server.hooks.before(async (ctx) => {
-        ctx['view'].share({ auth: ctx.auth })
-      })
-    })
-  }
+		this.container.with(['Adonis/Core/Server', 'Adonis/Core/View'], (Server: ServerContract) => {
+			Server.hooks.before(async (ctx) => {
+				ctx['view'].share({ auth: ctx.auth })
+			})
+		})
+	}
 }
