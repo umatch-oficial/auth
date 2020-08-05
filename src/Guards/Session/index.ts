@@ -27,15 +27,15 @@ import { AuthenticationException } from '../../Exceptions/AuthenticationExceptio
  * Session guard enables user login using sessions. Also it allows for
  * setting remember me tokens for life long login
  */
-export class SessionGuard extends BaseGuard implements SessionGuardContract<any, any> {
+export class SessionGuard extends BaseGuard<any> implements SessionGuardContract<any, any> {
 	constructor(
-		public name: string,
-		private config: SessionGuardConfig<any>,
+		name: string,
+		config: SessionGuardConfig<any>,
 		private emitter: EmitterContract,
-		public provider: UserProviderContract<any>,
+		provider: UserProviderContract<any>,
 		private ctx: HttpContextContract
 	) {
-		super(name, provider)
+		super(name, config, provider)
 	}
 
 	/**

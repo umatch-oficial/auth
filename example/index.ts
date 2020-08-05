@@ -13,6 +13,15 @@ export const config: AuthConfig = {
 				uids: ['email'],
 			},
 		},
+		basic: {
+			driver: 'basic',
+			provider: {
+				driver: 'lucid',
+				model: User,
+				identifierKey: 'id',
+				uids: ['email'],
+			},
+		},
 		api: {
 			driver: 'oat',
 			tokenProvider: {
@@ -39,6 +48,5 @@ export const config: AuthConfig = {
 }
 
 const a = {} as AuthContract
-a.check().then((state) => {
-	state
-})
+a.loginViaId(1)
+// a.use('basic').

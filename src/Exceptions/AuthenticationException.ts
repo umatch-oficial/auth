@@ -8,6 +8,7 @@
  */
 
 import { Exception } from '@poppinss/utils'
+import { GuardsList } from '@ioc:Adonis/Addons/Auth'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
 /**
@@ -20,11 +21,27 @@ export class AuthenticationException extends Exception {
 	/**
 	 * Raise exception with message and redirect url
 	 */
-	constructor(message: string, code: string, redirectTo?: string) {
+	constructor(message: string, code: string, guard?: string, redirectTo?: string) {
 		super(message, 401, code)
 		if (redirectTo) {
 			this.redirectTo = redirectTo
 		}
+
+		if (guard) {
+			this.guard = guard
+		}
+	}
+
+	/**
+	 * Prompts user to enter credentials
+	 */
+	protected respondWithBasicAuthPrompt(ctx: HttpContextContract, realm?: string) {
+		realm = realm || 'Authenticate'
+
+		ctx.response
+			.status(this.status)
+			.header('WWW-Authenticate', `Basic realm="${realm}", charset="UTF-8"`)
+			.send('Access denied')
 	}
 
 	/**
@@ -72,18 +89,21 @@ export class AuthenticationException extends Exception {
 	 * Missing session or unable to lookup user from session
 	 */
 	public static invalidSession(guard: string) {
-		const error = new this('Invalid session', 'E_INVALID_AUTH_SESSION')
-		error.guard = guard
-		return error
+		return new this('Invalid session', 'E_INVALID_AUTH_SESSION', guard)
 	}
 
 	/**
 	 * Missing/Invalid token or unable to lookup user from the token
 	 */
 	public static invalidToken(guard: string) {
-		const error = new this('Invalid API Token', 'E_INVALID_API_TOKEN')
-		error.guard = guard
-		return error
+		return new this('Invalid API Token', 'E_INVALID_API_TOKEN', guard)
+	}
+
+	/**
+	 * Missing or invalid basic auth credentials
+	 */
+	public static invalidBasicCredentials(guard: string) {
+		return new this('Invalid API Token', 'E_INVALID_BASIC_CREDENTIALS', guard)
 	}
 
 	/**
@@ -91,11 +111,30 @@ export class AuthenticationException extends Exception {
 	 * upon the type of request
 	 */
 	public async handle(_: AuthenticationException, ctx: HttpContextContract) {
+		/**
+		 * We need access to the guard config and driver to make appropriate response
+		 */
+		const config = this.guard ? ctx.auth.use(this.guard as keyof GuardsList).config : null
+
+		/**
+		 * Show username, password prompt when using basic auth driver
+		 */
+		if (config && config.driver === 'basic') {
+			this.respondWithBasicAuthPrompt(ctx, config.realm)
+			return
+		}
+
+		/**
+		 * Respond with json for ajax requests
+		 */
 		if (ctx.request.ajax()) {
 			this.respondWithJson(ctx)
 			return
 		}
 
+		/**
+		 * Uses content negotiation to make the response
+		 */
 		switch (ctx.request.accepts(['html', 'application/vnd.api+json', 'json'])) {
 			case 'html':
 			case null:

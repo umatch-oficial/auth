@@ -63,6 +63,10 @@ test.group('Auth Manager', (group) => {
 					},
 					provider: getLucidProviderConfig({ model: User }),
 				},
+				basic: {
+					driver: 'basic',
+					provider: getLucidProviderConfig({ model: User }),
+				},
 				session: {
 					driver: 'session',
 					provider: getLucidProviderConfig({ model: User }),
@@ -95,6 +99,10 @@ test.group('Auth Manager', (group) => {
 					},
 					provider: getLucidProviderConfig({ model: User }),
 				},
+				basic: {
+					driver: 'basic',
+					provider: getLucidProviderConfig({ model: User }),
+				},
 				session: {
 					driver: 'session',
 					provider: getLucidProviderConfig({ model: User }),
@@ -125,6 +133,10 @@ test.group('Auth Manager', (group) => {
 						driver: 'database',
 						table: 'api_tokens',
 					},
+					provider: getLucidProviderConfig({ model: User }),
+				},
+				basic: {
+					driver: 'basic',
 					provider: getLucidProviderConfig({ model: User }),
 				},
 				session: {

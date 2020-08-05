@@ -57,6 +57,13 @@ export class Auth implements AuthContract {
 	}
 
 	/**
+	 * Reference to the default guard config
+	 */
+	public get config() {
+		return this.use().config
+	}
+
+	/**
 	 * Find if the user has been logged out in the current request
 	 */
 	public get isLoggedOut() {

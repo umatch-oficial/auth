@@ -49,5 +49,8 @@ declare module '@ioc:Adonis/Addons/Auth' {
 {{#hasGuard.api}}
 {{> api_guard}}
 {{/hasGuard.api}}
+{{#hasGuard.basic}}
+{{> basic_guard}}
+{{/hasGuard.basic}}
   }
 }

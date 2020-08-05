@@ -305,6 +305,11 @@ declare module '@ioc:Adonis/Addons/Auth' {
 		name: Guard
 
 		/**
+		 * Reference to the guard config
+		 */
+		config: GuardsList[Guard]['config']
+
+		/**
 		 * Reference to the logged in user.
 		 */
 		user?: GetProviderRealUser<Provider>
@@ -449,6 +454,38 @@ declare module '@ioc:Adonis/Addons/Auth' {
 	 */
 	export type SessionGuardConfig<Provider extends keyof ProvidersList> = {
 		driver: 'session'
+		provider: ProvidersList[Provider]['config']
+	}
+
+	/*
+  |--------------------------------------------------------------------------
+  | Basic Auth Guard
+  |--------------------------------------------------------------------------
+  */
+
+	/**
+	 * Shape of data emitted by the authenticate event
+	 */
+	export type BasicAuthAuthenticateEventData<Provider extends keyof ProvidersList> = {
+		name: string
+		user: GetProviderRealUser<Provider>
+		ctx: HttpContextContract
+	}
+
+	/**
+	 * Shape of the basic auth guard
+	 */
+	export interface BasicAuthGuardContract<
+		Provider extends keyof ProvidersList,
+		Name extends keyof GuardsList
+	> extends Omit<GuardContract<Provider, Name>, 'attempt' | 'login' | 'loginViaId' | 'logout'> {}
+
+	/**
+	 * Shape of basic auth guard config.
+	 */
+	export type BasicAuthGuardConfig<Provider extends keyof ProvidersList> = {
+		driver: 'basic'
+		realm?: string
 		provider: ProvidersList[Provider]['config']
 	}
 
@@ -675,7 +712,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 		/**
 		 * Use a given guard
 		 */
-		use(guard?: string): GuardContract<keyof ProvidersList, keyof GuardsList>
+		use(): GuardContract<keyof ProvidersList, keyof GuardsList>
 		use<K extends keyof GuardsList>(guard: K): GuardsList[K]['implementation']
 	}
 

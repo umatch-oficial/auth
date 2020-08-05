@@ -35,16 +35,16 @@ import { AuthenticationException } from '../../Exceptions/AuthenticationExceptio
  * Exposes the API to generate and authenticate HTTP request using
  * opaque tokens
  */
-export class OATGuard extends BaseGuard implements OATGuardContract<any, any> {
+export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, any> {
 	constructor(
-		public name: string,
-		private config: OATGuardConfig<any>,
+		name: string,
+		config: OATGuardConfig<any>,
 		private emitter: EmitterContract,
-		public provider: UserProviderContract<any>,
+		provider: UserProviderContract<any>,
 		private ctx: HttpContextContract,
 		private tokenProvider: TokenProviderContract
 	) {
-		super(name, provider)
+		super(name, config, provider)
 	}
 
 	/**

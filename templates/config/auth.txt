@@ -28,6 +28,9 @@ const authConfig: AuthConfig = {
 {{#hasGuard.api}}
 {{> api_guard}}
 {{/hasGuard.api}}
+{{#hasGuard.basic}}
+{{> basic_guard}}
+{{/hasGuard.basic}}
   },
 }
 

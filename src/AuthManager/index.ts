@@ -212,6 +212,13 @@ export class AuthManager implements AuthManagerContract {
 	 */
 	public makeMapping(ctx: HttpContextContract, mapping: keyof GuardsList) {
 		const mappingConfig = this.config.list[mapping]
+
+		if (mappingConfig === undefined) {
+			throw new Exception(
+				`Invalid guard "${mapping}". Make sure the guard is defined inside the config/auth file`
+			)
+		}
+
 		const provider = this.makeUserProviderInstance(mappingConfig.provider)
 		return this.makeGuardInstance(mapping, mappingConfig, provider, ctx)
 	}

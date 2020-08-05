@@ -8,15 +8,26 @@
  */
 
 import { Exception } from '@poppinss/utils'
-import { UserProviderContract, ProviderUserContract } from '@ioc:Adonis/Addons/Auth'
+import { UserProviderContract, ProviderUserContract, GuardsList } from '@ioc:Adonis/Addons/Auth'
 
 import { InvalidCredentialsException } from '../../Exceptions/InvalidCredentialsException'
 
 /**
  * Base guard with shared abilities
  */
-export abstract class BaseGuard {
-	constructor(public name: string, public provider: UserProviderContract<any>) {}
+export abstract class BaseGuard<Guard extends keyof GuardsList> {
+	constructor(
+		public name: Guard,
+		public config: GuardsList[Guard]['config'],
+		public provider: UserProviderContract<any>
+	) {}
+
+	/**
+	 * Reference to the name of the guard driver
+	 */
+	public get driver() {
+		return this.config.driver
+	}
 
 	/**
 	 * Whether or not the authentication has been attempted

@@ -507,7 +507,7 @@ test.group('OAT Guard | authenticate', (group) => {
 				await oat1.authenticate()
 				ctx.response.send(oat1.token)
 			} catch (error) {
-				error.handle(error, ctx)
+				error.handle(error, { ...ctx, auth: { use: () => oat1 } as any })
 			}
 
 			ctx.response.finish()
@@ -553,7 +553,7 @@ test.group('OAT Guard | authenticate', (group) => {
 				await oat1.authenticate()
 				ctx.response.send(oat1.token)
 			} catch (error) {
-				error.handle(error, ctx)
+				error.handle(error, { ...ctx, auth: { use: () => oat1 } as any })
 			}
 
 			ctx.response.finish()
@@ -603,7 +603,7 @@ test.group('OAT Guard | authenticate', (group) => {
 				await oat1.authenticate()
 				ctx.response.send(oat1.token)
 			} catch (error) {
-				error.handle(error, ctx)
+				error.handle(error, { ...ctx, auth: { use: () => oat1 } as any })
 			}
 
 			ctx.response.finish()
@@ -654,7 +654,7 @@ test.group('OAT Guard | authenticate', (group) => {
 				await oat1.authenticate()
 				ctx.response.send(oat1.token)
 			} catch (error) {
-				error.handle(error, ctx)
+				error.handle(error, { ...ctx, auth: { use: () => oat1 } as any })
 			}
 
 			ctx.response.finish()
@@ -709,7 +709,7 @@ test.group('OAT Guard | authenticate', (group) => {
 				await oat1.authenticate()
 				ctx.response.send(oat1.token)
 			} catch (error) {
-				error.handle(error, ctx)
+				error.handle(error, { ...ctx, auth: { use: () => oat1 } as any })
 			}
 
 			ctx.response.finish()
@@ -760,7 +760,7 @@ test.group('OAT Guard | authenticate', (group) => {
 				await oat1.authenticate()
 				ctx.response.send(oat1.token)
 			} catch (error) {
-				error.handle(error, ctx)
+				error.handle(error, { ...ctx, auth: { use: () => oat1 } as any })
 			}
 
 			ctx.response.finish()

@@ -11,6 +11,7 @@ import { join } from 'path'
 import pluralize from 'pluralize'
 import { lodash } from '@poppinss/utils'
 import * as sinkStatic from '@adonisjs/sink'
+import { Application } from '@adonisjs/application/build/standalone'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 type InstructionsState = {
@@ -25,11 +26,12 @@ type InstructionsState = {
 	tokensSchemaName: string
 
 	provider: 'lucid' | 'database'
-	guards: ('web' | 'api')[]
+	guards: ('web' | 'api' | 'basic')[]
 
 	hasGuard: {
 		web: boolean
 		api: boolean
+		basic: boolean
 	}
 }
 
@@ -75,6 +77,11 @@ const GUARD_PROMPT_CHOICES = [
 		name: 'api' as const,
 		message: 'API tokens',
 		hint: ' (Uses database backed opaque tokens)',
+	},
+	{
+		name: 'basic' as const,
+		message: 'Basic Auth',
+		hint: ' (Uses HTTP Basic auth for authenticating requests)',
 	},
 ]
 
@@ -272,16 +279,22 @@ function makeConfig(
  * Prompts user to select the provider
  */
 async function getProvider(sink: typeof sinkStatic) {
-	return sink.getPrompt().choice('Select provider for finding users', PROVIDER_PROMPT_CHOICES)
+	return sink.getPrompt().choice('Select provider for finding users', PROVIDER_PROMPT_CHOICES, {
+		validate(choice) {
+			return choice && choice.length ? true : 'Select the provider for finding users'
+		},
+	})
 }
 
 /**
  * Prompts user to select one or more guards
  */
-async function getGuard (sink: typeof sinkStatic) {
-  return sink
-    .getPrompt()
-    .multiple('Select which guard you need for authentication (select using space)', GUARD_PROMPT_CHOICES)
+async function getGuard(sink: typeof sinkStatic) {
+	return sink.getPrompt().multiple('Select which guard you need for authentication (select using space)', GUARD_PROMPT_CHOICES, {
+		validate(choices) {
+			return choices && choices.length ? true : 'Select one or more guards for authenticating users'
+		},
+	})
 }
 
 /**
@@ -333,6 +346,7 @@ export default async function instructions(
 		hasGuard: {
 			web: false,
 			api: false,
+			basic: false,
 		},
 	}
 
@@ -412,3 +426,6 @@ export default async function instructions(
 	 */
 	makeMiddleware(projectRoot, app, sink, state)
 }
+
+const app = new Application(join(__dirname, './app'), {} as any, {}, {})
+instructions(__dirname, app, sinkStatic).catch(console.log)

@@ -30,6 +30,7 @@ import { BaseModel as LucidBaseModel } from '@adonisjs/lucid/build/src/Orm/BaseM
 
 import { OATGuard } from '../src/Guards/Oat'
 import { SessionGuard } from '../src/Guards/Session'
+import { BasicAuthGuard } from '../src/Guards/BasicAuth'
 import { LucidProvider } from '../src/UserProviders/Lucid'
 import { DatabaseProvider } from '../src/UserProviders/Database'
 import { TokenDatabaseProvider } from '../src/TokenProviders/Database'
@@ -304,6 +305,23 @@ export function getApiTokensGuard(
 	}
 
 	return new OATGuard('api', config, emitter, provider, ctx, tokensProvider)
+}
+
+/**
+ * Returns an instance of the basic auth guard.
+ */
+export function getBasicAuthGuard(
+	provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
+	providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
+	ctx: HttpContextContract
+) {
+	const config = {
+		driver: 'basic' as const,
+		realm: 'Login',
+		provider: providerConfig,
+	}
+
+	return new BasicAuthGuard('basic', config, emitter, provider, ctx)
 }
 
 /**

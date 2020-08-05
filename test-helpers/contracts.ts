@@ -25,6 +25,10 @@ declare module '@ioc:Adonis/Addons/Auth' {
 			implementation: SessionGuardContract<'database', 'sessionDb'>
 			config: SessionGuardConfig<'database'>
 		}
+		basic: {
+			implementation: BasicAuthGuardContract<'lucid', 'basic'>
+			config: BasicAuthGuardConfig<'lucid'>
+		}
 	}
 }
 

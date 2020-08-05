@@ -64,6 +64,10 @@ test.group('Auth', (group) => {
 					},
 					provider: getLucidProviderConfig({ model: User }),
 				},
+				basic: {
+					driver: 'basic',
+					provider: getLucidProviderConfig({ model: User }),
+				},
 				session: {
 					driver: 'session',
 					provider: getLucidProviderConfig({ model: User }),
@@ -222,6 +226,10 @@ test.group('Auth', (group) => {
 					driver: 'session',
 					provider: getLucidProviderConfig({ model: User }),
 				},
+				basic: {
+					driver: 'basic',
+					provider: getLucidProviderConfig({ model: User }),
+				},
 				api: {
 					driver: 'oat',
 					tokenProvider: {
@@ -263,6 +271,10 @@ test.group('Auth', (group) => {
 					},
 					provider: getLucidProviderConfig({ model: User }),
 				},
+				basic: {
+					driver: 'basic',
+					provider: getLucidProviderConfig({ model: User }),
+				},
 				sessionDb: {
 					driver: 'session',
 					provider: getDatabaseProviderConfig(),
@@ -302,6 +314,10 @@ test.group('Auth', (group) => {
 						driver: 'database',
 						table: 'api_tokens',
 					},
+					provider: getLucidProviderConfig({ model: User }),
+				},
+				basic: {
+					driver: 'basic',
 					provider: getLucidProviderConfig({ model: User }),
 				},
 				session: {
