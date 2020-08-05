@@ -289,11 +289,19 @@ async function getProvider(sink: typeof sinkStatic) {
  * Prompts user to select one or more guards
  */
 async function getGuard(sink: typeof sinkStatic) {
-	return sink.getPrompt().multiple('Select which guard you need for authentication (select using space)', GUARD_PROMPT_CHOICES, {
-		validate(choices) {
-			return choices && choices.length ? true : 'Select one or more guards for authenticating users'
-		},
-	})
+	return sink
+		.getPrompt()
+		.multiple(
+			'Select which guard you need for authentication (select using space)',
+			GUARD_PROMPT_CHOICES,
+			{
+				validate(choices) {
+					return choices && choices.length
+						? true
+						: 'Select one or more guards for authenticating users'
+				},
+			}
+		)
 }
 
 /**
