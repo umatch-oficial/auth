@@ -1,39 +1,53 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-## Table of contents
+<div align="center">
+  <img src="https://res.cloudinary.com/adonisjs/image/upload/q_100/v1558612869/adonis-readme_zscycu.jpg" width="600px">
+</div>
 
-- [@adonisjs/auth](#adonisjsauth)
-  - [Change log](#change-log)
-  - [Contributing](#contributing)
-  - [Authors & License](#authors--license)
+<br />
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+<div align="center">
+  <h3>Adonis Auth</h3>
+  <p>The official user authentication package for AdonisJS. Ships with <strong>sessions</strong>, <strong>api tokens</strong> and <strong>basic auth</strong> guards. </p>
+</div>
 
-# @adonisjs/auth
+<br />
 
-[![circleci-image]][circleci-url]
-[![npm-image]][npm-url]
-![](https://img.shields.io/badge/Typescript-294E80.svg?style=for-the-badge&logo=typescript)
+<div align="center">
 
-## Change log
+[![circleci-image]][circleci-url] [![typescript-image]][typescript-url] [![npm-image]][npm-url] [![license-image]][license-url] [![audit-report-image]][audit-report-url]
 
-The change log can be found in the [CHANGELOG.md](CHANGELOG.md) file.
+</div>
 
-## Contributing
+<div align="center">
+  <h3>
+    <a href="https://preview.adonisjs.com">
+      Website
+    </a>
+    <span> | </span>
+    <a href="https://preview.adonisjs.com/guides/auth/introduction">
+      Guides
+    </a>
+    <span> | </span>
+    <a href="CONTRIBUTING.md">
+      Contributing
+    </a>
+  </h3>
+</div>
 
-Everyone is welcome to contribute. Please go through the following guides, before getting started.
+<div align="center">
+  <sub>Built with ❤︎ by <a href="https://twitter.com/AmanVirk1">Harminder Virk</a>
+</div>
 
-1. [Contributing](https://adonisjs.com/contributing)
-2. [Code of conduct](https://adonisjs.com/code-of-conduct)
+[circleci-image]: https://img.shields.io/circleci/build/github/adonisjs/auth/master.svg?style=for-the-badge&logo=circleci
+[circleci-url]: https://circleci.com/gh/adonisjs/auth "circleci"
 
+[typescript-image]: https://img.shields.io/badge/Typescript-294E80.svg?style=for-the-badge&logo=typescript
+[typescript-url]:  "typescript"
 
-## Authors & License
-[Harminder virk](https://github.com/Harminder virk) and [contributors](https://github.com/adonisjs/adonis-auth/graphs/contributors).
+[npm-image]: https://img.shields.io/npm/v/@adonisjs/auth/alpha.svg?style=for-the-badge&logo=npm
+[npm-url]: https://www.npmjs.com/package/@adonisjs/auth/v/alpha "npm"
 
-MIT License, see the included [MIT](LICENSE.md) file.
+[license-image]: https://img.shields.io/npm/l/@adonisjs/auth?color=blueviolet&style=for-the-badge
+[license-url]: LICENSE.md "license"
 
-[circleci-image]: https://img.shields.io/circleci/project/github/adonisjs/adonis-auth/master.svg?style=for-the-badge&logo=circleci
-[circleci-url]: https://circleci.com/gh/adonisjs/adonis-auth "circleci"
-
-[npm-image]: https://img.shields.io/npm/v/@adonisjs/auth.svg?style=for-the-badge&logo=npm
-[npm-url]: https://npmjs.org/package/@adonisjs/auth "npm"
+[audit-report-image]: https://img.shields.io/badge/-Audit%20Report-blueviolet?style=for-the-badge
+[audit-report-url]: https://htmlpreview.github.io/?https://github.com/adonisjs/auth/blob/develop/npm-audit.html "audit-report"
