@@ -132,7 +132,7 @@ test.group('Session Driver | attempt', (group) => {
 		const User = getUserModel(BaseModel)
 		const password = await hash.make('secret')
 		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
-		emitter.once('auth:session:login', ({ name, user, token }) => {
+		emitter.once('adonis:session:login', ({ name, user, token }) => {
 			assert.equal(name, 'session')
 			assert.instanceOf(user, User)
 			assert.isNull(token)
@@ -168,7 +168,7 @@ test.group('Session Driver | attempt', (group) => {
 		const password = await hash.make('secret')
 		const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		emitter.once('auth:session:login', ({ name, user: model, token }) => {
+		emitter.once('adonis:session:login', ({ name, user: model, token }) => {
 			assert.equal(name, 'session')
 			assert.instanceOf(model, User)
 			assert.exists(token)
@@ -260,7 +260,7 @@ test.group('Session Driver | authenticate', (group) => {
 		const password = await hash.make('secret')
 		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		emitter.once('auth:session:authenticate', ({ name, user, viaRemember }) => {
+		emitter.once('adonis:session:authenticate', ({ name, user, viaRemember }) => {
 			assert.equal(name, 'session')
 			assert.instanceOf(user, User)
 			assert.isFalse(viaRemember)
@@ -314,7 +314,7 @@ test.group('Session Driver | authenticate', (group) => {
 		const password = await hash.make('secret')
 		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		emitter.once('auth:session:authenticate', ({ name, user, viaRemember }) => {
+		emitter.once('adonis:session:authenticate', ({ name, user, viaRemember }) => {
 			assert.equal(name, 'session')
 			assert.instanceOf(user, User)
 			assert.isTrue(viaRemember)
@@ -364,7 +364,7 @@ test.group('Session Driver | authenticate', (group) => {
 		const password = await hash.make('secret')
 		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		emitter.once('auth:session:authenticate', () => {
+		emitter.once('adonis:session:authenticate', () => {
 			throw new Error('Never expected to reach here')
 		})
 

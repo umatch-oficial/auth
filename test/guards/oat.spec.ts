@@ -150,7 +150,7 @@ test.group('OAT Guard | attempt', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:api:login', ({ name, user, token }) => {
+		emitter.once('adonis:api:login', ({ name, user, token }) => {
 			assert.equal(name, 'api')
 			assert.instanceOf(user, User)
 			assert.instanceOf(token, OpaqueToken)
@@ -187,7 +187,7 @@ test.group('OAT Guard | attempt', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:api:login', ({ name, user: model, token }) => {
+		emitter.once('adonis:api:login', ({ name, user: model, token }) => {
 			assert.equal(name, 'api')
 			assert.instanceOf(model, User)
 			assert.instanceOf(token, OpaqueToken)
@@ -227,7 +227,7 @@ test.group('OAT Guard | attempt', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:api:login', ({ name, user: model, token }) => {
+		emitter.once('adonis:api:login', ({ name, user: model, token }) => {
 			assert.equal(name, 'api')
 			assert.instanceOf(model, User)
 			assert.instanceOf(token, OpaqueToken)
@@ -264,7 +264,7 @@ test.group('OAT Guard | attempt', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:api:login', ({ name, user: model, token }) => {
+		emitter.once('adonis:api:login', ({ name, user: model, token }) => {
 			assert.equal(name, 'api')
 			assert.instanceOf(model, User)
 			assert.instanceOf(token, OpaqueToken)
@@ -320,7 +320,7 @@ test.group('OAT Guard | login', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:api:login', ({ name, user: model, token }) => {
+		emitter.once('adonis:api:login', ({ name, user: model, token }) => {
 			assert.equal(name, 'api')
 			assert.instanceOf(model, User)
 			assert.instanceOf(token, OpaqueToken)
@@ -376,7 +376,7 @@ test.group('OAT Guard | loginViaId', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:api:login', ({ name, user: model, token }) => {
+		emitter.once('adonis:api:login', ({ name, user: model, token }) => {
 			assert.equal(name, 'api')
 			assert.instanceOf(model, User)
 			assert.instanceOf(token, OpaqueToken)
@@ -434,7 +434,7 @@ test.group('OAT Guard | authenticate', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:api:authenticate', ({ name, user: model, token }) => {
+		emitter.once('adonis:api:authenticate', ({ name, user: model, token }) => {
 			assert.equal(name, 'api')
 			assert.instanceOf(model, User)
 			assert.instanceOf(token, ProviderToken)
@@ -814,7 +814,7 @@ test.group('OAT Guard | logout', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:api:authenticate', ({ name, user: model, token }) => {
+		emitter.once('adonis:api:authenticate', ({ name, user: model, token }) => {
 			assert.equal(name, 'api')
 			assert.instanceOf(model, User)
 			assert.instanceOf(token, ProviderToken)

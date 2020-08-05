@@ -260,7 +260,7 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
 		 * Emit login event. It can be used to track user logins and their devices.
 		 */
 		this.emitter.emit(
-			'auth:session:login',
+			'adonis:session:login',
 			this.getLoginEventData(providerUser.user, providerUser.getRememberMeToken())
 		)
 
@@ -288,7 +288,7 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
 			const providerUser = await this.getUserForSessionId(sessionId)
 			this.markUserAsLoggedIn(providerUser.user, true)
 			this.emitter.emit(
-				'auth:session:authenticate',
+				'adonis:session:authenticate',
 				this.getAuthenticateEventData(providerUser.user, false)
 			)
 			return this.user
@@ -320,7 +320,7 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
 
 		this.markUserAsLoggedIn(providerUser.user, true, true)
 		this.emitter.emit(
-			'auth:session:authenticate',
+			'adonis:session:authenticate',
 			this.getAuthenticateEventData(providerUser.user, true)
 		)
 		return this.user

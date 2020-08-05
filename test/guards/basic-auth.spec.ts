@@ -62,7 +62,7 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:basic:authenticate', ({ name, user: model }) => {
+		emitter.once('adonis:basic:authenticate', ({ name, user: model }) => {
 			assert.equal(name, 'basic')
 			assert.instanceOf(model, User)
 		})
@@ -103,7 +103,7 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:basic:authenticate', () => {
+		emitter.once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 
@@ -140,7 +140,7 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:basic:authenticate', () => {
+		emitter.once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 
@@ -182,7 +182,7 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:basic:authenticate', () => {
+		emitter.once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 
@@ -224,7 +224,7 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:basic:authenticate', () => {
+		emitter.once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 
@@ -261,7 +261,7 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:basic:authenticate', () => {
+		emitter.once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 
@@ -303,7 +303,7 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('auth:basic:authenticate', () => {
+		emitter.once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 

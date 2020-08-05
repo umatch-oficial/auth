@@ -9,3 +9,4 @@
 
 /// <reference path="./auth.ts" />
 /// <reference path="./context.ts" />
+/// <reference path="./events.ts" />
