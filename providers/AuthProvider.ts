@@ -9,9 +9,8 @@
 
 import { IocContract } from '@adonisjs/fold'
 import { ServerContract } from '@ioc:Adonis/Core/Server'
+import { AuthManagerContract } from '@ioc:Adonis/Addons/Auth'
 import { HttpContextConstructorContract } from '@ioc:Adonis/Core/HttpContext'
-
-import { AuthManager } from '../src/AuthManager'
 
 /**
  * Auth provider to register the auth binding
@@ -24,7 +23,8 @@ export default class AuthProvider {
 	 */
 	public register() {
 		this.container.singleton('Adonis/Addons/Auth', () => {
-			const authConfig = this.container.use('Adonis/Core/Config').get('auth')
+			const authConfig = this.container.use('Adonis/Core/Config').get('auth', {})
+			const { AuthManager } = require('../src/AuthManager')
 			return new AuthManager(this.container, authConfig)
 		})
 	}
@@ -35,7 +35,7 @@ export default class AuthProvider {
 	public async boot() {
 		this.container.with(
 			['Adonis/Core/HttpContext', 'Adonis/Addons/Auth'],
-			(HttpContext: HttpContextConstructorContract, Auth: AuthManager) => {
+			(HttpContext: HttpContextConstructorContract, Auth: AuthManagerContract) => {
 				HttpContext.getter(
 					'auth',
 					function auth() {
