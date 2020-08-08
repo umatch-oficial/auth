@@ -18,6 +18,7 @@ import {
 	LucidProviderConfig,
 	AuthManagerContract,
 	ExtendGuardCallback,
+	BasicAuthGuardConfig,
 	UserProviderContract,
 	DatabaseProviderConfig,
 	ExtendProviderCallback,
@@ -131,6 +132,19 @@ export class AuthManager implements AuthManagerContract {
 	}
 
 	/**
+	 * Returns an instance of the basic auth guard
+	 */
+	private makeBasicAuthGuard(
+		mapping: string,
+		config: BasicAuthGuardConfig<any>,
+		provider: UserProviderContract<any>,
+		ctx: HttpContextContract
+	) {
+		const { BasicAuthGuard } = require('../Guards/BasicAuth')
+		return new BasicAuthGuard(mapping, config, this.getEmitter(), provider, ctx)
+	}
+
+	/**
 	 * Returns an instance of the extended guard
 	 */
 	private makeExtendedGuard(
@@ -202,6 +216,8 @@ export class AuthManager implements AuthManagerContract {
 				return this.makeSessionGuard(mapping, mappingConfig, provider, ctx)
 			case 'oat':
 				return this.makeOatGuard(mapping, mappingConfig, provider, ctx)
+			case 'basic':
+				return this.makeBasicAuthGuard(mapping, mappingConfig, provider, ctx)
 			default:
 				return this.makeExtendedGuard(mapping, mappingConfig, provider, ctx)
 		}

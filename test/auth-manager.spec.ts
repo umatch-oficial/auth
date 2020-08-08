@@ -16,7 +16,9 @@ import { Auth } from '../src/Auth'
 import { AuthManager } from '../src/AuthManager'
 import { LucidProvider } from '../src/UserProviders/Lucid'
 import { DatabaseProvider } from '../src/UserProviders/Database'
+import { OATGuard } from '../src/Guards/Oat'
 import { SessionGuard } from '../src/Guards/Session'
+import { BasicAuthGuard } from '../src/Guards/BasicAuth'
 
 import {
 	setup,
@@ -234,5 +236,77 @@ test.group('Auth Manager', (group) => {
 		const ctx = getCtx()
 		assert.instanceOf(manager.makeMapping(ctx, 'admin' as any), CustomGuard)
 		assert.instanceOf(manager.makeMapping(ctx, 'admin' as any).provider, MongoDBProvider)
+	})
+
+	test('make an instance of the oat guard with lucid provider', (assert) => {
+		const User = getUserModel(BaseModel)
+
+		const manager = new AuthManager(container, {
+			guard: 'api',
+			list: {
+				api: {
+					driver: 'oat',
+					tokenProvider: {
+						driver: 'database',
+						table: 'api_tokens',
+					},
+					provider: getLucidProviderConfig({ model: User }),
+				},
+				basic: {
+					driver: 'basic',
+					provider: getLucidProviderConfig({ model: User }),
+				},
+				session: {
+					driver: 'session',
+					provider: getLucidProviderConfig({ model: User }),
+				},
+				sessionDb: {
+					driver: 'session',
+					provider: getDatabaseProviderConfig(),
+				},
+			},
+		})
+
+		const ctx = getCtx()
+
+		const mapping = manager.makeMapping(ctx, 'api')
+		assert.instanceOf(mapping, OATGuard)
+		assert.instanceOf(mapping.provider, LucidProvider)
+	})
+
+	test('make an instance of the basic auth guard with lucid provider', (assert) => {
+		const User = getUserModel(BaseModel)
+
+		const manager = new AuthManager(container, {
+			guard: 'api',
+			list: {
+				api: {
+					driver: 'oat',
+					tokenProvider: {
+						driver: 'database',
+						table: 'api_tokens',
+					},
+					provider: getLucidProviderConfig({ model: User }),
+				},
+				basic: {
+					driver: 'basic',
+					provider: getLucidProviderConfig({ model: User }),
+				},
+				session: {
+					driver: 'session',
+					provider: getLucidProviderConfig({ model: User }),
+				},
+				sessionDb: {
+					driver: 'session',
+					provider: getDatabaseProviderConfig(),
+				},
+			},
+		})
+
+		const ctx = getCtx()
+
+		const mapping = manager.makeMapping(ctx, 'basic')
+		assert.instanceOf(mapping, BasicAuthGuard)
+		assert.instanceOf(mapping.provider, LucidProvider)
 	})
 })
