@@ -34,6 +34,11 @@ export class TokenDatabaseProvider implements TokenProviderContract {
 	}
 
 	/**
+	 * The foreign key column
+	 */
+	private foreignKey = this.config.foreignKey || 'user_id'
+
+	/**
 	 * Returns the builder query for a given token + type
 	 */
 	private getLookupQuery(tokenId: string) {
@@ -62,7 +67,14 @@ export class TokenDatabaseProvider implements TokenProviderContract {
 			return null
 		}
 
-		const { name, user_id: userId, token: value, expires_at: expiresAt, type, ...meta } = tokenRow
+		const {
+			name,
+			[this.foreignKey]: userId,
+			token: value,
+			expires_at: expiresAt,
+			type,
+			...meta
+		} = tokenRow
 		let normalizedExpiryDate: undefined | DateTime
 
 		/**
@@ -102,7 +114,7 @@ export class TokenDatabaseProvider implements TokenProviderContract {
 		 * Payload to save to the database
 		 */
 		const payload = {
-			user_id: token.userId,
+			[this.foreignKey]: token.userId,
 			name: token.name,
 			token: token.tokenHash,
 			type: token.type,
