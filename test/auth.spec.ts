@@ -9,7 +9,7 @@
 
 import test from 'japa'
 import 'reflect-metadata'
-import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import { AuthManager } from '../src/AuthManager'
 import { SessionGuard } from '../src/Guards/Session'
@@ -20,40 +20,35 @@ import { TokenDatabaseProvider } from '../src/TokenProviders/Database'
 import {
 	setup,
 	reset,
-	getDb,
-	getCtx,
 	cleanup,
-	getModel,
-	container,
 	mockAction,
 	mockProperty,
 	getUserModel,
+	setupApplication,
 	getLucidProviderConfig,
 	getDatabaseProviderConfig,
 } from '../test-helpers'
 
-let db: DatabaseContract
-let BaseModel: ReturnType<typeof getModel>
+let app: ApplicationContract
 
 test.group('Auth', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		BaseModel = getModel(db)
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		await reset(db)
+		await reset(app)
 	})
 
 	test('make and cache instance of the session guard', (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'session',
 			list: {
 				api: {
@@ -79,7 +74,7 @@ test.group('Auth', (group) => {
 			},
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 		const auth = manager.getAuthForRequest(ctx)
 		const mapping = auth.use('session')
 		mapping['isCached'] = true
@@ -90,9 +85,9 @@ test.group('Auth', (group) => {
 	})
 
 	test('proxy all methods to the default driver', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'custom',
 			list: {
 				custom: {
@@ -113,7 +108,7 @@ test.group('Auth', (group) => {
 		class CustomGuard {}
 		const guardInstance = new CustomGuard()
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 		const auth = manager.getAuthForRequest(ctx)
 
 		manager.extend('guard', 'custom', () => {
@@ -217,9 +212,9 @@ test.group('Auth', (group) => {
 	})
 
 	test('update default guard', (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'session',
 			list: {
 				session: {
@@ -245,7 +240,7 @@ test.group('Auth', (group) => {
 			},
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 		const auth = manager.getAuthForRequest(ctx)
 		auth.defaultGuard = 'sessionDb'
 
@@ -254,9 +249,9 @@ test.group('Auth', (group) => {
 	})
 
 	test('serialize toJSON', (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'session',
 			list: {
 				session: {
@@ -282,7 +277,7 @@ test.group('Auth', (group) => {
 			},
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 		const auth = manager.getAuthForRequest(ctx)
 		auth.defaultGuard = 'sessionDb'
 		auth.use()
@@ -303,9 +298,9 @@ test.group('Auth', (group) => {
 	})
 
 	test('make oat guard', (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'api',
 			list: {
 				api: {
@@ -331,7 +326,7 @@ test.group('Auth', (group) => {
 			},
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 		const auth = manager.getAuthForRequest(ctx).use('api')
 
 		assert.equal(auth.name, 'api')
@@ -340,9 +335,9 @@ test.group('Auth', (group) => {
 	})
 
 	test('return user_id when foreignKey is missing', (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'api',
 			list: {
 				api: {
@@ -368,7 +363,7 @@ test.group('Auth', (group) => {
 			},
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 		const auth = manager.getAuthForRequest(ctx).use('api')
 
 		assert.instanceOf(auth.tokenProvider, TokenDatabaseProvider)
@@ -376,9 +371,9 @@ test.group('Auth', (group) => {
 	})
 
 	test('return the foreignKey when not missing', (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'api',
 			list: {
 				api: {
@@ -405,7 +400,7 @@ test.group('Auth', (group) => {
 			},
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 		const auth = manager.getAuthForRequest(ctx).use('api')
 
 		assert.instanceOf(auth.tokenProvider, TokenDatabaseProvider)

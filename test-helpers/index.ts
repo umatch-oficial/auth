@@ -9,24 +9,12 @@
 
 import 'reflect-metadata'
 import { join } from 'path'
-import { Ioc } from '@adonisjs/fold'
 import { MarkOptional } from 'ts-essentials'
 import { Filesystem } from '@poppinss/dev-utils'
 import { LucidModel } from '@ioc:Adonis/Lucid/Model'
-import { Hash } from '@adonisjs/hash/build/standalone'
-import { ServerResponse, IncomingMessage } from 'http'
-import { Logger } from '@adonisjs/logger/build/standalone'
-import { Database } from '@adonisjs/lucid/build/src/Database'
-import { Profiler } from '@adonisjs/profiler/build/standalone'
-import { Emitter } from '@adonisjs/events/build/standalone'
-import { Adapter } from '@adonisjs/lucid/build/src/Orm/Adapter'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { SessionConfig } from '@ioc:Adonis/Addons/Session'
-import { Encryption } from '@adonisjs/encryption/build/standalone'
-import { HttpContext, Router } from '@adonisjs/http-server/build/standalone'
-import { SessionManager } from '@adonisjs/session/build/src/SessionManager'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
-import { BaseModel as LucidBaseModel } from '@adonisjs/lucid/build/src/Orm/BaseModel'
 
 import { OATGuard } from '../src/Guards/Oat'
 import { SessionGuard } from '../src/Guards/Session'
@@ -44,43 +32,146 @@ import {
 	DatabaseProviderContract,
 } from '@ioc:Adonis/Addons/Auth'
 
-const fs = new Filesystem(join(__dirname, '__app'))
-const logger = new Logger({ enabled: false, level: 'debug', name: 'adonis', prettyPrint: true })
-const profiler = new Profiler(__dirname, logger, {})
-const sessionConfig: SessionConfig = {
-	driver: 'cookie',
-	cookieName: 'adonis-session',
-	clearWithBrowser: false,
-	age: '2h',
-	cookie: {
-		path: '/',
-	},
+import { Application } from '@adonisjs/core/build/standalone'
+
+export const fs = new Filesystem(join(__dirname, '__app'))
+
+export async function setupApplication(
+	additionalProviders?: string[],
+	environment: 'web' | 'repl' | 'test' = 'test'
+) {
+	await fs.add('.env', '')
+	await fs.add(
+		'config/app.ts',
+		`
+		export const appKey = 'averylong32charsrandomsecretkey',
+		export const http = {
+			cookie: {},
+			trustProxy: () => true,
+		}
+	`
+	)
+
+	await fs.add(
+		'config/hash.ts',
+		`
+		const hashConfig = {
+			default: 'bcrypt' as const,
+			list: {
+				bcrypt: {
+					driver: 'bcrypt',
+					rounds: 10,
+				},
+			},
+		}
+
+		export default hashConfig
+	`
+	)
+
+	await fs.add(
+		'config/session.ts',
+		`
+		const sessionConfig = {
+			driver: 'cookie',
+			cookieName: 'adonis-session',
+			clearWithBrowser: false,
+			age: '2h',
+			cookie: {
+				path: '/',
+			},
+		}
+
+		export default sessionConfig
+	`
+	)
+
+	await fs.add(
+		'config/database.ts',
+		`const databaseConfig = {
+			connection: 'primary',
+			connections: {
+				primary: {
+					client: 'sqlite3',
+					connection: {
+						filename: '${join(fs.basePath, 'primary.sqlite3')}',
+					},
+				},
+				secondary: {
+					client: 'sqlite3',
+					connection: {
+						filename: '${join(fs.basePath, 'secondary.sqlite3')}',
+					},
+				},
+			}
+		}
+
+		export default databaseConfig`
+	)
+
+	await fs.add(
+		'config/auth.ts',
+		`const authConfig = {
+			guard: 'web',
+			list: {
+				web: {
+				},
+			}
+		}
+
+		export default authConfig`
+	)
+
+	const app = new Application(fs.basePath, environment, {
+		aliases: {
+			App: './app',
+		},
+		providers: ['@adonisjs/core', '@adonisjs/repl', '@adonisjs/session', '@adonisjs/lucid'].concat(
+			additionalProviders || []
+		),
+	})
+
+	app.setup()
+	app.registerProviders()
+	await app.bootProviders()
+
+	return app
 }
 
-export const container = new Ioc()
-export const secret = 'securelong32characterslongsecret'
-export const encryption = new Encryption({ secret })
-export const hash = new Hash(container, {
-	default: 'bcrypt' as const,
-	list: {
-		bcrypt: {
-			driver: 'bcrypt',
-			rounds: 10,
-		},
-	},
-})
+// const sessionConfig: SessionConfig = {
+// 	driver: 'cookie',
+// 	cookieName: 'adonis-session',
+// 	clearWithBrowser: false,
+// 	age: '2h',
+// 	cookie: {
+// 		path: '/',
+// 	},
+// }
 
-export const emitter = new Emitter(container)
-container.singleton('Adonis/Core/Event', () => emitter)
-container.singleton('Adonis/Core/Encryption', () => encryption)
-container.singleton('Adonis/Core/Hash', () => hash)
-container.singleton('Adonis/Core/Config', () => {
-	return {
-		get() {
-			return secret
-		},
-	}
-})
+// export const container = new Ioc()
+// export const secret = 'securelong32characterslongsecret'
+// export const encryption = new Encryption({ secret })
+// export const hash = new Hash(container, {
+// 	default: 'bcrypt' as const,
+// 	list: {
+// 		bcrypt: {
+// 			driver: 'bcrypt',
+// 			rounds: 10,
+// 		},
+// 	},
+// })
+
+// export const emitter = new Emitter(container)
+// container.singleton('Adonis/Core/Event', () => emitter)
+// container.singleton('Adonis/Core/Encryption', () => encryption)
+// container.singleton('Adonis/Core/Hash', () => hash)
+// container.singleton('Adonis/Core/Config', () => {
+// 	return {
+// 		get() {
+// 			return secret
+// 		},
+// 	}
+// })
 
 /**
  * Create the users tables
@@ -145,59 +236,52 @@ export function getDatabaseProviderConfig() {
 /**
  * Returns instance of database
  */
-export async function getDb() {
-	await fs.ensureRoot()
+// export async function getDb() {
+// 	await fs.ensureRoot()
 
-	const db = (new Database(
-		{
-			connection: 'primary',
-			connections: {
-				primary: {
-					client: 'sqlite3',
-					connection: {
-						filename: join(fs.basePath, 'primary.sqlite3'),
-					},
-				},
-				secondary: {
-					client: 'sqlite3',
-					connection: {
-						filename: join(fs.basePath, 'secondary.sqlite3'),
-					},
-				},
-			},
-		},
-		logger,
-		profiler,
-		emitter
-	) as unknown) as DatabaseContract
+// 	const db = (new Database(
+// 		{
+// 			connection: 'primary',
+// 			connections: {
+// 				primary: {
+// 					client: 'sqlite3',
+// 					connection: {
+// 						filename: join(fs.basePath, 'primary.sqlite3'),
+// 					},
+// 				},
+// 				secondary: {
+// 					client: 'sqlite3',
+// 					connection: {
+// 						filename: join(fs.basePath, 'secondary.sqlite3'),
+// 					},
+// 				},
+// 			},
+// 		},
+// 		logger,
+// 		profiler,
+// 		emitter
+// 	) as unknown) as DatabaseContract
 
-	container.singleton('Adonis/Lucid/Database', () => db)
-	return db
-}
+// 	container.singleton('Adonis/Lucid/Database', () => db)
+// 	return db
+// }
 
 /**
  * Performs an initial setup
  */
-export async function setup(db: DatabaseContract) {
+export async function setup(application: ApplicationContract) {
+	const db = application.container.use('Adonis/Lucid/Database')
 	await createUsersTable(db.connection())
 	await createUsersTable(db.connection('secondary'))
 	await createTokensTable(db.connection())
 	await createTokensTable(db.connection('secondary'))
-
-	HttpContext.getter(
-		'session',
-		function session() {
-			const sessionManager = new SessionManager(container, sessionConfig)
-			return sessionManager.create(this)
-		},
-		true
-	)
 }
 
 /**
  * Performs cleanup
  */
-export async function cleanup(db: DatabaseContract) {
+export async function cleanup(application: ApplicationContract) {
+	const db = application.container.use('Adonis/Lucid/Database')
 	await db.connection().schema.dropTableIfExists('users')
 	await db.connection('secondary').schema.dropTableIfExists('users')
 	await db.manager.closeAll()
@@ -207,7 +291,8 @@ export async function cleanup(db: DatabaseContract) {
 /**
  * Reset database tables
  */
-export async function reset(db: DatabaseContract) {
+export async function reset(application: ApplicationContract) {
+	const db = application.container.use('Adonis/Lucid/Database')
 	await db.connection().truncate('users')
 	await db.connection('secondary').truncate('users')
 
@@ -216,63 +301,60 @@ export async function reset(db: DatabaseContract) {
 }
 
 /**
- * Returns Base model that other models can extend
- */
-export function getModel(db: DatabaseContract) {
-	LucidBaseModel.$adapter = new Adapter(db)
-	LucidBaseModel.$container = container
-	return (LucidBaseModel as unknown) as LucidModel
-}
-
-/**
  * Returns an instance of the lucid provider
  */
 export function getLucidProvider<User extends LucidProviderModel>(
+	application: ApplicationContract,
 	config: MarkOptional<LucidProviderConfig<User>, 'driver' | 'uids' | 'identifierKey' | 'user'>
 ) {
 	const defaults = getLucidProviderConfig(config)
 	const normalizedConfig = Object.assign(defaults, config) as LucidProviderConfig<User>
-	return (new LucidProvider(container, normalizedConfig) as unknown) as LucidProviderContract<User>
+	return (new LucidProvider(application, normalizedConfig) as unknown) as LucidProviderContract<
+		User
+	>
 }
 
 /**
  * Returns an instance of the database provider
  */
-export function getDatabaseProvider(config: Partial<DatabaseProviderConfig>) {
+export function getDatabaseProvider(
+	application: ApplicationContract,
+	config: Partial<DatabaseProviderConfig>
+) {
 	const defaults = getDatabaseProviderConfig()
 	const normalizedConfig = Object.assign(defaults, config) as DatabaseProviderConfig
-	const db = container.use('Adonis/Lucid/Database')
 	return (new DatabaseProvider(
-		container,
+		application,
 		normalizedConfig,
-		db
+		application.container.use('Adonis/Lucid/Database')
 	) as unknown) as DatabaseProviderContract<any>
 }
 
 /**
  * Returns an instance of ctx
  */
-export function getCtx(req?: IncomingMessage, res?: ServerResponse) {
-	const httpRow = profiler.create('http:request')
-	const router = new Router(encryption)
+// export function getCtx(req?: IncomingMessage, res?: ServerResponse) {
+// 	const httpRow = profiler.create('http:request')
+// 	const router = new Router(encryption)
 
-	return (HttpContext.create(
-		'/',
-		{},
-		logger,
-		httpRow,
-		encryption,
-		router,
-		req,
-		res,
-		{} as any
-	) as unknown) as HttpContextContract
-}
+// 	return (HttpContext.create(
+// 		'/',
+// 		{},
+// 		logger,
+// 		httpRow,
+// 		encryption,
+// 		router,
+// 		req,
+// 		res,
+// 		{} as any
+// 	) as unknown) as HttpContextContract
+// }
 
 /**
  * Returns an instance of the session driver.
  */
 export function getSessionDriver(
+	app: ApplicationContract,
 	provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
 	providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
 	ctx: HttpContextContract
@@ -283,13 +365,14 @@ export function getSessionDriver(
 		provider: providerConfig,
 	}
 
-	return new SessionGuard('session', config, emitter, provider, ctx)
+	return new SessionGuard('session', config, app.container.use('Adonis/Core/Event'), provider, ctx)
 }
 
 /**
  * Returns an instance of the api tokens guard.
  */
 export function getApiTokensGuard(
+	app: ApplicationContract,
 	provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
 	providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
 	ctx: HttpContextContract,
@@ -304,13 +387,21 @@ export function getApiTokensGuard(
 		provider: providerConfig,
 	}
 
-	return new OATGuard('api', config, emitter, provider, ctx, tokensProvider)
+	return new OATGuard(
+		'api',
+		config,
+		app.container.use('Adonis/Core/Event'),
+		provider,
+		ctx,
+		tokensProvider
+	)
 }
 
 /**
  * Returns an instance of the basic auth guard.
  */
 export function getBasicAuthGuard(
+	app: ApplicationContract,
 	provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
 	providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
 	ctx: HttpContextContract
@@ -321,7 +412,7 @@ export function getBasicAuthGuard(
 		provider: providerConfig,
 	}
 
-	return new BasicAuthGuard('basic', config, emitter, provider, ctx)
+	return new BasicAuthGuard('basic', config, app.container.use('Adonis/Core/Event'), provider, ctx)
 }
 
 /**
@@ -362,33 +453,35 @@ export function getUserModel(BaseModel: LucidModel) {
 /**
  * Signs value to be set as cookie header
  */
-export function signCookie(value: any, name: string) {
-	return `${name}=s:${encryption.verifier.sign(value, undefined, name)}`
+export function signCookie(app: ApplicationContract, value: any, name: string) {
+	return `${name}=s:${app.container
+		.use('Adonis/Core/Encryption')
+		.verifier.sign(value, undefined, name)}`
 }
 
 /**
  * Encrypt value to be set as cookie header
  */
-export function encryptCookie(value: any, name: string) {
-	return `${name}=e:${encryption.encrypt(value, undefined, name)}`
+export function encryptCookie(app: ApplicationContract, value: any, name: string) {
+	return `${name}=e:${app.container.use('Adonis/Core/Encryption').encrypt(value, undefined, name)}`
 }
 
 /**
  * Decrypt cookie
  */
-export function decryptCookie(cookie: any, name: string) {
+export function decryptCookie(app: ApplicationContract, cookie: any, name: string) {
 	const cookieValue = decodeURIComponent(cookie.split(';')[0]).replace(`${name}=`, '').slice(2)
 
-	return encryption.decrypt<any>(cookieValue, name)
+	return app.container.use('Adonis/Core/Encryption').decrypt<any>(cookieValue, name)
 }
 
 /**
  * Unsign cookie
  */
-export function unsignCookie(cookie: any, name: string) {
+export function unsignCookie(app: ApplicationContract, cookie: any, name: string) {
 	const cookieValue = decodeURIComponent(cookie.split(';')[0]).replace(`${name}=`, '').slice(2)
 
-	return encryption.verifier.unsign<any>(cookieValue, name)
+	return app.container.use('Adonis/Core/Encryption').verifier.unsign<any>(cookieValue, name)
 }
 
 /**

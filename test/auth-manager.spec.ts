@@ -10,7 +10,7 @@
 import test from 'japa'
 import 'reflect-metadata'
 import { UserProviderContract } from '@ioc:Adonis/Addons/Auth'
-import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import { Auth } from '../src/Auth'
 import { AuthManager } from '../src/AuthManager'
@@ -23,38 +23,33 @@ import { BasicAuthGuard } from '../src/Guards/BasicAuth'
 import {
 	setup,
 	reset,
-	getDb,
-	getCtx,
 	cleanup,
-	container,
-	getModel,
 	getUserModel,
+	setupApplication,
 	getLucidProviderConfig,
 	getDatabaseProviderConfig,
 } from '../test-helpers'
 
-let db: DatabaseContract
-let BaseModel: ReturnType<typeof getModel>
+let app: ApplicationContract
 
 test.group('Auth Manager', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		BaseModel = getModel(db)
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		await reset(db)
+		await reset(app)
 	})
 
 	test('make an instance of the session guard with lucid provider', (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'session',
 			list: {
 				api: {
@@ -80,7 +75,7 @@ test.group('Auth Manager', (group) => {
 			},
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 
 		const mapping = manager.makeMapping(ctx, 'session')
 		assert.instanceOf(mapping, SessionGuard)
@@ -88,9 +83,9 @@ test.group('Auth Manager', (group) => {
 	})
 
 	test('make an instance of the session guard with database provider', (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'session',
 			list: {
 				api: {
@@ -116,7 +111,7 @@ test.group('Auth Manager', (group) => {
 			},
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 
 		const mapping = manager.makeMapping(ctx, 'sessionDb')
 		assert.instanceOf(mapping, SessionGuard)
@@ -124,9 +119,9 @@ test.group('Auth Manager', (group) => {
 	})
 
 	test('make an instance of auth class for a given http request', (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'session',
 			list: {
 				api: {
@@ -152,7 +147,7 @@ test.group('Auth Manager', (group) => {
 			},
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 
 		const auth = manager.getAuthForRequest(ctx)
 		assert.instanceOf(auth, Auth)
@@ -171,7 +166,7 @@ test.group('Auth Manager', (group) => {
 			public async updateRememberMeToken() {}
 		}
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'session',
 			list: {
 				session: {},
@@ -188,7 +183,7 @@ test.group('Auth Manager', (group) => {
 			return new MongoDBProvider(config)
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 		assert.instanceOf(manager.makeMapping(ctx, 'admin' as any).provider, MongoDBProvider)
 	})
 
@@ -212,7 +207,7 @@ test.group('Auth Manager', (group) => {
 			}
 		}
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'session',
 			list: {
 				session: {},
@@ -233,15 +228,15 @@ test.group('Auth Manager', (group) => {
 			return new CustomGuard(mapping, config, provider) as any
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 		assert.instanceOf(manager.makeMapping(ctx, 'admin' as any), CustomGuard)
 		assert.instanceOf(manager.makeMapping(ctx, 'admin' as any).provider, MongoDBProvider)
 	})
 
 	test('make an instance of the oat guard with lucid provider', (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'api',
 			list: {
 				api: {
@@ -267,7 +262,7 @@ test.group('Auth Manager', (group) => {
 			},
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 
 		const mapping = manager.makeMapping(ctx, 'api')
 		assert.instanceOf(mapping, OATGuard)
@@ -275,9 +270,9 @@ test.group('Auth Manager', (group) => {
 	})
 
 	test('make an instance of the basic auth guard with lucid provider', (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const manager = new AuthManager(container, {
+		const manager = new AuthManager(app, {
 			guard: 'api',
 			list: {
 				api: {
@@ -303,7 +298,7 @@ test.group('Auth Manager', (group) => {
 			},
 		})
 
-		const ctx = getCtx()
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 
 		const mapping = manager.makeMapping(ctx, 'basic')
 		assert.instanceOf(mapping, BasicAuthGuard)

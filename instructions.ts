@@ -106,12 +106,12 @@ function makeModel(
 
 	const template = new sink.files.MustacheFile(projectRoot, modelPath, getStub('model.txt'))
 	if (template.exists()) {
-		sink.logger.skip(`${modelPath} file already exists`)
+		sink.logger.action('create').skipped(`${modelPath} file already exists`)
 		return
 	}
 
 	template.apply(state).commit()
-	sink.logger.create(modelPath)
+	sink.logger.action('create').succeeded(modelPath)
 }
 
 /**
@@ -135,12 +135,12 @@ function makeUsersMigration(
 		getStub('migrations/auth.txt')
 	)
 	if (template.exists()) {
-		sink.logger.skip(`${migrationPath} file already exists`)
+		sink.logger.action('create').skipped(`${migrationPath} file already exists`)
 		return
 	}
 
 	template.apply(state).commit()
-	sink.logger.create(migrationPath)
+	sink.logger.action('create').succeeded(migrationPath)
 }
 
 /**
@@ -164,12 +164,12 @@ function makeTokensMigration(
 		getStub('migrations/api_tokens.txt')
 	)
 	if (template.exists()) {
-		sink.logger.skip(`${migrationPath} file already exists`)
+		sink.logger.action('create').skipped(`${migrationPath} file already exists`)
 		return
 	}
 
 	template.apply(state).commit()
-	sink.logger.create(migrationPath)
+	sink.logger.action('create').succeeded(migrationPath)
 }
 
 /**
@@ -193,10 +193,10 @@ function makeMiddleware(
 		getStub('middleware/Auth.txt')
 	)
 	if (authTemplate.exists()) {
-		sink.logger.skip(`${authPath} file already exists`)
+		sink.logger.action('create').skipped(`${authPath} file already exists`)
 	} else {
 		authTemplate.apply(state).commit()
-		sink.logger.create(authPath)
+		sink.logger.action('create').succeeded(authPath)
 	}
 
 	/**
@@ -209,10 +209,10 @@ function makeMiddleware(
 		getStub('middleware/SilentAuth.txt')
 	)
 	if (silentAuthTemplate.exists()) {
-		sink.logger.skip(`${silentAuthPath} file already exists`)
+		sink.logger.action('create').skipped(`${silentAuthPath} file already exists`)
 	} else {
 		silentAuthTemplate.apply(state).commit()
-		sink.logger.create(silentAuthPath)
+		sink.logger.action('create').succeeded(silentAuthPath)
 	}
 }
 
@@ -244,7 +244,7 @@ function makeContract(
 	})
 
 	template.apply(state).partials(partials).commit()
-	sink.logger.create(contractPath)
+	sink.logger.action('create').succeeded(contractPath)
 }
 
 /**
@@ -271,7 +271,7 @@ function makeConfig(
 	})
 
 	template.apply(state).partials(partials).commit()
-	sink.logger.create(configPath)
+	sink.logger.action('create').succeeded(configPath)
 }
 
 /**
@@ -332,7 +332,7 @@ async function getTableName(sink: typeof sinkStatic): Promise<string> {
 async function getMigrationConsent(sink: typeof sinkStatic, tableName: string): Promise<boolean> {
 	return sink
 		.getPrompt()
-		.confirm(`Create migration for the ${sink.colors.underline(tableName)} table?`)
+		.confirm(`Create migration for the ${sink.logger.colors.underline(tableName)} table?`)
 }
 
 /**

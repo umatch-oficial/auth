@@ -9,7 +9,7 @@
 
 import { Hooks } from '@poppinss/hooks'
 import { Exception } from '@poppinss/utils'
-import { IocContract } from '@adonisjs/fold'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/DatabaseQueryBuilder'
 
@@ -42,7 +42,7 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
 	private rememberMeColumn = 'remember_me_token'
 
 	constructor(
-		private container: IocContract,
+		private application: ApplicationContract,
 		private config: DatabaseProviderConfig,
 		private db: DatabaseContract
 	) {}
@@ -104,7 +104,7 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
 	 */
 	public getUserFor(user: any): ProviderUserContract<DatabaseProviderRow> {
 		this.ensureUserHasId(user)
-		return this.container.make(this.config.user || DatabaseUser, [user, this.config])
+		return this.application.container.make(this.config.user || DatabaseUser, [user, this.config])
 	}
 
 	/**

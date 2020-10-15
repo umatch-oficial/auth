@@ -3,6 +3,7 @@
 	"files": [
 		"./node_modules/@adonisjs/lucid/build/adonis-typings/index.d.ts",
 		"./node_modules/@adonisjs/core/build/adonis-typings/index.d.ts",
+		"./node_modules/@adonisjs/application/build/adonis-typings/index.d.ts",
 		"./node_modules/@adonisjs/session/build/adonis-typings/index.d.ts"
 	],
 	"compilerOptions": {

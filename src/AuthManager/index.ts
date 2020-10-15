@@ -7,7 +7,6 @@
  * file that was distributed with this source code.
  */
 
-import { IocContract } from '@adonisjs/fold'
 import { Exception, ManagerConfigValidator } from '@poppinss/utils'
 
 import {
@@ -24,6 +23,7 @@ import {
 	ExtendProviderCallback,
 } from '@ioc:Adonis/Addons/Auth'
 
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { Auth } from '../Auth'
 
@@ -47,7 +47,7 @@ export class AuthManager implements AuthManagerContract {
 	 */
 	public defaultGuard = this.config.guard
 
-	constructor(private container: IocContract, private config: AuthConfig) {
+	constructor(private application: ApplicationContract, private config: AuthConfig) {
 		const validator = new ManagerConfigValidator(config, 'auth', 'config/auth')
 		validator.validateDefault('guard')
 		validator.validateList('list', 'guard')
@@ -57,28 +57,28 @@ export class AuthManager implements AuthManagerContract {
 	 * Verifies and returns an instance of the event emitter
 	 */
 	private getEmitter() {
-		const hasEmitter = this.container.hasBinding('Adonis/Core/Event')
+		const hasEmitter = this.application.container.hasBinding('Adonis/Core/Event')
 		if (!hasEmitter) {
 			throw new Exception('"Adonis/Core/Event" is required by the auth provider')
 		}
 
-		return this.container.use('Adonis/Core/Event')
+		return this.application.container.use('Adonis/Core/Event')
 	}
 
 	/**
 	 * Lazily makes an instance of the lucid provider
 	 */
 	private makeLucidProvider(config: LucidProviderConfig<any>) {
-		return new (require('../UserProviders/Lucid').LucidProvider)(this.container, config)
+		return new (require('../UserProviders/Lucid').LucidProvider)(this.application, config)
 	}
 
 	/**
 	 * Lazily makes an instance of the database provider
 	 */
 	private makeDatabaseProvider(config: DatabaseProviderConfig) {
-		const Database = this.container.use('Adonis/Lucid/Database')
+		const Database = this.application.container.use('Adonis/Lucid/Database')
 		return new (require('../UserProviders/Database').DatabaseProvider)(
-			this.container,
+			this.application,
 			config,
 			Database
 		)
@@ -93,14 +93,14 @@ export class AuthManager implements AuthManagerContract {
 			throw new Exception(`Invalid provider "${config.driver}"`)
 		}
 
-		return providerCallback(this.container, config)
+		return providerCallback(this.application, config)
 	}
 
 	/**
 	 * Lazily makes an instance of the token database provider
 	 */
 	private makeTokenDatabaseProvider(config: DatabaseProviderConfig) {
-		const Database = this.container.use('Adonis/Lucid/Database')
+		const Database = this.application.container.use('Adonis/Lucid/Database')
 		return new (require('../TokenProviders/Database').TokenDatabaseProvider)(config, Database)
 	}
 
@@ -158,7 +158,7 @@ export class AuthManager implements AuthManagerContract {
 			throw new Exception(`Invalid guard driver "${config.driver}" property`)
 		}
 
-		return guardCallback(this.container, mapping, config, provider, ctx)
+		return guardCallback(this.application, mapping, config, provider, ctx)
 	}
 
 	/**

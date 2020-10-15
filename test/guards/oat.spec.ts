@@ -11,56 +11,51 @@ import test from 'japa'
 import { DateTime } from 'luxon'
 import supertest from 'supertest'
 import { createServer } from 'http'
-import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import { OpaqueToken } from '../../src/Tokens/OpaqueToken'
 import { ProviderToken } from '../../src/Tokens/ProviderToken'
 
 import {
-	hash,
 	setup,
 	reset,
-	getDb,
-	getCtx,
-	emitter,
 	cleanup,
-	getModel,
 	getUserModel,
+	setupApplication,
 	getLucidProvider,
 	getApiTokensGuard,
 	getTokensDbProvider,
 	getLucidProviderConfig,
 } from '../../test-helpers'
 
-let db: DatabaseContract
-let BaseModel: ReturnType<typeof getModel>
+let app: ApplicationContract
 
 test.group('OAT Guard | Verify Credentials', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		BaseModel = getModel(db)
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		await reset(db)
-		emitter.clearAllListeners()
+		await reset(app)
+		app.container.use('Adonis/Core/Event')['clearAllListeners']()
 	})
 
 	test('raise exception when unable to lookup user', async (assert) => {
 		assert.plan(1)
 
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		try {
@@ -73,18 +68,19 @@ test.group('OAT Guard | Verify Credentials', (group) => {
 	test('raise exception when password is incorrect', async (assert) => {
 		assert.plan(1)
 
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		try {
@@ -97,18 +93,19 @@ test.group('OAT Guard | Verify Credentials', (group) => {
 	test('return user when able to verify credentials', async (assert) => {
 		assert.plan(1)
 
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		const user = await apiTokensGuard.verifyCredentials('virk@adonisjs.com', 'secret')
@@ -118,46 +115,46 @@ test.group('OAT Guard | Verify Credentials', (group) => {
 
 test.group('OAT Guard | attempt', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		BaseModel = getModel(db)
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		emitter.clearAllListeners()
-		await reset(db)
+		await reset(app)
+		app.container.use('Adonis/Core/Event')['clearAllListeners']()
 	})
 
 	test('return token with user from the attempt call', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:api:login', ({ name, user, token }) => {
+		app.container.use('Adonis/Core/Event').once('adonis:api:login', ({ name, user, token }) => {
 			assert.equal(name, 'api')
 			assert.instanceOf(user, User)
 			assert.instanceOf(token, OpaqueToken)
 		})
 
 		const token = await apiTokensGuard.attempt('virk@adonisjs.com', 'secret')
-		const tokens = await db.query().from('api_tokens')
+		const tokens = await app.container.use('Adonis/Lucid/Database').query().from('api_tokens')
 
 		/**
 		 * Assert correct token is generated and persisted to the db
@@ -170,33 +167,36 @@ test.group('OAT Guard | attempt', (group) => {
 	})
 
 	test('define custom expiry', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:api:login', ({ name, user: model, token }) => {
-			assert.equal(name, 'api')
-			assert.instanceOf(model, User)
-			assert.instanceOf(token, OpaqueToken)
-		})
+		app.container
+			.use('Adonis/Core/Event')
+			.once('adonis:api:login', ({ name, user: model, token }) => {
+				assert.equal(name, 'api')
+				assert.instanceOf(model, User)
+				assert.instanceOf(token, OpaqueToken)
+			})
 
 		const token = await apiTokensGuard.attempt('virk@adonisjs.com', 'secret', {
 			expiresIn: '3mins',
 		})
-		const tokens = await db.query().from('api_tokens')
+		const tokens = await app.container.use('Adonis/Lucid/Database').query().from('api_tokens')
 
 		/**
 		 * Assert correct token is generated and persisted to the db
@@ -210,33 +210,40 @@ test.group('OAT Guard | attempt', (group) => {
 	})
 
 	test('define custom name for the token', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:api:login', ({ name, user: model, token }) => {
-			assert.equal(name, 'api')
-			assert.instanceOf(model, User)
-			assert.instanceOf(token, OpaqueToken)
-		})
+		app.container
+			.use('Adonis/Core/Event')
+			.once('adonis:api:login', ({ name, user: model, token }) => {
+				assert.equal(name, 'api')
+				assert.instanceOf(model, User)
+				assert.instanceOf(token, OpaqueToken)
+			})
 
 		const token = await apiTokensGuard.attempt('virk@adonisjs.com', 'secret', {
 			name: 'Android token',
 		})
-		const tokens = await db.query().from('api_tokens').where('user_id', user.id)
+		const tokens = await app.container
+			.use('Adonis/Lucid/Database')
+			.query()
+			.from('api_tokens')
+			.where('user_id', user.id)
 
 		/**
 		 * Assert correct token is generated and persisted to the db
@@ -247,34 +254,41 @@ test.group('OAT Guard | attempt', (group) => {
 	})
 
 	test('define meta data to be persisted inside the database', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:api:login', ({ name, user: model, token }) => {
-			assert.equal(name, 'api')
-			assert.instanceOf(model, User)
-			assert.instanceOf(token, OpaqueToken)
-		})
+		app.container
+			.use('Adonis/Core/Event')
+			.once('adonis:api:login', ({ name, user: model, token }) => {
+				assert.equal(name, 'api')
+				assert.instanceOf(model, User)
+				assert.instanceOf(token, OpaqueToken)
+			})
 
 		const token = await apiTokensGuard.attempt('virk@adonisjs.com', 'secret', {
 			device_name: 'Android',
 			ip_address: '192.168.1.1',
 		})
-		const tokens = await db.query().from('api_tokens').where('user_id', user.id)
+		const tokens = await app.container
+			.use('Adonis/Lucid/Database')
+			.query()
+			.from('api_tokens')
+			.where('user_id', user.id)
 
 		/**
 		 * Assert correct token is generated and persisted to the db
@@ -288,49 +302,55 @@ test.group('OAT Guard | attempt', (group) => {
 
 test.group('OAT Guard | login', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		BaseModel = getModel(db)
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		emitter.clearAllListeners()
-		await reset(db)
+		await reset(app)
+		app.container.use('Adonis/Core/Event')['clearAllListeners']()
 	})
 
 	test('login using user instance', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:api:login', ({ name, user: model, token }) => {
-			assert.equal(name, 'api')
-			assert.instanceOf(model, User)
-			assert.instanceOf(token, OpaqueToken)
-		})
+		app.container
+			.use('Adonis/Core/Event')
+			.once('adonis:api:login', ({ name, user: model, token }) => {
+				assert.equal(name, 'api')
+				assert.instanceOf(model, User)
+				assert.instanceOf(token, OpaqueToken)
+			})
 
 		const token = await apiTokensGuard.login(user, {
 			device_name: 'Android',
 			ip_address: '192.168.1.1',
 		})
-		const tokens = await db.query().from('api_tokens').where('user_id', user.id)
+		const tokens = await app.container
+			.use('Adonis/Lucid/Database')
+			.query()
+			.from('api_tokens')
+			.where('user_id', user.id)
 
 		/**
 		 * Assert correct token is generated and persisted to the db
@@ -344,49 +364,55 @@ test.group('OAT Guard | login', (group) => {
 
 test.group('OAT Guard | loginViaId', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		BaseModel = getModel(db)
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		emitter.clearAllListeners()
-		await reset(db)
+		await reset(app)
+		app.container.use('Adonis/Core/Event')['clearAllListeners']()
 	})
 
 	test('login using user id', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:api:login', ({ name, user: model, token }) => {
-			assert.equal(name, 'api')
-			assert.instanceOf(model, User)
-			assert.instanceOf(token, OpaqueToken)
-		})
+		app.container
+			.use('Adonis/Core/Event')
+			.once('adonis:api:login', ({ name, user: model, token }) => {
+				assert.equal(name, 'api')
+				assert.instanceOf(model, User)
+				assert.instanceOf(token, OpaqueToken)
+			})
 
 		const token = await apiTokensGuard.loginViaId(user.id, {
 			device_name: 'Android',
 			ip_address: '192.168.1.1',
 		})
-		const tokens = await db.query().from('api_tokens').where('user_id', user.id)
+		const tokens = await app.container
+			.use('Adonis/Lucid/Database')
+			.query()
+			.from('api_tokens')
+			.where('user_id', user.id)
 
 		/**
 		 * Assert correct token is generated and persisted to the db
@@ -400,45 +426,47 @@ test.group('OAT Guard | loginViaId', (group) => {
 
 test.group('OAT Guard | authenticate', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		BaseModel = getModel(db)
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		emitter.clearAllListeners()
-		await reset(db)
+		await reset(app)
+		app.container.use('Adonis/Core/Event')['clearAllListeners']()
 	})
 
 	test('authenticate request by reading the bearer token', async (assert) => {
 		assert.plan(6)
 
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:api:authenticate', ({ name, user: model, token }) => {
-			assert.equal(name, 'api')
-			assert.instanceOf(model, User)
-			assert.instanceOf(token, ProviderToken)
-		})
+		app.container
+			.use('Adonis/Core/Event')
+			.once('adonis:api:authenticate', ({ name, user: model, token }) => {
+				assert.equal(name, 'api')
+				assert.instanceOf(model, User)
+				assert.instanceOf(token, ProviderToken)
+			})
 
 		const token = await apiTokensGuard.loginViaId(user.id, {
 			device_name: 'Android',
@@ -446,12 +474,13 @@ test.group('OAT Guard | authenticate', (group) => {
 		})
 
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx,
-				getTokensDbProvider(db)
+				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
 
 			try {
@@ -475,18 +504,19 @@ test.group('OAT Guard | authenticate', (group) => {
 	})
 
 	test('raise error when Authorization header is missing', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		await apiTokensGuard.loginViaId(user.id, {
@@ -495,12 +525,13 @@ test.group('OAT Guard | authenticate', (group) => {
 		})
 
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx,
-				getTokensDbProvider(db)
+				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
 
 			try {
@@ -521,18 +552,19 @@ test.group('OAT Guard | authenticate', (group) => {
 	})
 
 	test('raise error when token is malformed', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		await apiTokensGuard.loginViaId(user.id, {
@@ -541,12 +573,13 @@ test.group('OAT Guard | authenticate', (group) => {
 		})
 
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx,
-				getTokensDbProvider(db)
+				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
 
 			try {
@@ -571,18 +604,19 @@ test.group('OAT Guard | authenticate', (group) => {
 	})
 
 	test('raise error when token is missing in the database', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		const token = await apiTokensGuard.loginViaId(user.id, {
@@ -591,12 +625,13 @@ test.group('OAT Guard | authenticate', (group) => {
 		})
 
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx,
-				getTokensDbProvider(db)
+				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
 
 			try {
@@ -609,7 +644,7 @@ test.group('OAT Guard | authenticate', (group) => {
 			ctx.response.finish()
 		})
 
-		await db.from('api_tokens').del()
+		await app.container.use('Adonis/Lucid/Database').from('api_tokens').del()
 		const { body } = await supertest(server)
 			.get('/')
 			.set('Accept', 'application/json')
@@ -622,18 +657,19 @@ test.group('OAT Guard | authenticate', (group) => {
 	})
 
 	test('raise error when token is valid but user is missing', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		const token = await apiTokensGuard.loginViaId(user.id, {
@@ -642,12 +678,13 @@ test.group('OAT Guard | authenticate', (group) => {
 		})
 
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx,
-				getTokensDbProvider(db)
+				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
 
 			try {
@@ -660,7 +697,7 @@ test.group('OAT Guard | authenticate', (group) => {
 			ctx.response.finish()
 		})
 
-		await db.from('users').del()
+		await app.container.use('Adonis/Lucid/Database').from('users').del()
 		const { body } = await supertest(server)
 			.get('/')
 			.set('Accept', 'application/json')
@@ -673,18 +710,19 @@ test.group('OAT Guard | authenticate', (group) => {
 	})
 
 	test('raise error when token is expired', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		const token = await apiTokensGuard.loginViaId(user.id, {
@@ -692,17 +730,21 @@ test.group('OAT Guard | authenticate', (group) => {
 			ip_address: '192.168.1.1',
 		})
 
-		await db.from('api_tokens').update({
-			expires_at: DateTime.local().minus({ days: 1 }).toJSDate(),
-		})
+		await app.container
+			.use('Adonis/Lucid/Database')
+			.from('api_tokens')
+			.update({
+				expires_at: DateTime.local().minus({ days: 1 }).toJSDate(),
+			})
 
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx,
-				getTokensDbProvider(db)
+				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
 
 			try {
@@ -727,18 +769,19 @@ test.group('OAT Guard | authenticate', (group) => {
 	})
 
 	test('work fine when token is not expired', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		const token = await apiTokensGuard.loginViaId(user.id, {
@@ -748,12 +791,13 @@ test.group('OAT Guard | authenticate', (group) => {
 		})
 
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx,
-				getTokensDbProvider(db)
+				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
 
 			try {
@@ -780,45 +824,47 @@ test.group('OAT Guard | authenticate', (group) => {
 
 test.group('OAT Guard | logout', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		BaseModel = getModel(db)
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		emitter.clearAllListeners()
-		await reset(db)
+		await reset(app)
+		app.container.use('Adonis/Core/Event')['clearAllListeners']()
 	})
 
 	test('delete user token during logout', async (assert) => {
 		assert.plan(6)
 
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const apiTokensGuard = getApiTokensGuard(
-			getLucidProvider({ model: User }),
+			app,
+			getLucidProvider(app, { model: User }),
 			getLucidProviderConfig({ model: User }),
-			getCtx(),
-			getTokensDbProvider(db)
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:api:authenticate', ({ name, user: model, token }) => {
-			assert.equal(name, 'api')
-			assert.instanceOf(model, User)
-			assert.instanceOf(token, ProviderToken)
-		})
+		app.container
+			.use('Adonis/Core/Event')
+			.once('adonis:api:authenticate', ({ name, user: model, token }) => {
+				assert.equal(name, 'api')
+				assert.instanceOf(model, User)
+				assert.instanceOf(token, ProviderToken)
+			})
 
 		const token = await apiTokensGuard.loginViaId(user.id, {
 			device_name: 'Android',
@@ -826,12 +872,13 @@ test.group('OAT Guard | logout', (group) => {
 		})
 
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx,
-				getTokensDbProvider(db)
+				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
 
 			try {
@@ -849,7 +896,7 @@ test.group('OAT Guard | logout', (group) => {
 			.set('Authorization', `${token.type} ${token.token}`)
 			.expect(200)
 
-		const tokens = await db.query().from('api_tokens')
+		const tokens = await app.container.use('Adonis/Lucid/Database').query().from('api_tokens')
 		assert.lengthOf(tokens, 0)
 		assert.isFalse(body.isLoggedIn)
 		assert.isTrue(body.authenticationAttempted)

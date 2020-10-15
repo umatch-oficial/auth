@@ -8,30 +8,32 @@
  */
 
 import test from 'japa'
-import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
-import { getDb, setup, reset, cleanup, getDatabaseProvider } from '../../test-helpers'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
+import { setupApplication, setup, reset, cleanup, getDatabaseProvider } from '../../test-helpers'
 
-let db: DatabaseContract
+let app: ApplicationContract
 
 test.group('Database Provider | findById', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		await reset(db)
+		await reset(app)
 	})
 
 	test('find a user using the id', async (assert) => {
 		assert.plan(5)
 
+		const db = app.container.use('Adonis/Lucid/Database')
 		await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
-		const dbProvider = getDatabaseProvider({})
+
+		const dbProvider = getDatabaseProvider(app, {})
 
 		dbProvider.before('findUser', async (query) => assert.exists(query))
 		dbProvider.after('findUser', async (user) => {
@@ -47,7 +49,7 @@ test.group('Database Provider | findById', (group) => {
 	test('return null when unable to find the user', async (assert) => {
 		assert.plan(2)
 
-		const dbProvider = getDatabaseProvider({})
+		const dbProvider = getDatabaseProvider(app, {})
 		dbProvider.before('findUser', async (query) => assert.exists(query))
 		dbProvider.after('findUser', async () => {
 			throw new Error('not expected to be called')
@@ -58,9 +60,10 @@ test.group('Database Provider | findById', (group) => {
 	})
 
 	test('use custom connection', async (assert) => {
+		const db = app.container.use('Adonis/Lucid/Database')
 		await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
 
-		const dbProvider = getDatabaseProvider({})
+		const dbProvider = getDatabaseProvider(app, {})
 		dbProvider.setConnection('secondary')
 
 		const providerUser = await dbProvider.findById('1')
@@ -68,9 +71,11 @@ test.group('Database Provider | findById', (group) => {
 	})
 
 	test('use custom query client', async (assert) => {
+		const db = app.container.use('Adonis/Lucid/Database')
+
 		await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
 
-		const dbProvider = getDatabaseProvider({})
+		const dbProvider = getDatabaseProvider(app, {})
 		dbProvider.setConnection(db.connection('secondary'))
 
 		const providerUser = await dbProvider.findById('1')
@@ -80,25 +85,32 @@ test.group('Database Provider | findById', (group) => {
 
 test.group('Database Provider | findByUids', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		await reset(db)
+		await reset(app)
 	})
 
 	test('find a user using one of the uids', async (assert) => {
 		assert.plan(10)
 
-		await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
-		await db.table('users').insert({ username: 'nikk', email: 'nikk@adonisjs.com' })
+		await app.container
+			.use('Adonis/Lucid/Database')
+			.table('users')
+			.insert({ username: 'virk', email: 'virk@adonisjs.com' })
 
-		const dbProvider = getDatabaseProvider({})
+		await app.container
+			.use('Adonis/Lucid/Database')
+			.table('users')
+			.insert({ username: 'nikk', email: 'nikk@adonisjs.com' })
+
+		const dbProvider = getDatabaseProvider(app, {})
 
 		dbProvider.before('findUser', async (query) => assert.exists(query))
 		dbProvider.after('findUser', async (user) => {
@@ -118,7 +130,7 @@ test.group('Database Provider | findByUids', (group) => {
 	test('return null when unable to lookup user using uids', async (assert) => {
 		assert.plan(4)
 
-		const dbProvider = getDatabaseProvider({})
+		const dbProvider = getDatabaseProvider(app, {})
 		dbProvider.before('findUser', async (query) => assert.exists(query))
 		dbProvider.after('findUser', async () => {
 			throw new Error('not expected to be called')
@@ -132,10 +144,16 @@ test.group('Database Provider | findByUids', (group) => {
 	})
 
 	test('use custom connection', async (assert) => {
-		await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
-		await db.table('users').insert({ username: 'nikk', email: 'nikk@adonisjs.com' })
+		await app.container
+			.use('Adonis/Lucid/Database')
+			.table('users')
+			.insert({ username: 'virk', email: 'virk@adonisjs.com' })
+		await app.container
+			.use('Adonis/Lucid/Database')
+			.table('users')
+			.insert({ username: 'nikk', email: 'nikk@adonisjs.com' })
 
-		const dbProvider = getDatabaseProvider({})
+		const dbProvider = getDatabaseProvider(app, {})
 		dbProvider.setConnection('secondary')
 
 		const providerUser = await dbProvider.findByUid('virk')
@@ -146,10 +164,12 @@ test.group('Database Provider | findByUids', (group) => {
 	})
 
 	test('use custom query client', async (assert) => {
+		const db = app.container.use('Adonis/Lucid/Database')
+
 		await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
 		await db.table('users').insert({ username: 'nikk', email: 'nikk@adonisjs.com' })
 
-		const dbProvider = getDatabaseProvider({})
+		const dbProvider = getDatabaseProvider(app, {})
 		dbProvider.setConnection(db.connection('secondary'))
 
 		const providerUser = await dbProvider.findByUid('virk')
@@ -162,20 +182,21 @@ test.group('Database Provider | findByUids', (group) => {
 
 test.group('Database Provider | findByRememberMeToken', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		await reset(db)
+		await reset(app)
 	})
 
 	test('find a user using a token', async (assert) => {
 		assert.plan(5)
+		const db = app.container.use('Adonis/Lucid/Database')
 
 		await db
 			.table('users')
@@ -184,7 +205,7 @@ test.group('Database Provider | findByRememberMeToken', (group) => {
 			.table('users')
 			.insert({ username: 'nikk', email: 'nikk@adonisjs.com', remember_me_token: '123' })
 
-		const dbProvider = getDatabaseProvider({})
+		const dbProvider = getDatabaseProvider(app, {})
 		dbProvider.before('findUser', async (query) => assert.exists(query))
 		dbProvider.after('findUser', async (user) => {
 			assert.equal(user.username, 'virk')
@@ -197,23 +218,27 @@ test.group('Database Provider | findByRememberMeToken', (group) => {
 	})
 
 	test('return null when user exists but token is missing', async (assert) => {
+		const db = app.container.use('Adonis/Lucid/Database')
+
 		await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
 		await db
 			.table('users')
 			.insert({ username: 'nikk', email: 'nikk@adonisjs.com', remember_me_token: '123' })
 
-		const dbProvider = getDatabaseProvider({})
+		const dbProvider = getDatabaseProvider(app, {})
 		const providerUser = await dbProvider.findByRememberMeToken(1, '123')
 		assert.isNull(providerUser.user)
 	})
 
 	test('return null when user is missing', async (assert) => {
-		const dbProvider = getDatabaseProvider({})
+		const dbProvider = getDatabaseProvider(app, {})
 		const providerUser = await dbProvider.findByRememberMeToken(1, '123')
 		assert.isNull(providerUser.user)
 	})
 
 	test('use custom connection', async (assert) => {
+		const db = app.container.use('Adonis/Lucid/Database')
+
 		await db
 			.table('users')
 			.insert({ username: 'virk', email: 'virk@adonisjs.com', remember_me_token: '123' })
@@ -221,13 +246,15 @@ test.group('Database Provider | findByRememberMeToken', (group) => {
 			.table('users')
 			.insert({ username: 'nikk', email: 'nikk@adonisjs.com', remember_me_token: '123' })
 
-		const dbProvider = getDatabaseProvider({})
+		const dbProvider = getDatabaseProvider(app, {})
 		dbProvider.setConnection('secondary')
 		const providerUser = await dbProvider.findByRememberMeToken(1, '123')
 		assert.isNull(providerUser.user)
 	})
 
 	test('use custom query client', async (assert) => {
+		const db = app.container.use('Adonis/Lucid/Database')
+
 		await db
 			.table('users')
 			.insert({ username: 'virk', email: 'virk@adonisjs.com', remember_me_token: '123' })
@@ -235,7 +262,7 @@ test.group('Database Provider | findByRememberMeToken', (group) => {
 			.table('users')
 			.insert({ username: 'nikk', email: 'nikk@adonisjs.com', remember_me_token: '123' })
 
-		const dbProvider = getDatabaseProvider({})
+		const dbProvider = getDatabaseProvider(app, {})
 		dbProvider.setConnection(db.connection('secondary'))
 		const providerUser = await dbProvider.findByRememberMeToken(1, '123')
 		assert.isNull(providerUser.user)

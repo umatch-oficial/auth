@@ -11,29 +11,30 @@ import test from 'japa'
 import 'reflect-metadata'
 import { DateTime } from 'luxon'
 import { randomString } from '@poppinss/utils'
-import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
-import { getDb, cleanup, setup, reset, getTokensDbProvider } from '../../test-helpers'
-let db: DatabaseContract
+import { setupApplication, cleanup, setup, reset, getTokensDbProvider } from '../../test-helpers'
+let app: ApplicationContract
 
 const sleep = (time: number) => new Promise((resolve) => setTimeout(resolve, time))
 
 test.group('Database Token Provider', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		await reset(db)
+		await reset(app)
 	})
 
 	test('save token to the database', async (assert) => {
 		const token = randomString(40)
+		const db = app.container.use('Adonis/Lucid/Database')
 		const provider = getTokensDbProvider(db)
 
 		const tokenId = await provider.write({
@@ -49,6 +50,7 @@ test.group('Database Token Provider', (group) => {
 
 	test('read token from the database', async (assert) => {
 		const token = randomString(40)
+		const db = app.container.use('Adonis/Lucid/Database')
 		const provider = getTokensDbProvider(db)
 
 		const tokenId = await provider.write({
@@ -68,6 +70,7 @@ test.group('Database Token Provider', (group) => {
 
 	test('read null when there is a token hash mis-match', async (assert) => {
 		const token = randomString(40)
+		const db = app.container.use('Adonis/Lucid/Database')
 		const provider = getTokensDbProvider(db)
 
 		const tokenId = await provider.write({
@@ -83,6 +86,7 @@ test.group('Database Token Provider', (group) => {
 
 	test('read null when token has been expired', async (assert) => {
 		const token = randomString(40)
+		const db = app.container.use('Adonis/Lucid/Database')
 		const provider = getTokensDbProvider(db)
 
 		const tokenId = await provider.write({
@@ -99,6 +103,7 @@ test.group('Database Token Provider', (group) => {
 
 	test('work fine when token has no expiry', async (assert) => {
 		const token = randomString(40)
+		const db = app.container.use('Adonis/Lucid/Database')
 		const provider = getTokensDbProvider(db)
 
 		const tokenId = await provider.write({
@@ -114,6 +119,7 @@ test.group('Database Token Provider', (group) => {
 
 	test('read null when token is missing', async (assert) => {
 		const token = randomString(40)
+		const db = app.container.use('Adonis/Lucid/Database')
 		const provider = getTokensDbProvider(db)
 
 		const tokenId = await provider.write({
@@ -129,6 +135,7 @@ test.group('Database Token Provider', (group) => {
 
 	test('delete token from the database', async (assert) => {
 		const token = randomString(40)
+		const db = app.container.use('Adonis/Lucid/Database')
 		const provider = getTokensDbProvider(db)
 
 		const tokenId = await provider.write({

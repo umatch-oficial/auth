@@ -7,10 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import { inject } from '@adonisjs/fold'
 import { Exception } from '@poppinss/utils'
-import { HashContract } from '@ioc:Adonis/Core/Hash'
-import {
+import { inject } from '@adonisjs/core/build/standalone'
+import type { HashContract } from '@ioc:Adonis/Core/Hash'
+import type {
 	LucidProviderModel,
 	ProviderUserContract,
 	LucidProviderConfig,

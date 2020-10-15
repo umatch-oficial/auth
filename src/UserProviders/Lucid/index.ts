@@ -8,7 +8,7 @@
  */
 
 import { Hooks } from '@poppinss/hooks'
-import { IocContract } from '@adonisjs/fold'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import { ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Model'
 import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 import {
@@ -35,7 +35,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
 	private connection?: string | QueryClientContract
 
 	constructor(
-		private container: IocContract,
+		private application: ApplicationContract,
 		private config: LucidProviderConfig<LucidProviderModel>
 	) {}
 
@@ -81,7 +81,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
 	 * inside it
 	 */
 	public getUserFor(user: InstanceType<LucidProviderModel> | null) {
-		return this.container.make(this.config.user || LucidUser, [user, this.config])
+		return this.application.container.make(this.config.user || LucidUser, [user, this.config])
 	}
 
 	/**

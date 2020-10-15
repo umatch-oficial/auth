@@ -8,35 +8,21 @@
  */
 
 import test from 'japa'
-import { join } from 'path'
-import { Registrar, Ioc } from '@adonisjs/fold'
-import { Application } from '@adonisjs/application/build/standalone'
+import { fs, setupApplication } from '../test-helpers'
 import { AuthManager } from '../src/AuthManager'
 
-test.group('Auth Provider', () => {
+test.group('Auth Provider', (group) => {
+	group.afterEach(async () => {
+		await fs.cleanup()
+	})
+
 	test('register auth provider', async (assert) => {
-		const ioc = new Ioc()
-		ioc.bind('Adonis/Core/Application', () => {
-			return new Application(join(__dirname, 'fixtures'), ioc, {}, {})
-		})
-
-		await new Registrar(ioc, join(__dirname, '..'))
-			.useProviders(['@adonisjs/core', './providers/AuthProvider'])
-			.registerAndBoot()
-
-		assert.instanceOf(ioc.use('Adonis/Addons/Auth'), AuthManager)
+		const app = await setupApplication(['../../providers/AuthProvider'])
+		assert.instanceOf(app.container.use('Adonis/Addons/Auth'), AuthManager)
 	})
 
 	test('define auth property on http context', async (assert) => {
-		const ioc = new Ioc()
-		ioc.bind('Adonis/Core/Application', () => {
-			return new Application(join(__dirname, 'fixtures'), ioc, {}, {})
-		})
-
-		await new Registrar(ioc, join(__dirname, '..'))
-			.useProviders(['@adonisjs/core', './providers/AuthProvider'])
-			.registerAndBoot()
-
-		assert.isTrue(ioc.use('Adonis/Core/HttpContext').hasGetter('auth'))
+		const app = await setupApplication(['../../providers/AuthProvider'])
+		assert.isTrue(app.container.use('Adonis/Core/HttpContext')['hasGetter']('auth'))
 	})
 })

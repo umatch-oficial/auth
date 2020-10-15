@@ -11,50 +11,44 @@ import test from 'japa'
 import supertest from 'supertest'
 import { createServer } from 'http'
 import { base64 } from '@poppinss/utils'
-import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
+import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import {
-	hash,
 	setup,
 	reset,
-	getDb,
-	getCtx,
-	emitter,
 	cleanup,
-	getModel,
 	getUserModel,
+	setupApplication,
 	getLucidProvider,
 	getBasicAuthGuard,
 	getLucidProviderConfig,
 } from '../../test-helpers'
 
-let db: DatabaseContract
-let BaseModel: ReturnType<typeof getModel>
+let app: ApplicationContract
 
 test.group('Basic Auth Guard | authenticate', (group) => {
 	group.before(async () => {
-		db = await getDb()
-		BaseModel = getModel(db)
-		await setup(db)
+		app = await setupApplication()
+		await setup(app)
 	})
 
 	group.after(async () => {
-		await cleanup(db)
+		await cleanup(app)
 	})
 
 	group.afterEach(async () => {
-		emitter.clearAllListeners()
-		await reset(db)
+		await reset(app)
+		app.container.use('Adonis/Core/Event')['clearAllListeners']()
 	})
 
 	test('authenticate request by reading the basic auth credentials', async (assert) => {
 		assert.plan(7)
 
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		const credentials = base64.encode(`${user.email}:secret`)
@@ -62,15 +56,18 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:basic:authenticate', ({ name, user: model }) => {
-			assert.equal(name, 'basic')
-			assert.instanceOf(model, User)
-		})
+		app.container
+			.use('Adonis/Core/Event')
+			.once('adonis:basic:authenticate', ({ name, user: model }) => {
+				assert.equal(name, 'basic')
+				assert.instanceOf(model, User)
+			})
 
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx
 			)
@@ -98,19 +95,20 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 	})
 
 	test('raise error when Authorization header is missing', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:basic:authenticate', () => {
+		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx
 			)
@@ -130,25 +128,26 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 	})
 
 	test('raise error when type is not basic', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:basic:authenticate', () => {
+		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 
 		const credentials = base64.encode(`${user.email}:secret`)
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx
 			)
@@ -172,25 +171,26 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 	})
 
 	test('raise error when credentials are not base64 encoded', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:basic:authenticate', () => {
+		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 
 		const credentials = `${user.email}:secret`
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx
 			)
@@ -214,25 +214,26 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 	})
 
 	test('raise error when credentials are not separated using colon', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:basic:authenticate', () => {
+		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 
 		const credentials = base64.encode(`${user.email}_secret`)
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx
 			)
@@ -256,20 +257,21 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 	})
 
 	test('raise error when uid is incorrect', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:basic:authenticate', () => {
+		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 
 		const credentials = base64.encode(`foo:secret`)
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx
 			)
@@ -293,25 +295,26 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 	})
 
 	test('raise error when password is incorrect', async (assert) => {
-		const User = getUserModel(BaseModel)
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({
 			username: 'virk',
 			email: 'virk@adonisjs.com',
-			password: await hash.make('secret'),
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
 		})
 
 		/**
 		 * Assert the event is fired with correct set of arguments
 		 */
-		emitter.once('adonis:basic:authenticate', () => {
+		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
 			throw new Error('Not expected to be invoked')
 		})
 
 		const credentials = base64.encode(`${user.email}:helloworld`)
 		const server = createServer(async (req, res) => {
-			const ctx = getCtx(req, res)
+			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
-				getLucidProvider({ model: User }),
+				app,
+				getLucidProvider(app, { model: User }),
 				getLucidProviderConfig({ model: User }),
 				ctx
 			)

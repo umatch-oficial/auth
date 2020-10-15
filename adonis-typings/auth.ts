@@ -9,10 +9,10 @@
 
 declare module '@ioc:Adonis/Addons/Auth' {
 	import { DateTime } from 'luxon'
-	import { IocContract } from '@adonisjs/fold'
 	import { HashersList } from '@ioc:Adonis/Core/Hash'
 	import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 	import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+	import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 	import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/DatabaseQueryBuilder'
 	import { LucidModel, LucidRow, ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Model'
 
@@ -727,7 +727,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 	 * Shape of the callback accepted to add new user providers
 	 */
 	export type ExtendProviderCallback = (
-		container: IocContract,
+		application: ApplicationContract,
 		config: any
 	) => UserProviderContract<any>
 
@@ -735,7 +735,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 	 * Shape of the callback accepted to add new guards
 	 */
 	export type ExtendGuardCallback = (
-		container: IocContract,
+		application: ApplicationContract,
 		mapping: string,
 		config: any,
 		provider: UserProviderContract<any>,
