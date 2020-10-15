@@ -7,7 +7,9 @@
  * file that was distributed with this source code.
  */
 
-/// <reference path="./auth.ts" />
-/// <reference path="./context.ts" />
-/// <reference path="./events.ts" />
-/// <reference path="./container.ts" />
+declare module '@ioc:Adonis/Core/Application' {
+	import { AuthManagerContract } from '@ioc:Adonis/Addons/Auth'
+	export interface ContainerBindings {
+		'Adonis/Addons/Auth': AuthManagerContract
+	}
+}

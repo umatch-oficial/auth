@@ -108,7 +108,11 @@
     "@poppinss/utils": "^2.5.7",
     "luxon": "^1.25.0",
     "pluralize": "^8.0.0"
-  },
+	},
+	"peerDependencies": {
+		"@adonisjs/core": "^5.0.2-beta-rc",
+		"@adonisjs/session": "^9.0.0"
+	},
   "publishConfig": {
     "access": "public",
     "tag": "alpha"

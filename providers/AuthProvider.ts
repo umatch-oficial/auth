@@ -7,10 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { ServerContract } from '@ioc:Adonis/Core/Server'
-import { AuthManagerContract } from '@ioc:Adonis/Addons/Auth'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
-import { HttpContextConstructorContract } from '@ioc:Adonis/Core/HttpContext'
 
 /**
  * Auth provider to register the auth binding
@@ -36,7 +33,7 @@ export default class AuthProvider {
 	public async boot() {
 		this.application.container.with(
 			['Adonis/Core/HttpContext', 'Adonis/Addons/Auth'],
-			(HttpContext: HttpContextConstructorContract, Auth: AuthManagerContract) => {
+			(HttpContext, Auth) => {
 				HttpContext.getter(
 					'auth',
 					function auth() {
@@ -47,13 +44,10 @@ export default class AuthProvider {
 			}
 		)
 
-		this.application.container.with(
-			['Adonis/Core/Server', 'Adonis/Core/View'],
-			(Server: ServerContract) => {
-				Server.hooks.before(async (ctx) => {
-					ctx['view'].share({ auth: ctx.auth })
-				})
-			}
-		)
+		this.application.container.with(['Adonis/Core/Server', 'Adonis/Core/View'], (Server) => {
+			Server.hooks.before(async (ctx) => {
+				ctx['view'].share({ auth: ctx.auth })
+			})
+		})
 	}
 }
