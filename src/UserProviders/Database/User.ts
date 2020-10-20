@@ -41,6 +41,14 @@ export class DatabaseUser implements ProviderUserContract<DatabaseProviderRow> {
 		if (!this.user) {
 			throw new Exception('Cannot "verifyPassword" for non-existing user')
 		}
+
+		/**
+		 * Ensure user has password
+		 */
+		if (!this.user.password) {
+			throw new Exception('Auth user object must have a password in order to call "verifyPassword"')
+		}
+
 		const hasher = this.config.hashDriver ? this.hash.use(this.config.hashDriver) : this.hash
 		return hasher.verify(this.user.password, plainPassword)
 	}

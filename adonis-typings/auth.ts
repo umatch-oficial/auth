@@ -177,7 +177,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 	 */
 	export type LucidProviderModel = LucidModel & {
 		new (): LucidRow & {
-			password: string
+			password?: string
 			rememberMeToken?: string | null
 		}
 	}
@@ -241,7 +241,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 	 * and `remember_me_token` columns.
 	 */
 	export type DatabaseProviderRow = {
-		password: string
+		password?: string
 		remember_me_token?: string
 		[key: string]: any
 	}
