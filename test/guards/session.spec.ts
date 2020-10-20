@@ -48,13 +48,13 @@ test.group('Session Driver | Verify Credentials', (group) => {
 		assert.plan(1)
 
 		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 
 		const sessionDriver = getSessionDriver(
 			app,
 			lucidProvider,
-			getLucidProviderConfig({ model: User }),
+			getLucidProviderConfig({ model: async () => User }),
 			ctx
 		)
 
@@ -73,11 +73,11 @@ test.group('Session Driver | Verify Credentials', (group) => {
 		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
 		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		const sessionDriver = getSessionDriver(
 			app,
 			lucidProvider,
-			getLucidProviderConfig({ model: User }),
+			getLucidProviderConfig({ model: async () => User }),
 			ctx
 		)
 
@@ -96,11 +96,11 @@ test.group('Session Driver | Verify Credentials', (group) => {
 		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
 		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		const sessionDriver = getSessionDriver(
 			app,
 			lucidProvider,
-			getLucidProviderConfig({ model: User }),
+			getLucidProviderConfig({ model: async () => User }),
 			ctx
 		)
 
@@ -141,11 +141,11 @@ test.group('Session Driver | attempt', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			await ctx.session.initiate(false)
 
-			const lucidProvider = getLucidProvider(app, { model: User })
+			const lucidProvider = getLucidProvider(app, { model: async () => User })
 			const sessionDriver = getSessionDriver(
 				app,
 				lucidProvider,
-				getLucidProviderConfig({ model: User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 			await sessionDriver.attempt('virk@adonisjs.com', 'secret')
@@ -180,11 +180,11 @@ test.group('Session Driver | attempt', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			await ctx.session.initiate(false)
 
-			const lucidProvider = getLucidProvider(app, { model: User })
+			const lucidProvider = getLucidProvider(app, { model: async () => User })
 			const sessionDriver = getSessionDriver(
 				app,
 				lucidProvider,
-				getLucidProviderConfig({ model: User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 			await sessionDriver.attempt('virk@adonisjs.com', 'secret', true)
@@ -214,11 +214,11 @@ test.group('Session Driver | attempt', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			await ctx.session.initiate(false)
 
-			const lucidProvider = getLucidProvider(app, { model: User })
+			const lucidProvider = getLucidProvider(app, { model: async () => User })
 			const sessionDriver = getSessionDriver(
 				app,
 				lucidProvider,
-				getLucidProviderConfig({ model: User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 			await sessionDriver.attempt('virk@adonisjs.com', 'secret')
@@ -274,11 +274,11 @@ test.group('Session Driver | authenticate', (group) => {
 		const server = createServer(async (req, res) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			await ctx.session.initiate(false)
-			const lucidProvider = getLucidProvider(app, { model: User })
+			const lucidProvider = getLucidProvider(app, { model: async () => User })
 			const sessionDriver = getSessionDriver(
 				app,
 				lucidProvider,
-				getLucidProviderConfig({ model: User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 
@@ -331,11 +331,11 @@ test.group('Session Driver | authenticate', (group) => {
 		const server = createServer(async (req, res) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			await ctx.session.initiate(false)
-			const lucidProvider = getLucidProvider(app, { model: User })
+			const lucidProvider = getLucidProvider(app, { model: async () => User })
 			const sessionDriver = getSessionDriver(
 				app,
 				lucidProvider,
-				getLucidProviderConfig({ model: User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 
@@ -380,11 +380,11 @@ test.group('Session Driver | authenticate', (group) => {
 		const server = createServer(async (req, res) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			await ctx.session.initiate(false)
-			const lucidProvider = getLucidProvider(app, { model: User })
+			const lucidProvider = getLucidProvider(app, { model: async () => User })
 			const sessionDriver = getSessionDriver(
 				app,
 				lucidProvider,
-				getLucidProviderConfig({ model: User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 
@@ -427,11 +427,11 @@ test.group('Session Driver | logout', (group) => {
 		const server = createServer(async (req, res) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			await ctx.session.initiate(false)
-			const lucidProvider = getLucidProvider(app, { model: User })
+			const lucidProvider = getLucidProvider(app, { model: async () => User })
 			const sessionDriver = getSessionDriver(
 				app,
 				lucidProvider,
-				getLucidProviderConfig({ model: User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 
@@ -484,11 +484,11 @@ test.group('Session Driver | logout', (group) => {
 		const server = createServer(async (req, res) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			await ctx.session.initiate(false)
-			const lucidProvider = getLucidProvider(app, { model: User })
+			const lucidProvider = getLucidProvider(app, { model: async () => User })
 			const sessionDriver = getSessionDriver(
 				app,
 				lucidProvider,
-				getLucidProviderConfig({ model: User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 

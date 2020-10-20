@@ -67,8 +67,8 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 
@@ -108,8 +108,8 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 
@@ -147,8 +147,8 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 
@@ -190,8 +190,8 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 
@@ -233,8 +233,8 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 
@@ -271,8 +271,8 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 
@@ -314,8 +314,8 @@ test.group('Basic Auth Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const basicAuth = getBasicAuthGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx
 			)
 

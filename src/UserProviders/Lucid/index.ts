@@ -8,6 +8,7 @@
  */
 
 import { Hooks } from '@poppinss/hooks'
+import { esmResolver } from '@poppinss/utils'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import { ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Model'
 import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
@@ -57,8 +58,11 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
 	/**
 	 * Returns query instance for the user model
 	 */
-	private getModelQuery() {
-		return this.config.model.query(this.getModelOptions())
+	private async getModelQuery() {
+		const model = await this.config.model()
+		return {
+			query: esmResolver(model).query(this.getModelOptions()),
+		}
 	}
 
 	/**
@@ -112,7 +116,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
 	 * Returns a user instance using the primary key value
 	 */
 	public async findById(id: string | number) {
-		const query = this.getModelQuery()
+		const { query } = await this.getModelQuery()
 		return this.findUser(query.where(this.config.identifierKey, id))
 	}
 
@@ -120,7 +124,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
 	 * Returns a user instance using a specific token type and value
 	 */
 	public async findByRememberMeToken(id: string | number, value: string) {
-		const query = this.getModelQuery()
+		const { query } = await this.getModelQuery()
 		return this.findUser(query.where(this.config.identifierKey, id).where('rememberMeToken', value))
 	}
 
@@ -129,7 +133,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
 	 * their defined uids.
 	 */
 	public async findByUid(uidValue: string) {
-		const query = this.getModelQuery()
+		const { query } = await this.getModelQuery()
 		this.config.uids.forEach((uid) => query.orWhere(uid, uidValue))
 		return this.findUser(query)
 	}

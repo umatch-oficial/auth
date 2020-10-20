@@ -52,8 +52,8 @@ test.group('OAT Guard | Verify Credentials', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -77,8 +77,8 @@ test.group('OAT Guard | Verify Credentials', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -102,8 +102,8 @@ test.group('OAT Guard | Verify Credentials', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -138,8 +138,8 @@ test.group('OAT Guard | attempt', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -176,8 +176,8 @@ test.group('OAT Guard | attempt', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -219,8 +219,8 @@ test.group('OAT Guard | attempt', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -263,8 +263,8 @@ test.group('OAT Guard | attempt', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -325,8 +325,8 @@ test.group('OAT Guard | login', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -387,8 +387,8 @@ test.group('OAT Guard | loginViaId', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -451,8 +451,8 @@ test.group('OAT Guard | authenticate', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -477,8 +477,8 @@ test.group('OAT Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx,
 				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
@@ -513,8 +513,8 @@ test.group('OAT Guard | authenticate', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -528,8 +528,8 @@ test.group('OAT Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx,
 				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
@@ -547,7 +547,7 @@ test.group('OAT Guard | authenticate', (group) => {
 		const { body } = await supertest(server).get('/').set('Accept', 'application/json').expect(401)
 
 		assert.deepEqual(body, {
-			errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API Token' }],
+			errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API token' }],
 		})
 	})
 
@@ -561,8 +561,8 @@ test.group('OAT Guard | authenticate', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -576,8 +576,8 @@ test.group('OAT Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx,
 				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
@@ -599,7 +599,7 @@ test.group('OAT Guard | authenticate', (group) => {
 			.expect(401)
 
 		assert.deepEqual(body, {
-			errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API Token' }],
+			errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API token' }],
 		})
 	})
 
@@ -613,8 +613,8 @@ test.group('OAT Guard | authenticate', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -628,8 +628,8 @@ test.group('OAT Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx,
 				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
@@ -652,7 +652,7 @@ test.group('OAT Guard | authenticate', (group) => {
 			.expect(401)
 
 		assert.deepEqual(body, {
-			errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API Token' }],
+			errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API token' }],
 		})
 	})
 
@@ -666,8 +666,8 @@ test.group('OAT Guard | authenticate', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -681,8 +681,8 @@ test.group('OAT Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx,
 				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
@@ -705,7 +705,7 @@ test.group('OAT Guard | authenticate', (group) => {
 			.expect(401)
 
 		assert.deepEqual(body, {
-			errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API Token' }],
+			errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API token' }],
 		})
 	})
 
@@ -719,8 +719,8 @@ test.group('OAT Guard | authenticate', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -741,8 +741,8 @@ test.group('OAT Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx,
 				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
@@ -764,7 +764,7 @@ test.group('OAT Guard | authenticate', (group) => {
 			.expect(401)
 
 		assert.deepEqual(body, {
-			errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API Token' }],
+			errors: [{ message: 'E_INVALID_API_TOKEN: Invalid API token' }],
 		})
 	})
 
@@ -778,8 +778,8 @@ test.group('OAT Guard | authenticate', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -794,8 +794,8 @@ test.group('OAT Guard | authenticate', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx,
 				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)
@@ -849,8 +849,8 @@ test.group('OAT Guard | logout', (group) => {
 
 		const apiTokensGuard = getApiTokensGuard(
 			app,
-			getLucidProvider(app, { model: User }),
-			getLucidProviderConfig({ model: User }),
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
 			app.container.use('Adonis/Core/HttpContext').create('/', {}),
 			getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 		)
@@ -875,8 +875,8 @@ test.group('OAT Guard | logout', (group) => {
 			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
 			const oat1 = getApiTokensGuard(
 				app,
-				getLucidProvider(app, { model: User }),
-				getLucidProviderConfig({ model: User }),
+				getLucidProvider(app, { model: async () => User }),
+				getLucidProviderConfig({ model: async () => User }),
 				ctx,
 				getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
 			)

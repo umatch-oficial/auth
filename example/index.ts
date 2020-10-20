@@ -8,7 +8,7 @@ export const config: AuthConfig = {
 			driver: 'session',
 			provider: {
 				driver: 'lucid',
-				model: User,
+				model: async () => User,
 				identifierKey: 'id',
 				uids: ['email'],
 			},
@@ -17,7 +17,7 @@ export const config: AuthConfig = {
 			driver: 'basic',
 			provider: {
 				driver: 'lucid',
-				model: User,
+				model: async () => User,
 				identifierKey: 'id',
 				uids: ['email'],
 			},
@@ -30,7 +30,7 @@ export const config: AuthConfig = {
 			},
 			provider: {
 				driver: 'lucid',
-				model: User,
+				model: async () => User,
 				identifierKey: 'id',
 				uids: ['email'],
 			},

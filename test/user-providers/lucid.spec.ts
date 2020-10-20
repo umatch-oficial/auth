@@ -41,7 +41,7 @@ test.group('Lucid Provider | findById', (group) => {
 		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com' })
 
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		lucidProvider.before('findUser', async (query) => assert.exists(query))
 		lucidProvider.after('findUser', async (model) => assert.instanceOf(model, User))
 
@@ -57,7 +57,7 @@ test.group('Lucid Provider | findById', (group) => {
 
 		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		lucidProvider.before('findUser', async (query) => assert.exists(query))
 		lucidProvider.after('findUser', async () => {
 			throw new Error('not expected to be invoked')
@@ -71,7 +71,7 @@ test.group('Lucid Provider | findById', (group) => {
 		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com' })
 
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		lucidProvider.setConnection('secondary')
 
 		const providerUser = await lucidProvider.findById(user.id)
@@ -82,7 +82,7 @@ test.group('Lucid Provider | findById', (group) => {
 		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com' })
 
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		lucidProvider.setConnection(app.container.use('Adonis/Lucid/Database').connection('secondary'))
 
 		const providerUser = await lucidProvider.findById(user.id)
@@ -111,7 +111,7 @@ test.group('Lucid Provider | findByUids', (group) => {
 		await User.create({ username: 'virk', email: 'virk@adonisjs.com' })
 		await User.create({ username: 'nikk', email: 'nikk@adonisjs.com' })
 
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		lucidProvider.before('findUser', async (query) => assert.exists(query))
 		lucidProvider.after('findUser', async (user) => assert.instanceOf(user, User))
 
@@ -130,7 +130,7 @@ test.group('Lucid Provider | findByUids', (group) => {
 		assert.plan(4)
 
 		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 
 		lucidProvider.before('findUser', async (query) => assert.exists(query))
 		lucidProvider.after('findUser', async () => {
@@ -147,7 +147,7 @@ test.group('Lucid Provider | findByUids', (group) => {
 		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		await User.create({ username: 'nikk', email: 'nikk@adonisjs.com' })
 
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		lucidProvider.setConnection('secondary')
 
 		const providerUser = await lucidProvider.findByUid('nikk')
@@ -161,7 +161,7 @@ test.group('Lucid Provider | findByUids', (group) => {
 		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 		await User.create({ username: 'nikk', email: 'nikk@adonisjs.com' })
 
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		lucidProvider.setConnection(app.container.use('Adonis/Lucid/Database').connection('secondary'))
 
 		const providerUser = await lucidProvider.findByUid('nikk')
@@ -196,7 +196,7 @@ test.group('Lucid Provider | findByRememberMeToken', (group) => {
 		})
 		await User.create({ username: 'nikk', email: 'nikk@adonisjs.com' })
 
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		lucidProvider.before('findUser', async (query) => assert.exists(query))
 		lucidProvider.after('findUser', async (model) => assert.instanceOf(model, User))
 
@@ -208,7 +208,7 @@ test.group('Lucid Provider | findByRememberMeToken', (group) => {
 
 	test("return null when user doesn't exists", async (assert) => {
 		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		const providerUser = await lucidProvider.findByRememberMeToken(1, '123')
 		assert.isNull(providerUser.user)
 	})
@@ -221,7 +221,7 @@ test.group('Lucid Provider | findByRememberMeToken', (group) => {
 		const user = await User.create({ username: 'nikk', email: 'nikk@adonisjs.com' })
 		await User.create({ username: 'virk', email: 'virk@adonisjs.com', rememberMeToken: '123' })
 
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		lucidProvider.before('findUser', async (query) => assert.exists(query))
 		lucidProvider.after('findUser', async () => {
 			throw new Error('not expected to be invoked')
@@ -239,7 +239,7 @@ test.group('Lucid Provider | findByRememberMeToken', (group) => {
 			rememberMeToken: '123',
 		})
 
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		lucidProvider.setConnection('secondary')
 
 		const providerUser = await lucidProvider.findByRememberMeToken(user.id, '123')
@@ -254,7 +254,7 @@ test.group('Lucid Provider | findByRememberMeToken', (group) => {
 			rememberMeToken: '123',
 		})
 
-		const lucidProvider = getLucidProvider(app, { model: User })
+		const lucidProvider = getLucidProvider(app, { model: async () => User })
 		lucidProvider.setConnection(app.container.use('Adonis/Lucid/Database').connection('secondary'))
 
 		const providerUser = await lucidProvider.findByRememberMeToken(user.id, '123')

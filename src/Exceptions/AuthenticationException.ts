@@ -96,14 +96,14 @@ export class AuthenticationException extends Exception {
 	 * Missing/Invalid token or unable to lookup user from the token
 	 */
 	public static invalidToken(guard: string) {
-		return new this('Invalid API Token', 'E_INVALID_API_TOKEN', guard)
+		return new this('Invalid API token', 'E_INVALID_API_TOKEN', guard)
 	}
 
 	/**
 	 * Missing or invalid basic auth credentials
 	 */
 	public static invalidBasicCredentials(guard: string) {
-		return new this('Invalid API Token', 'E_INVALID_BASIC_CREDENTIALS', guard)
+		return new this('Invalid basic auth credentials', 'E_INVALID_BASIC_CREDENTIALS', guard)
 	}
 
 	/**

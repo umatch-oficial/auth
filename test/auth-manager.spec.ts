@@ -58,15 +58,15 @@ test.group('Auth Manager', (group) => {
 						driver: 'database',
 						table: 'api_tokens',
 					},
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				basic: {
 					driver: 'basic',
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				session: {
 					driver: 'session',
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				sessionDb: {
 					driver: 'session',
@@ -94,15 +94,15 @@ test.group('Auth Manager', (group) => {
 						driver: 'database',
 						table: 'api_tokens',
 					},
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				basic: {
 					driver: 'basic',
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				session: {
 					driver: 'session',
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				sessionDb: {
 					driver: 'session',
@@ -130,15 +130,15 @@ test.group('Auth Manager', (group) => {
 						driver: 'database',
 						table: 'api_tokens',
 					},
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				basic: {
 					driver: 'basic',
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				session: {
 					driver: 'session',
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				sessionDb: {
 					driver: 'session',
@@ -245,15 +245,15 @@ test.group('Auth Manager', (group) => {
 						driver: 'database',
 						table: 'api_tokens',
 					},
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				basic: {
 					driver: 'basic',
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				session: {
 					driver: 'session',
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				sessionDb: {
 					driver: 'session',
@@ -281,15 +281,15 @@ test.group('Auth Manager', (group) => {
 						driver: 'database',
 						table: 'api_tokens',
 					},
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				basic: {
 					driver: 'basic',
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				session: {
 					driver: 'session',
-					provider: getLucidProviderConfig({ model: User }),
+					provider: getLucidProviderConfig({ model: async () => User }),
 				},
 				sessionDb: {
 					driver: 'session',

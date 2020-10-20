@@ -222,7 +222,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 	 */
 	export type LucidProviderConfig<User extends LucidProviderModel> = {
 		driver: 'lucid'
-		model: User
+		model: () => Promise<User> | Promise<{ default: User }>
 		uids: (keyof InstanceType<User>)[]
 		identifierKey: string
 		connection?: string
