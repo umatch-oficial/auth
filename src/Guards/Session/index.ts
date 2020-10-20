@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import { randomString } from '@poppinss/utils'
+import { randomString, Exception } from '@poppinss/utils'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
@@ -58,12 +58,22 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
 	}
 
 	/**
+	 * Returns the session object from the context.
+	 */
+	private getSession() {
+		if (!this.ctx.session) {
+			throw new Exception('"@adonisjs/session" is required to use the "session" auth driver')
+		}
+		return this.ctx.session
+	}
+
+	/**
 	 * Set the user id inside the session. Also forces the session module
 	 * to re-generate the session id
 	 */
 	private setSession(userId: string | number) {
-		this.ctx.session.put(this.sessionKeyName, userId)
-		this.ctx.session.regenerate()
+		this.getSession().put(this.sessionKeyName, userId)
+		this.getSession().regenerate()
 	}
 
 	/**
@@ -99,7 +109,7 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
 	 * Clears user session and remember me cookie
 	 */
 	private clearUserFromStorage() {
-		this.ctx.session.forget(this.sessionKeyName)
+		this.getSession().forget(this.sessionKeyName)
 		this.clearRememberMeCookie()
 	}
 
@@ -144,7 +154,7 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
 	 * Returns the user id for the current HTTP request
 	 */
 	private getRequestSessionId() {
-		return this.ctx.session.get(this.sessionKeyName)
+		return this.getSession().get(this.sessionKeyName)
 	}
 
 	/**
