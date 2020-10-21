@@ -1,6 +1,6 @@
 {
   "name": "@adonisjs/auth",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Offical authentication provider for Adonis framework",
   "types": "build/adonis-typings/index.d.ts",
   "main": "build/providers/AuthProvider.js",
@@ -111,10 +111,10 @@
   },
   "peerDependencies": {
     "@adonisjs/core": "^5.0.3-beta-rc",
-		"@adonisjs/lucid": "^9.0.0",
-		"@adonisjs/session": "^4.0.0"
-	},
-	"peerDependenciesMeta": {
+    "@adonisjs/lucid": "^9.0.0",
+    "@adonisjs/session": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
     "@adonisjs/session": {
       "optional": true
     }
