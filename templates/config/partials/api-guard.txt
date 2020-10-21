@@ -19,12 +19,15 @@
       | Tokens provider
       |--------------------------------------------------------------------------
       |
-      | Uses SQL database for managing tokens.
+      | Uses SQL database config for managing tokens. The foreignKey column is used
+      | to make the relationship between the user and the token. You are free to
+      | use any column name here.
       |
       */
       tokenProvider: {
         driver: 'database',
         table: 'api_tokens',
+        foreignKey: 'user_id',
       },
 
       provider: {

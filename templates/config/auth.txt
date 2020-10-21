@@ -5,9 +5,6 @@
  * file.
  */
 
-{{#modelNamespace}}
-import {{ modelName }} from '{{{ modelNamespace }}}'
-{{/modelNamespace}}
 import { AuthConfig } from '@ioc:Adonis/Addons/Auth'
 
 /*
