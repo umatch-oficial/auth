@@ -121,7 +121,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "next"
+    "tag": "alpha"
   },
   "adonisjs": {
     "instructions": "./build/instructions.js",
