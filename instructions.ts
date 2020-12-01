@@ -418,8 +418,10 @@ export default async function instructions(
 	 * Only ask for the consent when using the api guard
 	 */
 	if (state.hasGuard.api) {
-		tokensMigrationConsent = await getMigrationConsent(sink, state.tokensTableName)
 		state.tokensProvider = await getTokensProvider(sink)
+		if (state.tokensProvider === 'database') {
+			tokensMigrationConsent = await getMigrationConsent(sink, state.tokensTableName)
+		}
 	}
 
 	/**
