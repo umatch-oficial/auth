@@ -15,6 +15,7 @@
       driver: 'oat',
 
       {{> token_provider}}
+
       provider: {
   {{> provider}}
       },
