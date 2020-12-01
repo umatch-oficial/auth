@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@adonisjs/core": "^5.0.4-preview-rc-2.1",
-    "@adonisjs/lucid": "^9.0.2",
+    "@adonisjs/lucid": "^10.0.0",
     "@adonisjs/mrm-preset": "^2.4.0",
     "@adonisjs/redis": "^5.0.9",
     "@adonisjs/repl": "^1.1.6",
@@ -113,11 +113,15 @@
   },
   "peerDependencies": {
     "@adonisjs/core": "^5.0.4-preview-rc",
-    "@adonisjs/lucid": "^9.0.0",
+    "@adonisjs/lucid": "^10.0.0",
+    "@adonisjs/redis": "^5.0.0",
     "@adonisjs/session": "^4.0.0"
   },
   "peerDependenciesMeta": {
     "@adonisjs/session": {
+      "optional": true
+    },
+    "@adonisjs/redis": {
       "optional": true
     }
   },

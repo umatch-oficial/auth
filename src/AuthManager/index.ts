@@ -108,6 +108,10 @@ export class AuthManager implements AuthManagerContract {
 	 * Lazily makes an instance of the token redis provider
 	 */
 	private makeTokenRedisProvider(config: DatabaseProviderConfig) {
+		if (!this.application.container.hasBinding('Adonis/Addons/Redis')) {
+			throw new Exception('"@adonisjs/redis" is required to use the "redis" token provider')
+		}
+
 		const Redis = this.application.container.use('Adonis/Addons/Redis')
 		return new (require('../TokenProviders/Redis').TokenRedisProvider)(config, Redis)
 	}
