@@ -25,6 +25,7 @@ type InstructionsState = {
 	tokensSchemaName: string
 
 	provider: 'lucid' | 'database'
+	tokensProvider: 'database' | 'redis'
 	guards: ('web' | 'api' | 'basic')[]
 
 	hasGuard: {
@@ -81,6 +82,22 @@ const GUARD_PROMPT_CHOICES = [
 		name: 'basic' as const,
 		message: 'Basic Auth',
 		hint: ' (Uses HTTP Basic auth for authenticating requests)',
+	},
+]
+
+/**
+ * Prompt choices for the tokens provider selection
+ */
+const TOKENS_PROVIDER_PROMPT_CHOICES = [
+	{
+		name: 'database' as const,
+		message: 'Database',
+		hint: ' (Uses SQL table for storing API tokens)',
+	},
+	{
+		name: 'redis' as const,
+		message: 'Redis',
+		hint: ' (Uses Redis for storing API tokens)',
 	},
 ]
 
@@ -264,6 +281,7 @@ function makeConfig(
 
 	const partials: any = {
 		provider: getStub(CONFIG_PARTIALS_BASE, `user-provider-${state.provider}.txt`),
+		token_provider: getStub(CONFIG_PARTIALS_BASE, `tokens-provider-${state.tokensProvider}.txt`),
 	}
 
 	state.guards.forEach((guard) => {
@@ -283,6 +301,19 @@ async function getProvider(sink: typeof sinkStatic) {
 			return choice && choice.length ? true : 'Select the provider for finding users'
 		},
 	})
+}
+
+/**
+ * Prompts user to select the tokens provider
+ */
+async function getTokensProvider(sink: typeof sinkStatic) {
+	return sink
+		.getPrompt()
+		.choice('Select the provider for storing API tokens', TOKENS_PROVIDER_PROMPT_CHOICES, {
+			validate(choice) {
+				return choice && choice.length ? true : 'Select the provider for storing API tokens'
+			},
+		})
 }
 
 /**
@@ -349,6 +380,7 @@ export default async function instructions(
 		tokensSchemaName: 'ApiTokens',
 		usersSchemaName: '',
 		provider: 'lucid',
+		tokensProvider: 'database',
 		guards: [],
 		hasGuard: {
 			web: false,
@@ -387,6 +419,7 @@ export default async function instructions(
 	 */
 	if (state.hasGuard.api) {
 		tokensMigrationConsent = await getMigrationConsent(sink, state.tokensTableName)
+		state.tokensProvider = await getTokensProvider(sink)
 	}
 
 	/**
