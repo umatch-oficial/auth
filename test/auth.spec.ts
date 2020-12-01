@@ -15,6 +15,7 @@ import { AuthManager } from '../src/AuthManager'
 import { SessionGuard } from '../src/Guards/Session'
 import { LucidProvider } from '../src/UserProviders/Lucid'
 import { DatabaseProvider } from '../src/UserProviders/Database'
+import { TokenRedisProvider } from '../src/TokenProviders/Redis'
 import { TokenDatabaseProvider } from '../src/TokenProviders/Database'
 
 import {
@@ -332,6 +333,43 @@ test.group('Auth', (group) => {
 		assert.equal(auth.name, 'api')
 		assert.instanceOf(auth.provider, LucidProvider)
 		assert.instanceOf(auth.tokenProvider, TokenDatabaseProvider)
+	})
+
+	test('make oat guard with redis driver', (assert) => {
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+
+		const manager = new AuthManager(app, {
+			guard: 'api',
+			list: {
+				api: {
+					driver: 'oat',
+					tokenProvider: {
+						driver: 'redis',
+						redisConnection: 'local',
+					},
+					provider: getLucidProviderConfig({ model: async () => User }),
+				},
+				basic: {
+					driver: 'basic',
+					provider: getLucidProviderConfig({ model: async () => User }),
+				},
+				session: {
+					driver: 'session',
+					provider: getLucidProviderConfig({ model: async () => User }),
+				},
+				sessionDb: {
+					driver: 'session',
+					provider: getDatabaseProviderConfig(),
+				},
+			},
+		})
+
+		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
+		const auth = manager.getAuthForRequest(ctx).use('api')
+
+		assert.equal(auth.name, 'api')
+		assert.instanceOf(auth.provider, LucidProvider)
+		assert.instanceOf(auth.tokenProvider, TokenRedisProvider)
 	})
 
 	test('return user_id when foreignKey is missing', (assert) => {

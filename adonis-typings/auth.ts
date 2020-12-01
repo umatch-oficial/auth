@@ -165,6 +165,15 @@ declare module '@ioc:Adonis/Addons/Auth' {
 		connection?: string
 	}
 
+	/**
+	 * Config for the redis token provider
+	 */
+	export type RedisTokenProviderConfig = {
+		driver: 'redis'
+		redisConnection: string
+		foreignKey?: string
+	}
+
 	/*
   |--------------------------------------------------------------------------
   | Lucid Provider
@@ -637,7 +646,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 		/**
 		 * Provider for managing tokens
 		 */
-		tokenProvider: DatabaseTokenProviderConfig
+		tokenProvider: DatabaseTokenProviderConfig | RedisTokenProviderConfig
 
 		/**
 		 * User provider

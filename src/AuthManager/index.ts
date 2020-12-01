@@ -105,6 +105,14 @@ export class AuthManager implements AuthManagerContract {
 	}
 
 	/**
+	 * Lazily makes an instance of the token redis provider
+	 */
+	private makeTokenRedisProvider(config: DatabaseProviderConfig) {
+		const Redis = this.application.container.use('Adonis/Addons/Redis')
+		return new (require('../TokenProviders/Redis').TokenRedisProvider)(config, Redis)
+	}
+
+	/**
 	 * Returns an instance of the session guard
 	 */
 	private makeSessionGuard(
@@ -192,6 +200,8 @@ export class AuthManager implements AuthManagerContract {
 		switch (providerConfig.driver) {
 			case 'database':
 				return this.makeTokenDatabaseProvider(providerConfig)
+			case 'redis':
+				return this.makeTokenRedisProvider(providerConfig)
 			default:
 				throw new Exception(`Invalid token provider "${providerConfig.driver}"`)
 		}

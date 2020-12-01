@@ -12,6 +12,7 @@ import { join } from 'path'
 import { MarkOptional } from 'ts-essentials'
 import { Filesystem } from '@poppinss/dev-utils'
 import { LucidModel } from '@ioc:Adonis/Lucid/Model'
+import { RedisManagerContract } from '@ioc:Adonis/Addons/Redis'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
@@ -21,6 +22,7 @@ import { SessionGuard } from '../src/Guards/Session'
 import { BasicAuthGuard } from '../src/Guards/BasicAuth'
 import { LucidProvider } from '../src/UserProviders/Lucid'
 import { DatabaseProvider } from '../src/UserProviders/Database'
+import { TokenRedisProvider } from '../src/TokenProviders/Redis'
 import { TokenDatabaseProvider } from '../src/TokenProviders/Database'
 
 import {
@@ -36,6 +38,9 @@ import { Application } from '@adonisjs/core/build/standalone'
 
 export const fs = new Filesystem(join(__dirname, '__app'))
 
+/**
+ * Setup application
+ */
 export async function setupApplication(
 	additionalProviders?: string[],
 	environment: 'web' | 'repl' | 'test' = 'test'
@@ -122,13 +127,28 @@ export async function setupApplication(
 		export default authConfig`
 	)
 
+	await fs.add(
+		'config/redis.ts',
+		`const redisConfig = {
+			connection: 'local',
+			connections: {
+				local: {}
+			}
+		}
+		export default redisConfig`
+	)
+
 	const app = new Application(fs.basePath, environment, {
 		aliases: {
 			App: './app',
 		},
-		providers: ['@adonisjs/core', '@adonisjs/repl', '@adonisjs/session', '@adonisjs/lucid'].concat(
-			additionalProviders || []
-		),
+		providers: [
+			'@adonisjs/core',
+			'@adonisjs/repl',
+			'@adonisjs/session',
+			'@adonisjs/lucid',
+			'@adonisjs/redis',
+		].concat(additionalProviders || []),
 	})
 
 	app.setup()
@@ -137,41 +157,6 @@ export async function setupApplication(
 
 	return app
 }
-
-// const sessionConfig: SessionConfig = {
-// 	driver: 'cookie',
-// 	cookieName: 'adonis-session',
-// 	clearWithBrowser: false,
-// 	age: '2h',
-// 	cookie: {
-// 		path: '/',
-// 	},
-// }
-
-// export const container = new Ioc()
-// export const secret = 'securelong32characterslongsecret'
-// export const encryption = new Encryption({ secret })
-// export const hash = new Hash(container, {
-// 	default: 'bcrypt' as const,
-// 	list: {
-// 		bcrypt: {
-// 			driver: 'bcrypt',
-// 			rounds: 10,
-// 		},
-// 	},
-// })
-
-// export const emitter = new Emitter(container)
-// container.singleton('Adonis/Core/Event', () => emitter)
-// container.singleton('Adonis/Core/Encryption', () => encryption)
-// container.singleton('Adonis/Core/Hash', () => hash)
-// container.singleton('Adonis/Core/Config', () => {
-// 	return {
-// 		get() {
-// 			return secret
-// 		},
-// 	}
-// })
 
 /**
  * Create the users tables
@@ -232,39 +217,6 @@ export function getDatabaseProviderConfig() {
 	}
 	return defaults
 }
-
-/**
- * Returns instance of database
- */
-// export async function getDb() {
-// 	await fs.ensureRoot()
-
-// 	const db = (new Database(
-// 		{
-// 			connection: 'primary',
-// 			connections: {
-// 				primary: {
-// 					client: 'sqlite3',
-// 					connection: {
-// 						filename: join(fs.basePath, 'primary.sqlite3'),
-// 					},
-// 				},
-// 				secondary: {
-// 					client: 'sqlite3',
-// 					connection: {
-// 						filename: join(fs.basePath, 'secondary.sqlite3'),
-// 					},
-// 				},
-// 			},
-// 		},
-// 		logger,
-// 		profiler,
-// 		emitter
-// 	) as unknown) as DatabaseContract
-
-// 	container.singleton('Adonis/Lucid/Database', () => db)
-// 	return db
-// }
 
 /**
  * Performs an initial setup
@@ -330,26 +282,6 @@ export function getDatabaseProvider(
 		application.container.use('Adonis/Lucid/Database')
 	) as unknown) as DatabaseProviderContract<any>
 }
-
-/**
- * Returns an instance of ctx
- */
-// export function getCtx(req?: IncomingMessage, res?: ServerResponse) {
-// 	const httpRow = profiler.create('http:request')
-// 	const router = new Router(encryption)
-
-// 	return (HttpContext.create(
-// 		'/',
-// 		{},
-// 		logger,
-// 		httpRow,
-// 		encryption,
-// 		router,
-// 		req,
-// 		res,
-// 		{} as any
-// 	) as unknown) as HttpContextContract
-// }
 
 /**
  * Returns an instance of the session driver.
@@ -426,6 +358,19 @@ export function getTokensDbProvider(db: DatabaseContract) {
 			driver: 'database',
 		},
 		db
+	)
+}
+
+/**
+ * Returns the database token provider
+ */
+export function getTokensRedisProvider(redis: RedisManagerContract) {
+	return new TokenRedisProvider(
+		{
+			driver: 'redis',
+			redisConnection: 'local',
+		},
+		redis
 	)
 }
 
