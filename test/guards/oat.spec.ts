@@ -360,6 +360,59 @@ test.group('OAT Guard | login', (group) => {
 		assert.equal(tokens[0].ip_address, '192.168.1.1')
 		assert.deepEqual(token.meta, { device_name: 'Android', ip_address: '192.168.1.1' })
 	})
+
+	test('use custom token type', async (assert) => {
+		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+		const user = await User.create({
+			username: 'virk',
+			email: 'virk@adonisjs.com',
+			password: await app.container.use('Adonis/Core/Hash').make('secret'),
+		})
+
+		const apiTokensGuard = getApiTokensGuard(
+			app,
+			getLucidProvider(app, { model: async () => User }),
+			getLucidProviderConfig({ model: async () => User }),
+			app.container.use('Adonis/Core/HttpContext').create('/', {}),
+			getTokensDbProvider(app.container.use('Adonis/Lucid/Database')),
+			{
+				driver: 'database',
+				table: 'api_tokens',
+				type: 'access_token',
+			}
+		)
+
+		/**
+		 * Assert the event is fired with correct set of arguments
+		 */
+		app.container
+			.use('Adonis/Core/Event')
+			.once('adonis:api:login', ({ name, user: model, token }) => {
+				assert.equal(name, 'api')
+				assert.instanceOf(model, User)
+				assert.instanceOf(token, OpaqueToken)
+				assert.equal(token.type, 'bearer')
+			})
+
+		const token = await apiTokensGuard.login(user, {
+			device_name: 'Android',
+			ip_address: '192.168.1.1',
+		})
+		const tokens = await app.container
+			.use('Adonis/Lucid/Database')
+			.query()
+			.from('api_tokens')
+			.where('user_id', user.id)
+
+		/**
+		 * Assert correct token is generated and persisted to the db
+		 */
+		assert.lengthOf(tokens, 1)
+		assert.equal(tokens[0].device_name, 'Android')
+		assert.equal(tokens[0].ip_address, '192.168.1.1')
+		assert.equal(tokens[0].type, 'access_token')
+		assert.deepEqual(token.meta, { device_name: 'Android', ip_address: '192.168.1.1' })
+	})
 })
 
 test.group('OAT Guard | loginViaId', (group) => {

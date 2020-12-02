@@ -32,6 +32,7 @@ import {
 	TokenProviderContract,
 	DatabaseProviderConfig,
 	DatabaseProviderContract,
+	DatabaseTokenProviderConfig,
 } from '@ioc:Adonis/Addons/Auth'
 
 import { Application } from '@adonisjs/core/build/standalone'
@@ -309,11 +310,12 @@ export function getApiTokensGuard(
 	provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
 	providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
 	ctx: HttpContextContract,
-	tokensProvider: TokenProviderContract
+	tokensProvider: TokenProviderContract,
+	tokenProviderConfig?: DatabaseTokenProviderConfig
 ) {
 	const config = {
 		driver: 'oat' as const,
-		tokenProvider: {
+		tokenProvider: tokenProviderConfig || {
 			driver: 'database' as const,
 			table: 'api_tokens',
 		},

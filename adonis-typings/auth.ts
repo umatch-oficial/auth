@@ -163,6 +163,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 		table: string
 		foreignKey?: string
 		connection?: string
+		type?: string
 	}
 
 	/**
@@ -172,6 +173,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 		driver: 'redis'
 		redisConnection: string
 		foreignKey?: string
+		type?: string
 	}
 
 	/*

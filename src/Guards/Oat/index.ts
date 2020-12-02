@@ -38,7 +38,7 @@ import { AuthenticationException } from '../../Exceptions/AuthenticationExceptio
 export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, any> {
 	constructor(
 		name: string,
-		config: OATGuardConfig<any>,
+		public config: OATGuardConfig<any>,
 		private emitter: EmitterContract,
 		provider: UserProviderContract<any>,
 		private ctx: HttpContextContract,
@@ -63,7 +63,7 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
 	/**
 	 * Token type for the persistance store
 	 */
-	private tokenType = 'opaque_token'
+	private tokenType = this.config.tokenProvider.type || 'opaque_token'
 
 	/**
 	 * Whether or not the authentication has been attempted
