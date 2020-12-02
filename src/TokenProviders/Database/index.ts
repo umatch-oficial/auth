@@ -41,20 +41,27 @@ export class TokenDatabaseProvider implements TokenProviderContract {
 	/**
 	 * Returns the builder query for a given token + type
 	 */
-	private getLookupQuery(tokenId: string) {
-		return this.getQueryClient().from(this.config.table).where('id', tokenId)
+	private getLookupQuery(tokenId: string, tokenType: string) {
+		return this.getQueryClient()
+			.from(this.config.table)
+			.where('id', tokenId)
+			.where('type', tokenType)
 	}
 
 	/**
 	 * Reads the token using the lookup token id
 	 */
-	public async read(tokenId: string, tokenHash: string): Promise<ProviderTokenContract | null> {
+	public async read(
+		tokenId: string,
+		tokenHash: string,
+		tokenType: string
+	): Promise<ProviderTokenContract | null> {
 		const client = this.getQueryClient()
 
 		/**
 		 * Find token using id
 		 */
-		const tokenRow = await this.getLookupQuery(tokenId).first()
+		const tokenRow = await this.getLookupQuery(tokenId, tokenType).first()
 		if (!tokenRow || !tokenRow.token) {
 			return null
 		}
@@ -130,7 +137,7 @@ export class TokenDatabaseProvider implements TokenProviderContract {
 	/**
 	 * Removes a given token
 	 */
-	public async destroy(tokenId: string) {
-		await this.getLookupQuery(tokenId).delete()
+	public async destroy(tokenId: string, tokenType: string) {
+		await this.getLookupQuery(tokenId, tokenType).delete()
 	}
 }

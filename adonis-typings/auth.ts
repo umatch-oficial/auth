@@ -152,7 +152,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
 		/**
 		 * Delete token using the lookup id or the token value
 		 */
-		destroy(lookupId: string, token: string, type: string): Promise<void>
+		destroy(lookupId: string, type: string): Promise<void>
 	}
 
 	/**

@@ -61,7 +61,7 @@ test.group('Database Token Provider', (group) => {
 			expiresAt: DateTime.local().plus({ minutes: 30 }),
 		})
 
-		const tokenRow = await provider.read(tokenId, token)
+		const tokenRow = await provider.read(tokenId, token, 'api_token')
 		assert.equal(tokenRow!.name, 'Auth token')
 		assert.equal(tokenRow!.tokenHash, token)
 		assert.equal(tokenRow!.type, 'api_token')
@@ -81,7 +81,7 @@ test.group('Database Token Provider', (group) => {
 			expiresAt: DateTime.local(),
 		})
 
-		assert.isNull(await provider.read(tokenId, 'foo'))
+		assert.isNull(await provider.read(tokenId, 'foo', 'api_token'))
 	})
 
 	test('return null when token has been expired', async (assert) => {
@@ -98,7 +98,7 @@ test.group('Database Token Provider', (group) => {
 		})
 
 		await sleep(1000)
-		assert.isNull(await provider.read(tokenId, token))
+		assert.isNull(await provider.read(tokenId, token, 'api_token'))
 	})
 
 	test('work fine when token has no expiry', async (assert) => {
@@ -114,7 +114,7 @@ test.group('Database Token Provider', (group) => {
 		})
 
 		await sleep(1000)
-		assert.isNotNull(await provider.read(tokenId, token))
+		assert.isNotNull(await provider.read(tokenId, token, 'api_token'))
 	})
 
 	test('return null when token is missing', async (assert) => {
@@ -130,7 +130,7 @@ test.group('Database Token Provider', (group) => {
 			expiresAt: DateTime.local(),
 		})
 
-		assert.isNull(await provider.read(tokenId + 1, token))
+		assert.isNull(await provider.read(tokenId + 1, token, 'api_token'))
 	})
 
 	test('delete token from the database', async (assert) => {
@@ -146,7 +146,7 @@ test.group('Database Token Provider', (group) => {
 			expiresAt: DateTime.local(),
 		})
 
-		await provider.destroy(tokenId)
+		await provider.destroy(tokenId, 'api_token')
 		const tokens = await db.from('api_tokens').select('*')
 		assert.lengthOf(tokens, 0)
 	})

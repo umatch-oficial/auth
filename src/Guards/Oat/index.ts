@@ -412,11 +412,7 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
 		 * Clean up token from storage
 		 */
 		if (this.parsedToken) {
-			await this.tokenProvider.destroy(
-				this.parsedToken.tokenId,
-				this.parsedToken.value,
-				this.tokenType
-			)
+			await this.tokenProvider.destroy(this.parsedToken.tokenId, this.tokenType)
 		}
 
 		this.markUserAsLoggedOut()

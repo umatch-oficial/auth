@@ -30,7 +30,6 @@ import { ProviderToken } from '../../Tokens/ProviderToken'
 type PersistedToken = {
 	name: string
 	token: string
-	type: string
 } & {
 	[key: string]: any
 }
@@ -71,7 +70,7 @@ export class TokenRedisProvider implements TokenProviderContract {
 
 		try {
 			const tokenRow: any = JSON.parse(token)
-			if (!tokenRow.token || !tokenRow.name || !tokenRow[this.foreignKey] || !tokenRow.type) {
+			if (!tokenRow.token || !tokenRow.name || !tokenRow[this.foreignKey]) {
 				return null
 			}
 
@@ -84,11 +83,15 @@ export class TokenRedisProvider implements TokenProviderContract {
 	/**
 	 * Reads the token using the lookup token id
 	 */
-	public async read(tokenId: string, tokenHash: string): Promise<ProviderTokenContract | null> {
+	public async read(
+		tokenId: string,
+		tokenHash: string,
+		tokenType: string
+	): Promise<ProviderTokenContract | null> {
 		/**
 		 * Find token using id
 		 */
-		const tokenRow = this.parseToken(await this.getRedisConnection().get(tokenId))
+		const tokenRow = this.parseToken(await this.getRedisConnection().get(`${tokenType}:${tokenId}`))
 		if (!tokenRow) {
 			return null
 		}
@@ -101,9 +104,9 @@ export class TokenRedisProvider implements TokenProviderContract {
 			return null
 		}
 
-		const { name, [this.foreignKey]: userId, token: value, type, ...meta } = tokenRow
+		const { name, [this.foreignKey]: userId, token: value, ...meta } = tokenRow
 
-		const token = new ProviderToken(name, value, userId, type)
+		const token = new ProviderToken(name, value, userId, tokenType)
 		token.meta = meta
 		return token
 	}
@@ -120,7 +123,6 @@ export class TokenRedisProvider implements TokenProviderContract {
 			[this.foreignKey]: token.userId,
 			name: token.name,
 			token: token.tokenHash,
-			type: token.type,
 			...token.meta,
 		}
 
@@ -136,9 +138,13 @@ export class TokenRedisProvider implements TokenProviderContract {
 		}
 
 		if (token.expiresAt) {
-			await this.getRedisConnection().setex(tokenId, ttl, JSON.stringify(payload))
+			await this.getRedisConnection().setex(
+				`${token.type}:${tokenId}`,
+				ttl,
+				JSON.stringify(payload)
+			)
 		} else {
-			await this.getRedisConnection().set(tokenId, JSON.stringify(payload))
+			await this.getRedisConnection().set(`${token.type}:${tokenId}`, JSON.stringify(payload))
 		}
 
 		return tokenId
@@ -147,7 +153,7 @@ export class TokenRedisProvider implements TokenProviderContract {
 	/**
 	 * Removes a given token
 	 */
-	public async destroy(tokenId: string) {
-		await this.getRedisConnection().del(tokenId)
+	public async destroy(tokenId: string, tokenType: string) {
+		await this.getRedisConnection().del(`${tokenType}:${tokenId}`)
 	}
 }

@@ -18,7 +18,7 @@ let app: ApplicationContract
 
 const sleep = (time: number) => new Promise((resolve) => setTimeout(resolve, time))
 
-test.group('Database Token Provider', (group) => {
+test.group('Redis Token Provider', (group) => {
 	group.before(async () => {
 		app = await setupApplication()
 		await setup(app)
@@ -47,12 +47,11 @@ test.group('Database Token Provider', (group) => {
 		})
 
 		assert.exists(tokenId)
-		const tokenRow = JSON.parse((await redis.get(tokenId))!)
+		const tokenRow = JSON.parse((await redis.get(`api_token:${tokenId}`))!)
 		assert.deepEqual(tokenRow, {
 			user_id: '1',
 			name: 'Auth token',
 			token,
-			type: 'api_token',
 		})
 
 		let expiry = await redis.ttl(tokenId)
@@ -73,7 +72,7 @@ test.group('Database Token Provider', (group) => {
 		})
 
 		assert.exists(tokenId)
-		const tokenRow = await provider.read(tokenId, token)
+		const tokenRow = await provider.read(tokenId, token, 'api_token')
 		assert.equal(tokenRow!.name, 'Auth token')
 		assert.equal(tokenRow!.tokenHash, token)
 		assert.equal(tokenRow!.type, 'api_token')
@@ -92,7 +91,7 @@ test.group('Database Token Provider', (group) => {
 			expiresAt: DateTime.local().plus({ minutes: 30 }),
 		})
 
-		assert.isNull(await provider.read(tokenId, 'foo'))
+		assert.isNull(await provider.read(tokenId, 'foo', 'api_token'))
 	})
 
 	test('return null when token has been expired', async (assert) => {
@@ -109,7 +108,7 @@ test.group('Database Token Provider', (group) => {
 		})
 
 		await sleep(2000)
-		assert.isNull(await provider.read(tokenId, token))
+		assert.isNull(await provider.read(tokenId, token, 'api_token'))
 	}).timeout(3000)
 
 	test('work fine when token has no expiry', async (assert) => {
@@ -125,9 +124,9 @@ test.group('Database Token Provider', (group) => {
 		})
 
 		await sleep(2000)
-		assert.isNotNull(await provider.read(tokenId, token))
+		assert.isNotNull(await provider.read(tokenId, token, 'api_token'))
 
-		let expiry = await redis.ttl(tokenId)
+		let expiry = await redis.ttl(`api_token:${tokenId}`)
 		assert.equal(expiry, -1)
 	}).timeout(3000)
 
@@ -144,7 +143,7 @@ test.group('Database Token Provider', (group) => {
 			expiresAt: DateTime.local().plus({ seconds: 1 }),
 		})
 
-		assert.isNull(await provider.read(tokenId + 1, token))
+		assert.isNull(await provider.read(tokenId + 1, token, 'api_token'))
 	})
 
 	test('delete token from the database', async (assert) => {
@@ -160,7 +159,7 @@ test.group('Database Token Provider', (group) => {
 			expiresAt: DateTime.local().plus({ seconds: 1 }),
 		})
 
-		await provider.destroy(tokenId)
+		await provider.destroy(tokenId, 'api_token')
 		const tokenRow = await redis.get(tokenId)
 		assert.isNull(tokenRow)
 	})
