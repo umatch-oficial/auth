@@ -56,12 +56,20 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
   }
 
   /**
+   * Returns the auth model
+   */
+  private async getModel(): Promise<LucidProviderModel> {
+    const model = await this.config.model()
+    return esmResolver(model)
+  }
+
+  /**
    * Returns query instance for the user model
    */
-  private async getModelQuery() {
-    const model = await this.config.model()
+  private async getModelQuery(model?: LucidProviderModel) {
+    model = model || (await this.getModel())
     return {
-      query: esmResolver(model).query(this.getModelOptions()),
+      query: model.query(this.getModelOptions()),
     }
   }
 
@@ -133,6 +141,21 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
    * their defined uids.
    */
   public async findByUid(uidValue: string) {
+    const model = await this.getModel()
+
+    /**
+     * Use custom function on the model. This time, we do not emit
+     * an event, since the user custom lookup may not even
+     * run a query at all.
+     */
+    if (typeof model.findForAuth === 'function') {
+      const user = await model.findForAuth(this.config.uids, uidValue)
+      return this.getUserFor(user)
+    }
+
+    /**
+     * Lookup by running a custom query.
+     */
     const { query } = await this.getModelQuery()
     this.config.uids.forEach((uid) => query.orWhere(uid, uidValue))
     return this.findUser(query)

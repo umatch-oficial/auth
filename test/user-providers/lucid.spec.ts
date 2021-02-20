@@ -169,6 +169,35 @@ test.group('Lucid Provider | findByUids', (group) => {
     assert.isNull(providerUser.user)
     assert.isNull(providerUser1.user)
   })
+
+  test('find a user using the custom function', async (assert) => {
+    assert.plan(4)
+
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    User['findForAuth'] = function (_: any, uid: string) {
+      return this.query().where('username', uid).first()
+    }
+
+    await User.create({ username: 'virk', email: 'virk@adonisjs.com' })
+    await User.create({ username: 'nikk', email: 'nikk@adonisjs.com' })
+
+    const lucidProvider = getLucidProvider(app, { model: async () => User })
+
+    /**
+     * These won't be executed
+     */
+    lucidProvider.before('findUser', async (query) => assert.exists(query))
+    lucidProvider.after('findUser', async (user) => assert.instanceOf(user, User))
+
+    const providerUser = await lucidProvider.findByUid('virk')
+    const providerUser1 = await lucidProvider.findByUid('nikk@adonisjs.com')
+
+    assert.instanceOf(providerUser.user, User)
+    assert.equal(providerUser.user!.username, 'virk')
+    assert.equal(providerUser.user!.email, 'virk@adonisjs.com')
+
+    assert.isNull(providerUser1.user)
+  })
 })
 
 test.group('Lucid Provider | findByRememberMeToken', (group) => {

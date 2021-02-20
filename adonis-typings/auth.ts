@@ -187,6 +187,12 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * must have `password` and `rememberMeToken` attributes.
    */
   export type LucidProviderModel = LucidModel & {
+    findForAuth?: <T extends LucidModel>(
+      this: T,
+      uids: string[],
+      value: any
+    ) => Promise<InstanceType<T>>
+  } & {
     new (): LucidRow & {
       password?: string
       rememberMeToken?: string | null
