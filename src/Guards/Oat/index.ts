@@ -7,11 +7,10 @@
  * file that was distributed with this source code.
  */
 
-import ms from 'ms'
 import { DateTime } from 'luxon'
 import { createHash } from 'crypto'
-import { randomString, base64 } from '@poppinss/utils'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
+import { string, base64 } from '@poppinss/utils/build/helpers'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
 import {
@@ -123,7 +122,7 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
 			return
 		}
 
-		const milliseconds = typeof expiresIn === 'string' ? ms(expiresIn) : expiresIn
+		const milliseconds = typeof expiresIn === 'string' ? string.toMs(expiresIn) : expiresIn
 		return DateTime.local().plus({ milliseconds })
 	}
 
@@ -131,7 +130,7 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
 	 * Generates a new token + hash for the persistance
 	 */
 	private generateTokenForPersistance(expiresIn?: string | number) {
-		const token = randomString(this.tokenLength)
+		const token = string.generateRandom(this.tokenLength)
 
 		return {
 			token,

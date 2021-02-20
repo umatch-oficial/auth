@@ -7,7 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { randomString, Exception } from '@poppinss/utils'
+import { Exception } from '@poppinss/utils'
+import { string } from '@poppinss/utils/build/helpers'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
@@ -80,7 +81,7 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
 	 * Generate remember me token
 	 */
 	private generateRememberMeToken(): string {
-		return randomString(20)
+		return string.generateRandom(20)
 	}
 
 	/**

@@ -8,7 +8,7 @@
  */
 
 import { DateTime } from 'luxon'
-import { safeEqual } from '@poppinss/utils'
+import { safeEqual } from '@poppinss/utils/build/helpers'
 import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
 import {
 	TokenProviderContract,

@@ -13,12 +13,12 @@ import { UserProviderContract } from '@ioc:Adonis/Addons/Auth'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import { Auth } from '../src/Auth'
-import { AuthManager } from '../src/AuthManager'
-import { LucidProvider } from '../src/UserProviders/Lucid'
-import { DatabaseProvider } from '../src/UserProviders/Database'
 import { OATGuard } from '../src/Guards/Oat'
+import { AuthManager } from '../src/AuthManager'
 import { SessionGuard } from '../src/Guards/Session'
 import { BasicAuthGuard } from '../src/Guards/BasicAuth'
+import { LucidProvider } from '../src/UserProviders/Lucid'
+import { DatabaseProvider } from '../src/UserProviders/Database'
 
 import {
 	setup,

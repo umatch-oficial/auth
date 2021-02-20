@@ -7,8 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import cuid from 'cuid'
-import { safeEqual, Exception } from '@poppinss/utils'
+import { Exception } from '@poppinss/utils'
+import { safeEqual, cuid } from '@poppinss/utils/build/helpers'
 
 import {
 	RedisManagerContract,

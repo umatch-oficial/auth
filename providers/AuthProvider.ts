@@ -21,7 +21,9 @@ export default class AuthProvider {
 	 */
 	public register() {
 		this.application.container.singleton('Adonis/Addons/Auth', () => {
-			const authConfig = this.application.container.use('Adonis/Core/Config').get('auth', {})
+			const authConfig = this.application.container
+				.resolveBinding('Adonis/Core/Config')
+				.get('auth', {})
 			const { AuthManager } = require('../src/AuthManager')
 			return new AuthManager(this.application, authConfig)
 		})
@@ -31,7 +33,7 @@ export default class AuthProvider {
 	 * Hook into boot to register auth macro
 	 */
 	public async boot() {
-		this.application.container.with(
+		this.application.container.withBindings(
 			['Adonis/Core/HttpContext', 'Adonis/Addons/Auth'],
 			(HttpContext, Auth) => {
 				HttpContext.getter(
@@ -44,10 +46,13 @@ export default class AuthProvider {
 			}
 		)
 
-		this.application.container.with(['Adonis/Core/Server', 'Adonis/Core/View'], (Server) => {
-			Server.hooks.before(async (ctx) => {
-				ctx['view'].share({ auth: ctx.auth })
-			})
-		})
+		this.application.container.withBindings(
+			['Adonis/Core/Server', 'Adonis/Core/View'],
+			(Server) => {
+				Server.hooks.before(async (ctx) => {
+					ctx['view'].share({ auth: ctx.auth })
+				})
+			}
+		)
 	}
 }

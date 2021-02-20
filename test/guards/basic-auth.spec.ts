@@ -10,7 +10,7 @@
 import test from 'japa'
 import supertest from 'supertest'
 import { createServer } from 'http'
-import { base64 } from '@poppinss/utils'
+import { base64 } from '@poppinss/utils/build/helpers'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import {

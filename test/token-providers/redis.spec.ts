@@ -10,7 +10,7 @@
 import test from 'japa'
 import 'reflect-metadata'
 import { DateTime } from 'luxon'
-import { randomString } from '@poppinss/utils'
+import { string } from '@poppinss/utils/build/helpers'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import { setupApplication, cleanup, setup, reset, getTokensRedisProvider } from '../../test-helpers'
@@ -34,7 +34,7 @@ test.group('Redis Token Provider', (group) => {
 	})
 
 	test('save token to the database', async (assert) => {
-		const token = randomString(40)
+		const token = string.generateRandom(40)
 		const redis = app.container.use('Adonis/Addons/Redis')
 		const provider = getTokensRedisProvider(redis)
 
@@ -59,7 +59,7 @@ test.group('Redis Token Provider', (group) => {
 	})
 
 	test('read token from the database', async (assert) => {
-		const token = randomString(40)
+		const token = string.generateRandom(40)
 		const redis = app.container.use('Adonis/Addons/Redis')
 		const provider = getTokensRedisProvider(redis)
 
@@ -79,7 +79,7 @@ test.group('Redis Token Provider', (group) => {
 	})
 
 	test('return null when there is a token hash mis-match', async (assert) => {
-		const token = randomString(40)
+		const token = string.generateRandom(40)
 		const redis = app.container.use('Adonis/Addons/Redis')
 		const provider = getTokensRedisProvider(redis)
 
@@ -95,7 +95,7 @@ test.group('Redis Token Provider', (group) => {
 	})
 
 	test('return null when token has been expired', async (assert) => {
-		const token = randomString(40)
+		const token = string.generateRandom(40)
 		const redis = app.container.use('Adonis/Addons/Redis')
 		const provider = getTokensRedisProvider(redis)
 
@@ -112,7 +112,7 @@ test.group('Redis Token Provider', (group) => {
 	}).timeout(3000)
 
 	test('work fine when token has no expiry', async (assert) => {
-		const token = randomString(40)
+		const token = string.generateRandom(40)
 		const redis = app.container.use('Adonis/Addons/Redis')
 		const provider = getTokensRedisProvider(redis)
 
@@ -131,7 +131,7 @@ test.group('Redis Token Provider', (group) => {
 	}).timeout(3000)
 
 	test('return null when token is missing', async (assert) => {
-		const token = randomString(40)
+		const token = string.generateRandom(40)
 		const redis = app.container.use('Adonis/Addons/Redis')
 		const provider = getTokensRedisProvider(redis)
 
@@ -147,7 +147,7 @@ test.group('Redis Token Provider', (group) => {
 	})
 
 	test('delete token from the database', async (assert) => {
-		const token = randomString(40)
+		const token = string.generateRandom(40)
 		const redis = app.container.use('Adonis/Addons/Redis')
 		const provider = getTokensRedisProvider(redis)
 

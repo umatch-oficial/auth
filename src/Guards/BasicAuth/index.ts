@@ -7,7 +7,8 @@
  * file that was distributed with this source code.
  */
 
-import { base64, Exception } from '@poppinss/utils'
+import { Exception } from '@poppinss/utils'
+import { base64 } from '@poppinss/utils/build/helpers'
 import { EmitterContract } from '@ioc:Adonis/Core/Event'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
