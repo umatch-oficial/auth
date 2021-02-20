@@ -10,6 +10,7 @@
 import test from 'japa'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
+import { LucidUser } from '../../src/UserProviders/Lucid/User'
 import {
   setup,
   reset,
@@ -87,6 +88,29 @@ test.group('Lucid Provider | findById', (group) => {
 
     const providerUser = await lucidProvider.findById(user.id)
     assert.isNull(providerUser.user)
+  })
+
+  test('use custom user builder', async (assert) => {
+    assert.plan(6)
+
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com' })
+    class CustomUser extends LucidUser<typeof User> {}
+
+    const lucidProvider = getLucidProvider(app, {
+      model: async () => User,
+      user: async () => CustomUser,
+    })
+
+    lucidProvider.before('findUser', async (query) => assert.exists(query))
+    lucidProvider.after('findUser', async (model) => assert.instanceOf(model, User))
+
+    const providerUser = await lucidProvider.findById(user.id)
+
+    assert.instanceOf(providerUser, CustomUser)
+    assert.instanceOf(providerUser.user, User)
+    assert.equal(providerUser.user!.username, 'virk')
+    assert.equal(providerUser.user!.email, 'virk@adonisjs.com')
   })
 })
 

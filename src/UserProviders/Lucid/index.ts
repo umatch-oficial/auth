@@ -93,7 +93,8 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
    * inside it
    */
   public async getUserFor(user: InstanceType<LucidProviderModel> | null) {
-    return this.application.container.makeAsync(this.config.user || LucidUser, [user, this.config])
+    const UserBuilder = this.config.user ? esmResolver(await this.config.user()) : LucidUser
+    return this.application.container.makeAsync(UserBuilder, [user, this.config])
   }
 
   /**

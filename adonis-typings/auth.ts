@@ -244,7 +244,9 @@ declare module '@ioc:Adonis/Addons/Auth' {
     identifierKey: string
     connection?: string
     hashDriver?: keyof HashersList
-    user?: LucidProviderUserBuilder<User>
+    user?: () =>
+      | Promise<LucidProviderUserBuilder<User>>
+      | Promise<{ default: LucidProviderUserBuilder<User> }>
   }
 
   /*
@@ -308,7 +310,9 @@ declare module '@ioc:Adonis/Addons/Auth' {
     identifierKey: string
     connection?: string
     hashDriver?: keyof HashersList
-    user?: DatabaseProviderUserBuilder
+    user?: () =>
+      | Promise<DatabaseProviderUserBuilder>
+      | Promise<{ default: DatabaseProviderUserBuilder }>
   }
 
   /*

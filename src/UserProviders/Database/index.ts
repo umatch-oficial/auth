@@ -8,7 +8,7 @@
  */
 
 import { Hooks } from '@poppinss/hooks'
-import { Exception } from '@poppinss/utils'
+import { Exception, esmResolver } from '@poppinss/utils'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/DatabaseQueryBuilder'
@@ -104,10 +104,8 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
    */
   public async getUserFor(user: any): Promise<ProviderUserContract<DatabaseProviderRow>> {
     this.ensureUserHasId(user)
-    return this.application.container.makeAsync(this.config.user || DatabaseUser, [
-      user,
-      this.config,
-    ])
+    const UserBuilder = this.config.user ? esmResolver(await this.config.user()) : DatabaseUser
+    return this.application.container.makeAsync(UserBuilder, [user, this.config])
   }
 
   /**

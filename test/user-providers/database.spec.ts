@@ -9,6 +9,7 @@
 
 import test from 'japa'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
+import { DatabaseUser } from '../../src/UserProviders/Database/User'
 import { setupApplication, setup, reset, cleanup, getDatabaseProvider } from '../../test-helpers'
 
 let app: ApplicationContract
@@ -80,6 +81,30 @@ test.group('Database Provider | findById', (group) => {
 
     const providerUser = await dbProvider.findById('1')
     assert.isNull(providerUser.user)
+  })
+
+  test('user custom user builder', async (assert) => {
+    assert.plan(6)
+
+    const db = app.container.use('Adonis/Lucid/Database')
+    await db.table('users').insert({ username: 'virk', email: 'virk@adonisjs.com' })
+
+    class CustomUser extends DatabaseUser {}
+
+    const dbProvider = getDatabaseProvider(app, {
+      user: async () => CustomUser,
+    })
+
+    dbProvider.before('findUser', async (query) => assert.exists(query))
+    dbProvider.after('findUser', async (user) => {
+      assert.equal(user.username, 'virk')
+      assert.equal(user.email, 'virk@adonisjs.com')
+    })
+
+    const providerUser = await dbProvider.findById('1')
+    assert.instanceOf(providerUser, CustomUser)
+    assert.equal(providerUser.user!.username, 'virk')
+    assert.equal(providerUser.user!.email, 'virk@adonisjs.com')
   })
 })
 
