@@ -240,7 +240,7 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
      * them to instantiate and return an instance of authenticatable, so
      * we create one manually.
      */
-    const providerUser = this.getUserForLogin(user, this.config.provider.identifierKey)
+    const providerUser = await this.getUserForLogin(user, this.config.provider.identifierKey)
 
     /**
      * getUserForLogin raises exception when id is missing, so we can
@@ -373,7 +373,7 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
      * for the current user.
      */
     if (this.user) {
-      const providerUser = this.provider.getUserFor(this.user)
+      const providerUser = await this.provider.getUserFor(this.user)
 
       this.ctx.logger.trace('re-generating remember me token')
       providerUser.setRememberMeToken(this.generateRememberMeToken())

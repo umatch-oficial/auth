@@ -310,7 +310,7 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
      * them to instantiate and pass an instance of provider user, so we
      * create one manually.
      */
-    const providerUser = this.getUserForLogin(user, this.config.provider.identifierKey)
+    const providerUser = await this.getUserForLogin(user, this.config.provider.identifierKey)
 
     /**
      * "getUserForLogin" raises exception when id is missing, so we can

@@ -102,9 +102,12 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
   /**
    * Returns an instance of provider user
    */
-  public getUserFor(user: any): ProviderUserContract<DatabaseProviderRow> {
+  public async getUserFor(user: any): Promise<ProviderUserContract<DatabaseProviderRow>> {
     this.ensureUserHasId(user)
-    return this.application.container.make(this.config.user || DatabaseUser, [user, this.config])
+    return this.application.container.makeAsync(this.config.user || DatabaseUser, [
+      user,
+      this.config,
+    ])
   }
 
   /**

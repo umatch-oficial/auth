@@ -116,8 +116,11 @@ export abstract class BaseGuard<Guard extends keyof GuardsList> {
    * Returns the provider user instance from the regular user details. Raises
    * exception when id is missing
    */
-  protected getUserForLogin(user: any, identifierKey: string): ProviderUserContract<any> {
-    const providerUser = this.provider.getUserFor(user)
+  protected async getUserForLogin(
+    user: any,
+    identifierKey: string
+  ): Promise<ProviderUserContract<any>> {
+    const providerUser = await this.provider.getUserFor(user)
 
     /**
      * Ensure id exists on the user

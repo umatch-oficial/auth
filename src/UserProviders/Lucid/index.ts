@@ -84,8 +84,8 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
    * Returns an instance of the [[ProviderUser]] by wrapping lucid model
    * inside it
    */
-  public getUserFor(user: InstanceType<LucidProviderModel> | null) {
-    return this.application.container.make(this.config.user || LucidUser, [user, this.config])
+  public async getUserFor(user: InstanceType<LucidProviderModel> | null) {
+    return this.application.container.makeAsync(this.config.user || LucidUser, [user, this.config])
   }
 
   /**

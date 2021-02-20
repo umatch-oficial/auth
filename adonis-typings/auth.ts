@@ -59,7 +59,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
     /**
      * Return an instance of the user wrapped inside the Provider user contract
      */
-    getUserFor(user: User): ProviderUserContract<User>
+    getUserFor(user: User): Promise<ProviderUserContract<User>>
 
     /**
      * Find a user using the primary key value
