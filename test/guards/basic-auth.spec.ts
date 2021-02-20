@@ -14,326 +14,326 @@ import { base64 } from '@poppinss/utils/build/helpers'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import {
-	setup,
-	reset,
-	cleanup,
-	getUserModel,
-	setupApplication,
-	getLucidProvider,
-	getBasicAuthGuard,
-	getLucidProviderConfig,
+  setup,
+  reset,
+  cleanup,
+  getUserModel,
+  setupApplication,
+  getLucidProvider,
+  getBasicAuthGuard,
+  getLucidProviderConfig,
 } from '../../test-helpers'
 
 let app: ApplicationContract
 
 test.group('Basic Auth Guard | authenticate', (group) => {
-	group.before(async () => {
-		app = await setupApplication()
-		await setup(app)
-	})
+  group.before(async () => {
+    app = await setupApplication()
+    await setup(app)
+  })
 
-	group.after(async () => {
-		await cleanup(app)
-	})
+  group.after(async () => {
+    await cleanup(app)
+  })
 
-	group.afterEach(async () => {
-		await reset(app)
-		app.container.use('Adonis/Core/Event')['clearAllListeners']()
-	})
+  group.afterEach(async () => {
+    await reset(app)
+    app.container.use('Adonis/Core/Event')['clearAllListeners']()
+  })
 
-	test('authenticate request by reading the basic auth credentials', async (assert) => {
-		assert.plan(7)
+  test('authenticate request by reading the basic auth credentials', async (assert) => {
+    assert.plan(7)
 
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const user = await User.create({
-			username: 'virk',
-			email: 'virk@adonisjs.com',
-			password: await app.container.use('Adonis/Core/Hash').make('secret'),
-		})
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const user = await User.create({
+      username: 'virk',
+      email: 'virk@adonisjs.com',
+      password: await app.container.use('Adonis/Core/Hash').make('secret'),
+    })
 
-		const credentials = base64.encode(`${user.email}:secret`)
+    const credentials = base64.encode(`${user.email}:secret`)
 
-		/**
-		 * Assert the event is fired with correct set of arguments
-		 */
-		app.container
-			.use('Adonis/Core/Event')
-			.once('adonis:basic:authenticate', ({ name, user: model }) => {
-				assert.equal(name, 'basic')
-				assert.instanceOf(model, User)
-			})
+    /**
+     * Assert the event is fired with correct set of arguments
+     */
+    app.container
+      .use('Adonis/Core/Event')
+      .once('adonis:basic:authenticate', ({ name, user: model }) => {
+        assert.equal(name, 'basic')
+        assert.instanceOf(model, User)
+      })
 
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			const basicAuth = getBasicAuthGuard(
-				app,
-				getLucidProvider(app, { model: async () => User }),
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      const basicAuth = getBasicAuthGuard(
+        app,
+        getLucidProvider(app, { model: async () => User }),
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			try {
-				await basicAuth.authenticate()
-				ctx.response.send(basicAuth.toJSON())
-			} catch (error) {
-				await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
-			}
+      try {
+        await basicAuth.authenticate()
+        ctx.response.send(basicAuth.toJSON())
+      } catch (error) {
+        await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
+      }
 
-			ctx.response.finish()
-		})
+      ctx.response.finish()
+    })
 
-		const { body } = await supertest(server)
-			.get('/')
-			.set('Authorization', `Basic ${credentials}`)
-			.expect(200)
+    const { body } = await supertest(server)
+      .get('/')
+      .set('Authorization', `Basic ${credentials}`)
+      .expect(200)
 
-		assert.isTrue(body.authenticationAttempted)
-		assert.isTrue(body.isAuthenticated)
-		assert.isFalse(body.isGuest)
-		assert.isTrue(body.isLoggedIn)
-		assert.property(body, 'user')
-	})
+    assert.isTrue(body.authenticationAttempted)
+    assert.isTrue(body.isAuthenticated)
+    assert.isFalse(body.isGuest)
+    assert.isTrue(body.isLoggedIn)
+    assert.property(body, 'user')
+  })
 
-	test('raise error when Authorization header is missing', async (assert) => {
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+  test('raise error when Authorization header is missing', async (assert) => {
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		/**
-		 * Assert the event is fired with correct set of arguments
-		 */
-		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
-			throw new Error('Not expected to be invoked')
-		})
+    /**
+     * Assert the event is fired with correct set of arguments
+     */
+    app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
+      throw new Error('Not expected to be invoked')
+    })
 
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			const basicAuth = getBasicAuthGuard(
-				app,
-				getLucidProvider(app, { model: async () => User }),
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      const basicAuth = getBasicAuthGuard(
+        app,
+        getLucidProvider(app, { model: async () => User }),
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			try {
-				await basicAuth.authenticate()
-				ctx.response.send(basicAuth.toJSON())
-			} catch (error) {
-				await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
-			}
+      try {
+        await basicAuth.authenticate()
+        ctx.response.send(basicAuth.toJSON())
+      } catch (error) {
+        await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
+      }
 
-			ctx.response.finish()
-		})
+      ctx.response.finish()
+    })
 
-		const { header } = await supertest(server).get('/').expect(401)
-		assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
-	})
+    const { header } = await supertest(server).get('/').expect(401)
+    assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
+  })
 
-	test('raise error when type is not basic', async (assert) => {
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const user = await User.create({
-			username: 'virk',
-			email: 'virk@adonisjs.com',
-			password: await app.container.use('Adonis/Core/Hash').make('secret'),
-		})
+  test('raise error when type is not basic', async (assert) => {
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const user = await User.create({
+      username: 'virk',
+      email: 'virk@adonisjs.com',
+      password: await app.container.use('Adonis/Core/Hash').make('secret'),
+    })
 
-		/**
-		 * Assert the event is fired with correct set of arguments
-		 */
-		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
-			throw new Error('Not expected to be invoked')
-		})
+    /**
+     * Assert the event is fired with correct set of arguments
+     */
+    app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
+      throw new Error('Not expected to be invoked')
+    })
 
-		const credentials = base64.encode(`${user.email}:secret`)
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			const basicAuth = getBasicAuthGuard(
-				app,
-				getLucidProvider(app, { model: async () => User }),
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const credentials = base64.encode(`${user.email}:secret`)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      const basicAuth = getBasicAuthGuard(
+        app,
+        getLucidProvider(app, { model: async () => User }),
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			try {
-				await basicAuth.authenticate()
-				ctx.response.send(basicAuth.toJSON())
-			} catch (error) {
-				await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
-			}
+      try {
+        await basicAuth.authenticate()
+        ctx.response.send(basicAuth.toJSON())
+      } catch (error) {
+        await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
+      }
 
-			ctx.response.finish()
-		})
+      ctx.response.finish()
+    })
 
-		const { header } = await supertest(server)
-			.get('/')
-			.set('Authorization', `Foo ${credentials}`)
-			.expect(401)
+    const { header } = await supertest(server)
+      .get('/')
+      .set('Authorization', `Foo ${credentials}`)
+      .expect(401)
 
-		assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
-	})
+    assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
+  })
 
-	test('raise error when credentials are not base64 encoded', async (assert) => {
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const user = await User.create({
-			username: 'virk',
-			email: 'virk@adonisjs.com',
-			password: await app.container.use('Adonis/Core/Hash').make('secret'),
-		})
+  test('raise error when credentials are not base64 encoded', async (assert) => {
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const user = await User.create({
+      username: 'virk',
+      email: 'virk@adonisjs.com',
+      password: await app.container.use('Adonis/Core/Hash').make('secret'),
+    })
 
-		/**
-		 * Assert the event is fired with correct set of arguments
-		 */
-		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
-			throw new Error('Not expected to be invoked')
-		})
+    /**
+     * Assert the event is fired with correct set of arguments
+     */
+    app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
+      throw new Error('Not expected to be invoked')
+    })
 
-		const credentials = `${user.email}:secret`
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			const basicAuth = getBasicAuthGuard(
-				app,
-				getLucidProvider(app, { model: async () => User }),
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const credentials = `${user.email}:secret`
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      const basicAuth = getBasicAuthGuard(
+        app,
+        getLucidProvider(app, { model: async () => User }),
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			try {
-				await basicAuth.authenticate()
-				ctx.response.send(basicAuth.toJSON())
-			} catch (error) {
-				await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
-			}
+      try {
+        await basicAuth.authenticate()
+        ctx.response.send(basicAuth.toJSON())
+      } catch (error) {
+        await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
+      }
 
-			ctx.response.finish()
-		})
+      ctx.response.finish()
+    })
 
-		const { header } = await supertest(server)
-			.get('/')
-			.set('Authorization', `Foo ${credentials}`)
-			.expect(401)
+    const { header } = await supertest(server)
+      .get('/')
+      .set('Authorization', `Foo ${credentials}`)
+      .expect(401)
 
-		assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
-	})
+    assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
+  })
 
-	test('raise error when credentials are not separated using colon', async (assert) => {
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const user = await User.create({
-			username: 'virk',
-			email: 'virk@adonisjs.com',
-			password: await app.container.use('Adonis/Core/Hash').make('secret'),
-		})
+  test('raise error when credentials are not separated using colon', async (assert) => {
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const user = await User.create({
+      username: 'virk',
+      email: 'virk@adonisjs.com',
+      password: await app.container.use('Adonis/Core/Hash').make('secret'),
+    })
 
-		/**
-		 * Assert the event is fired with correct set of arguments
-		 */
-		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
-			throw new Error('Not expected to be invoked')
-		})
+    /**
+     * Assert the event is fired with correct set of arguments
+     */
+    app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
+      throw new Error('Not expected to be invoked')
+    })
 
-		const credentials = base64.encode(`${user.email}_secret`)
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			const basicAuth = getBasicAuthGuard(
-				app,
-				getLucidProvider(app, { model: async () => User }),
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const credentials = base64.encode(`${user.email}_secret`)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      const basicAuth = getBasicAuthGuard(
+        app,
+        getLucidProvider(app, { model: async () => User }),
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			try {
-				await basicAuth.authenticate()
-				ctx.response.send(basicAuth.toJSON())
-			} catch (error) {
-				await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
-			}
+      try {
+        await basicAuth.authenticate()
+        ctx.response.send(basicAuth.toJSON())
+      } catch (error) {
+        await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
+      }
 
-			ctx.response.finish()
-		})
+      ctx.response.finish()
+    })
 
-		const { header } = await supertest(server)
-			.get('/')
-			.set('Authorization', `Foo ${credentials}`)
-			.expect(401)
+    const { header } = await supertest(server)
+      .get('/')
+      .set('Authorization', `Foo ${credentials}`)
+      .expect(401)
 
-		assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
-	})
+    assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
+  })
 
-	test('raise error when uid is incorrect', async (assert) => {
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+  test('raise error when uid is incorrect', async (assert) => {
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
 
-		/**
-		 * Assert the event is fired with correct set of arguments
-		 */
-		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
-			throw new Error('Not expected to be invoked')
-		})
+    /**
+     * Assert the event is fired with correct set of arguments
+     */
+    app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
+      throw new Error('Not expected to be invoked')
+    })
 
-		const credentials = base64.encode(`foo:secret`)
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			const basicAuth = getBasicAuthGuard(
-				app,
-				getLucidProvider(app, { model: async () => User }),
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const credentials = base64.encode(`foo:secret`)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      const basicAuth = getBasicAuthGuard(
+        app,
+        getLucidProvider(app, { model: async () => User }),
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			try {
-				await basicAuth.authenticate()
-				ctx.response.send(basicAuth.toJSON())
-			} catch (error) {
-				await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
-			}
+      try {
+        await basicAuth.authenticate()
+        ctx.response.send(basicAuth.toJSON())
+      } catch (error) {
+        await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
+      }
 
-			ctx.response.finish()
-		})
+      ctx.response.finish()
+    })
 
-		const { header } = await supertest(server)
-			.get('/')
-			.set('Authorization', `Foo ${credentials}`)
-			.expect(401)
+    const { header } = await supertest(server)
+      .get('/')
+      .set('Authorization', `Foo ${credentials}`)
+      .expect(401)
 
-		assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
-	})
+    assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
+  })
 
-	test('raise error when password is incorrect', async (assert) => {
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const user = await User.create({
-			username: 'virk',
-			email: 'virk@adonisjs.com',
-			password: await app.container.use('Adonis/Core/Hash').make('secret'),
-		})
+  test('raise error when password is incorrect', async (assert) => {
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const user = await User.create({
+      username: 'virk',
+      email: 'virk@adonisjs.com',
+      password: await app.container.use('Adonis/Core/Hash').make('secret'),
+    })
 
-		/**
-		 * Assert the event is fired with correct set of arguments
-		 */
-		app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
-			throw new Error('Not expected to be invoked')
-		})
+    /**
+     * Assert the event is fired with correct set of arguments
+     */
+    app.container.use('Adonis/Core/Event').once('adonis:basic:authenticate', () => {
+      throw new Error('Not expected to be invoked')
+    })
 
-		const credentials = base64.encode(`${user.email}:helloworld`)
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			const basicAuth = getBasicAuthGuard(
-				app,
-				getLucidProvider(app, { model: async () => User }),
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const credentials = base64.encode(`${user.email}:helloworld`)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      const basicAuth = getBasicAuthGuard(
+        app,
+        getLucidProvider(app, { model: async () => User }),
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			try {
-				await basicAuth.authenticate()
-				ctx.response.send(basicAuth.toJSON())
-			} catch (error) {
-				await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
-			}
+      try {
+        await basicAuth.authenticate()
+        ctx.response.send(basicAuth.toJSON())
+      } catch (error) {
+        await error.handle(error, { ...ctx, auth: { use: () => basicAuth } as any })
+      }
 
-			ctx.response.finish()
-		})
+      ctx.response.finish()
+    })
 
-		const { header } = await supertest(server)
-			.get('/')
-			.set('Authorization', `Foo ${credentials}`)
-			.expect(401)
+    const { header } = await supertest(server)
+      .get('/')
+      .set('Authorization', `Foo ${credentials}`)
+      .expect(401)
 
-		assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
-	})
+    assert.deepEqual(header['www-authenticate'], 'Basic realm="Login", charset="UTF-8"')
+  })
 })

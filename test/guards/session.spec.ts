@@ -14,522 +14,522 @@ import cookieParser from 'set-cookie-parser'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import {
-	setup,
-	reset,
-	cleanup,
-	unsignCookie,
-	decryptCookie,
-	encryptCookie,
-	getUserModel,
-	setupApplication,
-	getSessionDriver,
-	getLucidProvider,
-	getLucidProviderConfig,
+  setup,
+  reset,
+  cleanup,
+  unsignCookie,
+  decryptCookie,
+  encryptCookie,
+  getUserModel,
+  setupApplication,
+  getSessionDriver,
+  getLucidProvider,
+  getLucidProviderConfig,
 } from '../../test-helpers'
 
 let app: ApplicationContract
 
 test.group('Session Driver | Verify Credentials', (group) => {
-	group.before(async () => {
-		app = await setupApplication()
-		await setup(app)
-	})
+  group.before(async () => {
+    app = await setupApplication()
+    await setup(app)
+  })
 
-	group.after(async () => {
-		await cleanup(app)
-	})
+  group.after(async () => {
+    await cleanup(app)
+  })
 
-	group.afterEach(async () => {
-		await reset(app)
-		app.container.use('Adonis/Core/Event')['clearAllListeners']()
-	})
+  group.afterEach(async () => {
+    await reset(app)
+    app.container.use('Adonis/Core/Event')['clearAllListeners']()
+  })
 
-	test('raise exception when unable to lookup user', async (assert) => {
-		assert.plan(1)
+  test('raise exception when unable to lookup user', async (assert) => {
+    assert.plan(1)
 
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const lucidProvider = getLucidProvider(app, { model: async () => User })
-		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const lucidProvider = getLucidProvider(app, { model: async () => User })
+    const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
 
-		const sessionDriver = getSessionDriver(
-			app,
-			lucidProvider,
-			getLucidProviderConfig({ model: async () => User }),
-			ctx
-		)
+    const sessionDriver = getSessionDriver(
+      app,
+      lucidProvider,
+      getLucidProviderConfig({ model: async () => User }),
+      ctx
+    )
 
-		try {
-			await sessionDriver.verifyCredentials('virk@adonisjs.com', 'password')
-		} catch (error) {
-			assert.deepEqual(error.message, 'E_INVALID_AUTH_UID: User not found')
-		}
-	})
+    try {
+      await sessionDriver.verifyCredentials('virk@adonisjs.com', 'password')
+    } catch (error) {
+      assert.deepEqual(error.message, 'E_INVALID_AUTH_UID: User not found')
+    }
+  })
 
-	test('raise exception when password is incorrect', async (assert) => {
-		assert.plan(1)
+  test('raise exception when password is incorrect', async (assert) => {
+    assert.plan(1)
 
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const password = await app.container.use('Adonis/Core/Hash').make('secret')
-		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
-		const lucidProvider = getLucidProvider(app, { model: async () => User })
-		const sessionDriver = getSessionDriver(
-			app,
-			lucidProvider,
-			getLucidProviderConfig({ model: async () => User }),
-			ctx
-		)
+    const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
+    const lucidProvider = getLucidProvider(app, { model: async () => User })
+    const sessionDriver = getSessionDriver(
+      app,
+      lucidProvider,
+      getLucidProviderConfig({ model: async () => User }),
+      ctx
+    )
 
-		try {
-			await sessionDriver.verifyCredentials('virk@adonisjs.com', 'password')
-		} catch (error) {
-			assert.deepEqual(error.message, 'E_INVALID_AUTH_PASSWORD: Password mis-match')
-		}
-	})
+    try {
+      await sessionDriver.verifyCredentials('virk@adonisjs.com', 'password')
+    } catch (error) {
+      assert.deepEqual(error.message, 'E_INVALID_AUTH_PASSWORD: Password mis-match')
+    }
+  })
 
-	test('return user when able to verify credentials', async (assert) => {
-		assert.plan(1)
+  test('return user when able to verify credentials', async (assert) => {
+    assert.plan(1)
 
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const password = await app.container.use('Adonis/Core/Hash').make('secret')
-		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
-		const lucidProvider = getLucidProvider(app, { model: async () => User })
-		const sessionDriver = getSessionDriver(
-			app,
-			lucidProvider,
-			getLucidProviderConfig({ model: async () => User }),
-			ctx
-		)
+    const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {})
+    const lucidProvider = getLucidProvider(app, { model: async () => User })
+    const sessionDriver = getSessionDriver(
+      app,
+      lucidProvider,
+      getLucidProviderConfig({ model: async () => User }),
+      ctx
+    )
 
-		const user = await sessionDriver.verifyCredentials('virk@adonisjs.com', 'secret')
-		assert.instanceOf(user, User)
-	})
+    const user = await sessionDriver.verifyCredentials('virk@adonisjs.com', 'secret')
+    assert.instanceOf(user, User)
+  })
 })
 
 test.group('Session Driver | attempt', (group) => {
-	group.before(async () => {
-		app = await setupApplication()
-		await setup(app)
-	})
+  group.before(async () => {
+    app = await setupApplication()
+    await setup(app)
+  })
 
-	group.after(async () => {
-		await cleanup(app)
-	})
+  group.after(async () => {
+    await cleanup(app)
+  })
 
-	group.afterEach(async () => {
-		await reset(app)
-		app.container.use('Adonis/Core/Event')['clearAllListeners']()
-	})
+  group.afterEach(async () => {
+    await reset(app)
+    app.container.use('Adonis/Core/Event')['clearAllListeners']()
+  })
 
-	test('login user by setting the session', async (assert) => {
-		assert.plan(4)
+  test('login user by setting the session', async (assert) => {
+    assert.plan(4)
 
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const password = await app.container.use('Adonis/Core/Hash').make('secret')
-		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		app.container.use('Adonis/Core/Event').once('adonis:session:login', ({ name, user, token }) => {
-			assert.equal(name, 'session')
-			assert.instanceOf(user, User)
-			assert.isNull(token)
-		})
+    app.container.use('Adonis/Core/Event').once('adonis:session:login', ({ name, user, token }) => {
+      assert.equal(name, 'session')
+      assert.instanceOf(user, User)
+      assert.isNull(token)
+    })
 
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			await ctx.session.initiate(false)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      await ctx.session.initiate(false)
 
-			const lucidProvider = getLucidProvider(app, { model: async () => User })
-			const sessionDriver = getSessionDriver(
-				app,
-				lucidProvider,
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
-			await sessionDriver.attempt('virk@adonisjs.com', 'secret')
-			ctx.response.send({})
+      const lucidProvider = getLucidProvider(app, { model: async () => User })
+      const sessionDriver = getSessionDriver(
+        app,
+        lucidProvider,
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
+      await sessionDriver.attempt('virk@adonisjs.com', 'secret')
+      ctx.response.send({})
 
-			await ctx.session.commit()
-			ctx.response.finish()
-		})
+      await ctx.session.commit()
+      ctx.response.finish()
+    })
 
-		const { header } = await supertest(server).get('/')
-		const sessionCookie = unsignCookie(app, header['set-cookie'][1], 'adonis-session')
-		const sessionValue = decryptCookie(app, header['set-cookie'][2], sessionCookie)
-		assert.deepEqual(sessionValue, { auth_session: 1 })
-	})
+    const { header } = await supertest(server).get('/')
+    const sessionCookie = unsignCookie(app, header['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(app, header['set-cookie'][2], sessionCookie)
+    assert.deepEqual(sessionValue, { auth_session: 1 })
+  })
 
-	test('define remember me cookie when remember me is set to true', async (assert) => {
-		assert.plan(5)
+  test('define remember me cookie when remember me is set to true', async (assert) => {
+    assert.plan(5)
 
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const password = await app.container.use('Adonis/Core/Hash').make('secret')
-		const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		app.container
-			.use('Adonis/Core/Event')
-			.once('adonis:session:login', ({ name, user: model, token }) => {
-				assert.equal(name, 'session')
-				assert.instanceOf(model, User)
-				assert.exists(token)
-			})
+    app.container
+      .use('Adonis/Core/Event')
+      .once('adonis:session:login', ({ name, user: model, token }) => {
+        assert.equal(name, 'session')
+        assert.instanceOf(model, User)
+        assert.exists(token)
+      })
 
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			await ctx.session.initiate(false)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      await ctx.session.initiate(false)
 
-			const lucidProvider = getLucidProvider(app, { model: async () => User })
-			const sessionDriver = getSessionDriver(
-				app,
-				lucidProvider,
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
-			await sessionDriver.attempt('virk@adonisjs.com', 'secret', true)
-			ctx.response.send({})
+      const lucidProvider = getLucidProvider(app, { model: async () => User })
+      const sessionDriver = getSessionDriver(
+        app,
+        lucidProvider,
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
+      await sessionDriver.attempt('virk@adonisjs.com', 'secret', true)
+      ctx.response.send({})
 
-			await ctx.session.commit()
-			ctx.response.finish()
-		})
+      await ctx.session.commit()
+      ctx.response.finish()
+    })
 
-		const { header } = await supertest(server).get('/')
-		const rememberMeCookie = decryptCookie(app, header['set-cookie'][0], 'remember_session')
-		const sessionCookie = unsignCookie(app, header['set-cookie'][1], 'adonis-session')
-		const sessionValue = decryptCookie(app, header['set-cookie'][2], sessionCookie)
+    const { header } = await supertest(server).get('/')
+    const rememberMeCookie = decryptCookie(app, header['set-cookie'][0], 'remember_session')
+    const sessionCookie = unsignCookie(app, header['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(app, header['set-cookie'][2], sessionCookie)
 
-		await user.refresh()
+    await user.refresh()
 
-		assert.deepEqual(sessionValue, { auth_session: 1 })
-		assert.equal(user.rememberMeToken!, rememberMeCookie.token)
-	})
+    assert.deepEqual(sessionValue, { auth_session: 1 })
+    assert.equal(user.rememberMeToken!, rememberMeCookie.token)
+  })
 
-	test('delete remember_me cookie explicitly when login with remember me is false', async (assert) => {
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const password = await app.container.use('Adonis/Core/Hash').make('secret')
-		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+  test('delete remember_me cookie explicitly when login with remember me is false', async (assert) => {
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			await ctx.session.initiate(false)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      await ctx.session.initiate(false)
 
-			const lucidProvider = getLucidProvider(app, { model: async () => User })
-			const sessionDriver = getSessionDriver(
-				app,
-				lucidProvider,
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
-			await sessionDriver.attempt('virk@adonisjs.com', 'secret')
-			await ctx.session.commit()
-			ctx.response.finish()
-		})
+      const lucidProvider = getLucidProvider(app, { model: async () => User })
+      const sessionDriver = getSessionDriver(
+        app,
+        lucidProvider,
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
+      await sessionDriver.attempt('virk@adonisjs.com', 'secret')
+      await ctx.session.commit()
+      ctx.response.finish()
+    })
 
-		const rememberMeToken = encryptCookie(app, '1234', 'remember_session')
-		const { header } = await supertest(server)
-			.get('/')
-			.set('cookie', `remember_session=${rememberMeToken}`)
-		const sessionCookie = unsignCookie(app, header['set-cookie'][1], 'adonis-session')
-		const sessionValue = decryptCookie(app, header['set-cookie'][2], sessionCookie)
-		const [key, maxAge, expiry] = header['set-cookie'][0].split(';')
+    const rememberMeToken = encryptCookie(app, '1234', 'remember_session')
+    const { header } = await supertest(server)
+      .get('/')
+      .set('cookie', `remember_session=${rememberMeToken}`)
+    const sessionCookie = unsignCookie(app, header['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(app, header['set-cookie'][2], sessionCookie)
+    const [key, maxAge, expiry] = header['set-cookie'][0].split(';')
 
-		assert.equal(expiry.trim(), 'Expires=Thu, 01 Jan 1970 00:00:00 GMT')
-		assert.equal(maxAge.trim(), 'Max-Age=-1')
-		assert.isTrue(key.startsWith('remember_session='))
-		assert.deepEqual(sessionValue, { auth_session: 1 })
-	})
+    assert.equal(expiry.trim(), 'Expires=Thu, 01 Jan 1970 00:00:00 GMT')
+    assert.equal(maxAge.trim(), 'Max-Age=-1')
+    assert.isTrue(key.startsWith('remember_session='))
+    assert.deepEqual(sessionValue, { auth_session: 1 })
+  })
 })
 
 test.group('Session Driver | authenticate', (group) => {
-	group.before(async () => {
-		app = await setupApplication()
-		await setup(app)
-	})
+  group.before(async () => {
+    app = await setupApplication()
+    await setup(app)
+  })
 
-	group.after(async () => {
-		await cleanup(app)
-	})
+  group.after(async () => {
+    await cleanup(app)
+  })
 
-	group.afterEach(async () => {
-		await reset(app)
-		app.container.use('Adonis/Core/Event')['clearAllListeners']()
-	})
+  group.afterEach(async () => {
+    await reset(app)
+    app.container.use('Adonis/Core/Event')['clearAllListeners']()
+  })
 
-	test('authenticate user session and load user from db', async (assert) => {
-		assert.plan(8)
+  test('authenticate user session and load user from db', async (assert) => {
+    assert.plan(8)
 
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const password = await app.container.use('Adonis/Core/Hash').make('secret')
-		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		app.container
-			.use('Adonis/Core/Event')
-			.once('adonis:session:authenticate', ({ name, user, viaRemember }) => {
-				assert.equal(name, 'session')
-				assert.instanceOf(user, User)
-				assert.isFalse(viaRemember)
-			})
+    app.container
+      .use('Adonis/Core/Event')
+      .once('adonis:session:authenticate', ({ name, user, viaRemember }) => {
+        assert.equal(name, 'session')
+        assert.instanceOf(user, User)
+        assert.isFalse(viaRemember)
+      })
 
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			await ctx.session.initiate(false)
-			const lucidProvider = getLucidProvider(app, { model: async () => User })
-			const sessionDriver = getSessionDriver(
-				app,
-				lucidProvider,
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      await ctx.session.initiate(false)
+      const lucidProvider = getLucidProvider(app, { model: async () => User })
+      const sessionDriver = getSessionDriver(
+        app,
+        lucidProvider,
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			if (req.url === '/login') {
-				await sessionDriver.attempt('virk@adonisjs.com', 'secret')
-				await ctx.session.commit()
-				ctx.response.finish()
-			} else {
-				await sessionDriver.authenticate()
-				ctx.response.send({
-					user: sessionDriver.user,
-					isAuthenticated: sessionDriver.isAuthenticated,
-					viaRemember: sessionDriver.viaRemember,
-				})
-				await ctx.session.commit()
-				ctx.response.finish()
-			}
-		})
+      if (req.url === '/login') {
+        await sessionDriver.attempt('virk@adonisjs.com', 'secret')
+        await ctx.session.commit()
+        ctx.response.finish()
+      } else {
+        await sessionDriver.authenticate()
+        ctx.response.send({
+          user: sessionDriver.user,
+          isAuthenticated: sessionDriver.isAuthenticated,
+          viaRemember: sessionDriver.viaRemember,
+        })
+        await ctx.session.commit()
+        ctx.response.finish()
+      }
+    })
 
-		const { header } = await supertest(server).get('/login')
-		const cookies = cookieParser(header['set-cookie'])
-		const reqCookies = cookies
-			.filter((cookie) => cookie.maxAge > 0)
-			.map((cookie) => `${cookie.name}=${cookie.value};`)
+    const { header } = await supertest(server).get('/login')
+    const cookies = cookieParser(header['set-cookie'])
+    const reqCookies = cookies
+      .filter((cookie) => cookie.maxAge > 0)
+      .map((cookie) => `${cookie.name}=${cookie.value};`)
 
-		const { body } = await supertest(server).get('/').set('cookie', reqCookies)
+    const { body } = await supertest(server).get('/').set('cookie', reqCookies)
 
-		assert.equal(body.user.id, 1)
-		assert.equal(body.user.username, 'virk')
-		assert.equal(body.user.email, 'virk@adonisjs.com')
-		assert.isTrue(body.isAuthenticated)
-		assert.isFalse(body.viaRemember)
-	})
+    assert.equal(body.user.id, 1)
+    assert.equal(body.user.username, 'virk')
+    assert.equal(body.user.email, 'virk@adonisjs.com')
+    assert.isTrue(body.isAuthenticated)
+    assert.isFalse(body.viaRemember)
+  })
 
-	test('re-login user using remember me token', async (assert) => {
-		assert.plan(8)
+  test('re-login user using remember me token', async (assert) => {
+    assert.plan(8)
 
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const password = await app.container.use('Adonis/Core/Hash').make('secret')
-		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		app.container
-			.use('Adonis/Core/Event')
-			.once('adonis:session:authenticate', ({ name, user, viaRemember }) => {
-				assert.equal(name, 'session')
-				assert.instanceOf(user, User)
-				assert.isTrue(viaRemember)
-			})
+    app.container
+      .use('Adonis/Core/Event')
+      .once('adonis:session:authenticate', ({ name, user, viaRemember }) => {
+        assert.equal(name, 'session')
+        assert.instanceOf(user, User)
+        assert.isTrue(viaRemember)
+      })
 
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			await ctx.session.initiate(false)
-			const lucidProvider = getLucidProvider(app, { model: async () => User })
-			const sessionDriver = getSessionDriver(
-				app,
-				lucidProvider,
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      await ctx.session.initiate(false)
+      const lucidProvider = getLucidProvider(app, { model: async () => User })
+      const sessionDriver = getSessionDriver(
+        app,
+        lucidProvider,
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			if (req.url === '/login') {
-				await sessionDriver.attempt('virk@adonisjs.com', 'secret', true)
-				await ctx.session.commit()
-				ctx.response.finish()
-			} else {
-				await sessionDriver.authenticate()
-				ctx.response.send({
-					user: sessionDriver.user,
-					isAuthenticated: sessionDriver.isAuthenticated,
-					viaRemember: sessionDriver.viaRemember,
-				})
-				await ctx.session.commit()
-				ctx.response.finish()
-			}
-		})
+      if (req.url === '/login') {
+        await sessionDriver.attempt('virk@adonisjs.com', 'secret', true)
+        await ctx.session.commit()
+        ctx.response.finish()
+      } else {
+        await sessionDriver.authenticate()
+        ctx.response.send({
+          user: sessionDriver.user,
+          isAuthenticated: sessionDriver.isAuthenticated,
+          viaRemember: sessionDriver.viaRemember,
+        })
+        await ctx.session.commit()
+        ctx.response.finish()
+      }
+    })
 
-		const { header } = await supertest(server).get('/login')
-		const cookies = cookieParser(header['set-cookie'])
+    const { header } = await supertest(server).get('/login')
+    const cookies = cookieParser(header['set-cookie'])
 
-		const rememberMeCookie = `${cookies[0].name}=${cookies[0].value};`
-		const { body } = await supertest(server).get('/').set('cookie', rememberMeCookie)
+    const rememberMeCookie = `${cookies[0].name}=${cookies[0].value};`
+    const { body } = await supertest(server).get('/').set('cookie', rememberMeCookie)
 
-		assert.equal(body.user.id, 1)
-		assert.equal(body.user.username, 'virk')
-		assert.equal(body.user.email, 'virk@adonisjs.com')
-		assert.isTrue(body.isAuthenticated)
-		assert.isTrue(body.viaRemember)
-	})
+    assert.equal(body.user.id, 1)
+    assert.equal(body.user.username, 'virk')
+    assert.equal(body.user.email, 'virk@adonisjs.com')
+    assert.isTrue(body.isAuthenticated)
+    assert.isTrue(body.viaRemember)
+  })
 
-	test('raise exception when unable to authenticate', async (assert) => {
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const password = await app.container.use('Adonis/Core/Hash').make('secret')
-		await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+  test('raise exception when unable to authenticate', async (assert) => {
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		app.container.use('Adonis/Core/Event').once('adonis:session:authenticate', () => {
-			throw new Error('Never expected to reach here')
-		})
+    app.container.use('Adonis/Core/Event').once('adonis:session:authenticate', () => {
+      throw new Error('Never expected to reach here')
+    })
 
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			await ctx.session.initiate(false)
-			const lucidProvider = getLucidProvider(app, { model: async () => User })
-			const sessionDriver = getSessionDriver(
-				app,
-				lucidProvider,
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      await ctx.session.initiate(false)
+      const lucidProvider = getLucidProvider(app, { model: async () => User })
+      const sessionDriver = getSessionDriver(
+        app,
+        lucidProvider,
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			try {
-				await sessionDriver.authenticate()
-			} catch (error) {
-				assert.equal(error.message, 'E_INVALID_AUTH_SESSION: Invalid session')
-				assert.equal(error.guard, 'session')
-				assert.equal(error.redirectTo, '/login')
-			}
+      try {
+        await sessionDriver.authenticate()
+      } catch (error) {
+        assert.equal(error.message, 'E_INVALID_AUTH_SESSION: Invalid session')
+        assert.equal(error.guard, 'session')
+        assert.equal(error.redirectTo, '/login')
+      }
 
-			await ctx.session.commit()
-			ctx.response.finish()
-		})
+      await ctx.session.commit()
+      ctx.response.finish()
+    })
 
-		await supertest(server).get('/')
-	})
+    await supertest(server).get('/')
+  })
 })
 
 test.group('Session Driver | logout', (group) => {
-	group.before(async () => {
-		app = await setupApplication()
-		await setup(app)
-	})
+  group.before(async () => {
+    app = await setupApplication()
+    await setup(app)
+  })
 
-	group.after(async () => {
-		await cleanup(app)
-	})
+  group.after(async () => {
+    await cleanup(app)
+  })
 
-	group.afterEach(async () => {
-		await reset(app)
-		app.container.use('Adonis/Core/Event')['clearAllListeners']()
-	})
+  group.afterEach(async () => {
+    await reset(app)
+    app.container.use('Adonis/Core/Event')['clearAllListeners']()
+  })
 
-	test('logout the user by clearing up the session and removing remember_me cookie', async (assert) => {
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const password = await app.container.use('Adonis/Core/Hash').make('secret')
-		const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+  test('logout the user by clearing up the session and removing remember_me cookie', async (assert) => {
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			await ctx.session.initiate(false)
-			const lucidProvider = getLucidProvider(app, { model: async () => User })
-			const sessionDriver = getSessionDriver(
-				app,
-				lucidProvider,
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      await ctx.session.initiate(false)
+      const lucidProvider = getLucidProvider(app, { model: async () => User })
+      const sessionDriver = getSessionDriver(
+        app,
+        lucidProvider,
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			if (req.url === '/login') {
-				await sessionDriver.attempt('virk@adonisjs.com', 'secret', true)
-				await ctx.session.commit()
-				ctx.response.finish()
-			} else {
-				await sessionDriver.logout()
-				ctx.response.send({
-					user: sessionDriver.user,
-					isAuthenticated: sessionDriver.isAuthenticated,
-					isLoggedOut: sessionDriver.isLoggedOut,
-				})
-				await ctx.session.commit()
-				ctx.response.finish()
-			}
-		})
+      if (req.url === '/login') {
+        await sessionDriver.attempt('virk@adonisjs.com', 'secret', true)
+        await ctx.session.commit()
+        ctx.response.finish()
+      } else {
+        await sessionDriver.logout()
+        ctx.response.send({
+          user: sessionDriver.user,
+          isAuthenticated: sessionDriver.isAuthenticated,
+          isLoggedOut: sessionDriver.isLoggedOut,
+        })
+        await ctx.session.commit()
+        ctx.response.finish()
+      }
+    })
 
-		const { header } = await supertest(server).get('/login')
-		await user.refresh()
+    const { header } = await supertest(server).get('/login')
+    await user.refresh()
 
-		const initialToken = user.rememberMeToken
-		const cookies = cookieParser(header['set-cookie'])
-		const reqCookies = cookies
-			.filter((cookie) => cookie.maxAge > 0)
-			.map((cookie) => `${cookie.name}=${cookie.value};`)
+    const initialToken = user.rememberMeToken
+    const cookies = cookieParser(header['set-cookie'])
+    const reqCookies = cookies
+      .filter((cookie) => cookie.maxAge > 0)
+      .map((cookie) => `${cookie.name}=${cookie.value};`)
 
-		const { body, header: authHeaders } = await supertest(server).get('/').set('cookie', reqCookies)
+    const { body, header: authHeaders } = await supertest(server).get('/').set('cookie', reqCookies)
 
-		const rememberMeCookie = decryptCookie(app, authHeaders['set-cookie'][0], 'remember_session')
-		const sessionCookie = unsignCookie(app, authHeaders['set-cookie'][1], 'adonis-session')
-		const sessionValue = decryptCookie(app, authHeaders['set-cookie'][2], sessionCookie)
+    const rememberMeCookie = decryptCookie(app, authHeaders['set-cookie'][0], 'remember_session')
+    const sessionCookie = unsignCookie(app, authHeaders['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(app, authHeaders['set-cookie'][2], sessionCookie)
 
-		assert.isNull(rememberMeCookie)
-		assert.deepEqual(sessionValue, {})
-		assert.isNull(body.user)
-		assert.isFalse(body.isAuthenticated)
-		assert.isTrue(body.isLoggedOut)
+    assert.isNull(rememberMeCookie)
+    assert.deepEqual(sessionValue, {})
+    assert.isNull(body.user)
+    assert.isFalse(body.isAuthenticated)
+    assert.isTrue(body.isLoggedOut)
 
-		await user.refresh()
-		assert.equal(user.rememberMeToken, initialToken)
-	})
+    await user.refresh()
+    assert.equal(user.rememberMeToken, initialToken)
+  })
 
-	test('logout and recycle user remember me token', async (assert) => {
-		const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
-		const password = await app.container.use('Adonis/Core/Hash').make('secret')
-		const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+  test('logout and recycle user remember me token', async (assert) => {
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
 
-		const server = createServer(async (req, res) => {
-			const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
-			await ctx.session.initiate(false)
-			const lucidProvider = getLucidProvider(app, { model: async () => User })
-			const sessionDriver = getSessionDriver(
-				app,
-				lucidProvider,
-				getLucidProviderConfig({ model: async () => User }),
-				ctx
-			)
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      await ctx.session.initiate(false)
+      const lucidProvider = getLucidProvider(app, { model: async () => User })
+      const sessionDriver = getSessionDriver(
+        app,
+        lucidProvider,
+        getLucidProviderConfig({ model: async () => User }),
+        ctx
+      )
 
-			if (req.url === '/login') {
-				await sessionDriver.attempt('virk@adonisjs.com', 'secret', true)
-				await ctx.session.commit()
-				ctx.response.finish()
-			} else {
-				await sessionDriver.logout(true)
-				ctx.response.send({
-					user: sessionDriver.user,
-					isAuthenticated: sessionDriver.isAuthenticated,
-					isLoggedOut: sessionDriver.isLoggedOut,
-				})
-				await ctx.session.commit()
-				ctx.response.finish()
-			}
-		})
+      if (req.url === '/login') {
+        await sessionDriver.attempt('virk@adonisjs.com', 'secret', true)
+        await ctx.session.commit()
+        ctx.response.finish()
+      } else {
+        await sessionDriver.logout(true)
+        ctx.response.send({
+          user: sessionDriver.user,
+          isAuthenticated: sessionDriver.isAuthenticated,
+          isLoggedOut: sessionDriver.isLoggedOut,
+        })
+        await ctx.session.commit()
+        ctx.response.finish()
+      }
+    })
 
-		const { header } = await supertest(server).get('/login')
-		await user.refresh()
+    const { header } = await supertest(server).get('/login')
+    await user.refresh()
 
-		const initialToken = user.rememberMeToken
-		const cookies = cookieParser(header['set-cookie'])
-		const reqCookies = cookies
-			.filter((cookie) => cookie.maxAge > 0)
-			.map((cookie) => `${cookie.name}=${cookie.value};`)
+    const initialToken = user.rememberMeToken
+    const cookies = cookieParser(header['set-cookie'])
+    const reqCookies = cookies
+      .filter((cookie) => cookie.maxAge > 0)
+      .map((cookie) => `${cookie.name}=${cookie.value};`)
 
-		const { body, header: authHeaders } = await supertest(server).get('/').set('cookie', reqCookies)
+    const { body, header: authHeaders } = await supertest(server).get('/').set('cookie', reqCookies)
 
-		const rememberMeCookie = decryptCookie(app, authHeaders['set-cookie'][0], 'remember_session')
-		const sessionCookie = unsignCookie(app, authHeaders['set-cookie'][1], 'adonis-session')
-		const sessionValue = decryptCookie(app, authHeaders['set-cookie'][2], sessionCookie)
+    const rememberMeCookie = decryptCookie(app, authHeaders['set-cookie'][0], 'remember_session')
+    const sessionCookie = unsignCookie(app, authHeaders['set-cookie'][1], 'adonis-session')
+    const sessionValue = decryptCookie(app, authHeaders['set-cookie'][2], sessionCookie)
 
-		assert.isNull(rememberMeCookie)
-		assert.deepEqual(sessionValue, {})
-		assert.isNull(body.user)
-		assert.isFalse(body.isAuthenticated)
-		assert.isTrue(body.isLoggedOut)
+    assert.isNull(rememberMeCookie)
+    assert.deepEqual(sessionValue, {})
+    assert.isNull(body.user)
+    assert.isFalse(body.isAuthenticated)
+    assert.isTrue(body.isLoggedOut)
 
-		await user.refresh()
-		assert.notEqual(user.rememberMeToken, initialToken)
-	})
+    await user.refresh()
+    assert.notEqual(user.rememberMeToken, initialToken)
+  })
 })

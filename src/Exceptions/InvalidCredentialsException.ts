@@ -14,93 +14,93 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
  * Exception raised when unable to verify user credentials
  */
 export class InvalidCredentialsException extends Exception {
-	public guard: string
+  public guard: string
 
-	/**
-	 * Unable to find user
-	 */
-	public static invalidUid(guard: string) {
-		const error = new this('User not found', 400, 'E_INVALID_AUTH_UID')
-		error.guard = guard
-		return error
-	}
+  /**
+   * Unable to find user
+   */
+  public static invalidUid(guard: string) {
+    const error = new this('User not found', 400, 'E_INVALID_AUTH_UID')
+    error.guard = guard
+    return error
+  }
 
-	/**
-	 * Invalid user password
-	 */
-	public static invalidPassword(guard: string) {
-		const error = new this('Password mis-match', 400, 'E_INVALID_AUTH_PASSWORD')
-		error.guard = guard
-		return error
-	}
+  /**
+   * Invalid user password
+   */
+  public static invalidPassword(guard: string) {
+    const error = new this('Password mis-match', 400, 'E_INVALID_AUTH_PASSWORD')
+    error.guard = guard
+    return error
+  }
 
-	/**
-	 * Send response as an array of errors
-	 */
-	protected respondWithJson(ctx: HttpContextContract) {
-		ctx.response.status(this.status).send({
-			errors: [
-				{
-					message: 'Invalid user credentials',
-				},
-			],
-		})
-	}
+  /**
+   * Send response as an array of errors
+   */
+  protected respondWithJson(ctx: HttpContextContract) {
+    ctx.response.status(this.status).send({
+      errors: [
+        {
+          message: 'Invalid user credentials',
+        },
+      ],
+    })
+  }
 
-	/**
-	 * Flash error message and redirect the user back
-	 */
-	protected respondWithRedirect(ctx: HttpContextContract) {
-		if (!ctx.session) {
-			return ctx.response.status(this.status).send('Invalid credentials')
-		}
+  /**
+   * Flash error message and redirect the user back
+   */
+  protected respondWithRedirect(ctx: HttpContextContract) {
+    if (!ctx.session) {
+      return ctx.response.status(this.status).send('Invalid credentials')
+    }
 
-		ctx.session.flashExcept(['_csrf'])
-		ctx.session.flash('auth', {
-			errors: {
-				uid: this.code === 'E_INVALID_AUTH_UID' ? ['Invalid login id'] : null,
-				password: this.code === 'E_INVALID_AUTH_PASSWORD' ? ['Invalid password'] : null,
-			},
-		})
-		ctx.response.redirect('back', true)
-	}
+    ctx.session.flashExcept(['_csrf'])
+    ctx.session.flash('auth', {
+      errors: {
+        uid: this.code === 'E_INVALID_AUTH_UID' ? ['Invalid login id'] : null,
+        password: this.code === 'E_INVALID_AUTH_PASSWORD' ? ['Invalid password'] : null,
+      },
+    })
+    ctx.response.redirect('back', true)
+  }
 
-	/**
-	 * Send response as an array of errors formatted as per JSONAPI spec
-	 */
-	protected respondWithJsonAPI(ctx: HttpContextContract) {
-		ctx.response.status(this.status).send({
-			errors: [
-				{
-					code: this.code,
-					title: 'Invalid user credentials',
-					source: null,
-				},
-			],
-		})
-	}
+  /**
+   * Send response as an array of errors formatted as per JSONAPI spec
+   */
+  protected respondWithJsonAPI(ctx: HttpContextContract) {
+    ctx.response.status(this.status).send({
+      errors: [
+        {
+          code: this.code,
+          title: 'Invalid user credentials',
+          source: null,
+        },
+      ],
+    })
+  }
 
-	/**
-	 * Self handle exception and attempt to make the best response based
-	 * upon the type of request
-	 */
-	public async handle(_: InvalidCredentialsException, ctx: HttpContextContract) {
-		if (ctx.request.ajax()) {
-			this.respondWithJson(ctx)
-			return
-		}
+  /**
+   * Self handle exception and attempt to make the best response based
+   * upon the type of request
+   */
+  public async handle(_: InvalidCredentialsException, ctx: HttpContextContract) {
+    if (ctx.request.ajax()) {
+      this.respondWithJson(ctx)
+      return
+    }
 
-		switch (ctx.request.accepts(['html', 'application/vnd.api+json', 'json'])) {
-			case 'html':
-			case null:
-				this.respondWithRedirect(ctx)
-				break
-			case 'json':
-				this.respondWithJson(ctx)
-				break
-			case 'application/vnd.api+json':
-				this.respondWithJsonAPI(ctx)
-				break
-		}
-	}
+    switch (ctx.request.accepts(['html', 'application/vnd.api+json', 'json'])) {
+      case 'html':
+      case null:
+        this.respondWithRedirect(ctx)
+        break
+      case 'json':
+        this.respondWithJson(ctx)
+        break
+      case 'application/vnd.api+json':
+        this.respondWithJsonAPI(ctx)
+        break
+    }
+  }
 }

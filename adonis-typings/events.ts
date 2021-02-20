@@ -8,20 +8,20 @@
  */
 
 declare module '@ioc:Adonis/Core/Event' {
-	import {
-		ProvidersList,
-		OATLoginEventData,
-		SessionLoginEventData,
-		OATAuthenticateEventData,
-		SessionAuthenticateEventData,
-		BasicAuthAuthenticateEventData,
-	} from '@ioc:Adonis/Addons/Auth'
+  import {
+    ProvidersList,
+    OATLoginEventData,
+    SessionLoginEventData,
+    OATAuthenticateEventData,
+    SessionAuthenticateEventData,
+    BasicAuthAuthenticateEventData,
+  } from '@ioc:Adonis/Addons/Auth'
 
-	export interface EventsList {
-		'adonis:basic:authenticate': BasicAuthAuthenticateEventData<keyof ProvidersList>
-		'adonis:session:login': SessionLoginEventData<keyof ProvidersList>
-		'adonis:session:authenticate': SessionAuthenticateEventData<keyof ProvidersList>
-		'adonis:api:authenticate': OATAuthenticateEventData<keyof ProvidersList>
-		'adonis:api:login': OATLoginEventData<keyof ProvidersList>
-	}
+  export interface EventsList {
+    'adonis:basic:authenticate': BasicAuthAuthenticateEventData<keyof ProvidersList>
+    'adonis:session:login': SessionLoginEventData<keyof ProvidersList>
+    'adonis:session:authenticate': SessionAuthenticateEventData<keyof ProvidersList>
+    'adonis:api:authenticate': OATAuthenticateEventData<keyof ProvidersList>
+    'adonis:api:login': OATLoginEventData<keyof ProvidersList>
+  }
 }

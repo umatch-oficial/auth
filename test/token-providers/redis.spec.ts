@@ -19,148 +19,148 @@ let app: ApplicationContract
 const sleep = (time: number) => new Promise((resolve) => setTimeout(resolve, time))
 
 test.group('Redis Token Provider', (group) => {
-	group.before(async () => {
-		app = await setupApplication()
-		await setup(app)
-	})
+  group.before(async () => {
+    app = await setupApplication()
+    await setup(app)
+  })
 
-	group.after(async () => {
-		await cleanup(app)
-		await app.container.use('Adonis/Addons/Redis').flushdb()
-	})
+  group.after(async () => {
+    await cleanup(app)
+    await app.container.use('Adonis/Addons/Redis').flushdb()
+  })
 
-	group.afterEach(async () => {
-		await reset(app)
-	})
+  group.afterEach(async () => {
+    await reset(app)
+  })
 
-	test('save token to the database', async (assert) => {
-		const token = string.generateRandom(40)
-		const redis = app.container.use('Adonis/Addons/Redis')
-		const provider = getTokensRedisProvider(redis)
+  test('save token to the database', async (assert) => {
+    const token = string.generateRandom(40)
+    const redis = app.container.use('Adonis/Addons/Redis')
+    const provider = getTokensRedisProvider(redis)
 
-		const tokenId = await provider.write({
-			name: 'Auth token',
-			tokenHash: token,
-			userId: '1',
-			type: 'api_token',
-			expiresAt: DateTime.local().plus({ days: 2 }),
-		})
+    const tokenId = await provider.write({
+      name: 'Auth token',
+      tokenHash: token,
+      userId: '1',
+      type: 'api_token',
+      expiresAt: DateTime.local().plus({ days: 2 }),
+    })
 
-		assert.exists(tokenId)
-		const tokenRow = JSON.parse((await redis.get(`api_token:${tokenId}`))!)
-		assert.deepEqual(tokenRow, {
-			user_id: '1',
-			name: 'Auth token',
-			token,
-		})
+    assert.exists(tokenId)
+    const tokenRow = JSON.parse((await redis.get(`api_token:${tokenId}`))!)
+    assert.deepEqual(tokenRow, {
+      user_id: '1',
+      name: 'Auth token',
+      token,
+    })
 
-		let expiry = await redis.ttl(tokenId)
-		assert.isBelow(expiry, 2 * 24 * 3600 + 1)
-	})
+    let expiry = await redis.ttl(tokenId)
+    assert.isBelow(expiry, 2 * 24 * 3600 + 1)
+  })
 
-	test('read token from the database', async (assert) => {
-		const token = string.generateRandom(40)
-		const redis = app.container.use('Adonis/Addons/Redis')
-		const provider = getTokensRedisProvider(redis)
+  test('read token from the database', async (assert) => {
+    const token = string.generateRandom(40)
+    const redis = app.container.use('Adonis/Addons/Redis')
+    const provider = getTokensRedisProvider(redis)
 
-		const tokenId = await provider.write({
-			name: 'Auth token',
-			tokenHash: token,
-			userId: '1',
-			type: 'api_token',
-			expiresAt: DateTime.local().plus({ days: 2 }),
-		})
+    const tokenId = await provider.write({
+      name: 'Auth token',
+      tokenHash: token,
+      userId: '1',
+      type: 'api_token',
+      expiresAt: DateTime.local().plus({ days: 2 }),
+    })
 
-		assert.exists(tokenId)
-		const tokenRow = await provider.read(tokenId, token, 'api_token')
-		assert.equal(tokenRow!.name, 'Auth token')
-		assert.equal(tokenRow!.tokenHash, token)
-		assert.equal(tokenRow!.type, 'api_token')
-	})
+    assert.exists(tokenId)
+    const tokenRow = await provider.read(tokenId, token, 'api_token')
+    assert.equal(tokenRow!.name, 'Auth token')
+    assert.equal(tokenRow!.tokenHash, token)
+    assert.equal(tokenRow!.type, 'api_token')
+  })
 
-	test('return null when there is a token hash mis-match', async (assert) => {
-		const token = string.generateRandom(40)
-		const redis = app.container.use('Adonis/Addons/Redis')
-		const provider = getTokensRedisProvider(redis)
+  test('return null when there is a token hash mis-match', async (assert) => {
+    const token = string.generateRandom(40)
+    const redis = app.container.use('Adonis/Addons/Redis')
+    const provider = getTokensRedisProvider(redis)
 
-		const tokenId = await provider.write({
-			name: 'Auth token',
-			tokenHash: token,
-			userId: '1',
-			type: 'api_token',
-			expiresAt: DateTime.local().plus({ minutes: 30 }),
-		})
+    const tokenId = await provider.write({
+      name: 'Auth token',
+      tokenHash: token,
+      userId: '1',
+      type: 'api_token',
+      expiresAt: DateTime.local().plus({ minutes: 30 }),
+    })
 
-		assert.isNull(await provider.read(tokenId, 'foo', 'api_token'))
-	})
+    assert.isNull(await provider.read(tokenId, 'foo', 'api_token'))
+  })
 
-	test('return null when token has been expired', async (assert) => {
-		const token = string.generateRandom(40)
-		const redis = app.container.use('Adonis/Addons/Redis')
-		const provider = getTokensRedisProvider(redis)
+  test('return null when token has been expired', async (assert) => {
+    const token = string.generateRandom(40)
+    const redis = app.container.use('Adonis/Addons/Redis')
+    const provider = getTokensRedisProvider(redis)
 
-		const tokenId = await provider.write({
-			name: 'Auth token',
-			tokenHash: token,
-			userId: '1',
-			type: 'api_token',
-			expiresAt: DateTime.local().plus({ seconds: 1 }),
-		})
+    const tokenId = await provider.write({
+      name: 'Auth token',
+      tokenHash: token,
+      userId: '1',
+      type: 'api_token',
+      expiresAt: DateTime.local().plus({ seconds: 1 }),
+    })
 
-		await sleep(2000)
-		assert.isNull(await provider.read(tokenId, token, 'api_token'))
-	}).timeout(3000)
+    await sleep(2000)
+    assert.isNull(await provider.read(tokenId, token, 'api_token'))
+  }).timeout(3000)
 
-	test('work fine when token has no expiry', async (assert) => {
-		const token = string.generateRandom(40)
-		const redis = app.container.use('Adonis/Addons/Redis')
-		const provider = getTokensRedisProvider(redis)
+  test('work fine when token has no expiry', async (assert) => {
+    const token = string.generateRandom(40)
+    const redis = app.container.use('Adonis/Addons/Redis')
+    const provider = getTokensRedisProvider(redis)
 
-		const tokenId = await provider.write({
-			name: 'Auth token',
-			tokenHash: token,
-			userId: '1',
-			type: 'api_token',
-		})
+    const tokenId = await provider.write({
+      name: 'Auth token',
+      tokenHash: token,
+      userId: '1',
+      type: 'api_token',
+    })
 
-		await sleep(2000)
-		assert.isNotNull(await provider.read(tokenId, token, 'api_token'))
+    await sleep(2000)
+    assert.isNotNull(await provider.read(tokenId, token, 'api_token'))
 
-		let expiry = await redis.ttl(`api_token:${tokenId}`)
-		assert.equal(expiry, -1)
-	}).timeout(3000)
+    let expiry = await redis.ttl(`api_token:${tokenId}`)
+    assert.equal(expiry, -1)
+  }).timeout(3000)
 
-	test('return null when token is missing', async (assert) => {
-		const token = string.generateRandom(40)
-		const redis = app.container.use('Adonis/Addons/Redis')
-		const provider = getTokensRedisProvider(redis)
+  test('return null when token is missing', async (assert) => {
+    const token = string.generateRandom(40)
+    const redis = app.container.use('Adonis/Addons/Redis')
+    const provider = getTokensRedisProvider(redis)
 
-		const tokenId = await provider.write({
-			name: 'Auth token',
-			tokenHash: token,
-			userId: '1',
-			type: 'api_token',
-			expiresAt: DateTime.local().plus({ seconds: 1 }),
-		})
+    const tokenId = await provider.write({
+      name: 'Auth token',
+      tokenHash: token,
+      userId: '1',
+      type: 'api_token',
+      expiresAt: DateTime.local().plus({ seconds: 1 }),
+    })
 
-		assert.isNull(await provider.read(tokenId + 1, token, 'api_token'))
-	})
+    assert.isNull(await provider.read(tokenId + 1, token, 'api_token'))
+  })
 
-	test('delete token from the database', async (assert) => {
-		const token = string.generateRandom(40)
-		const redis = app.container.use('Adonis/Addons/Redis')
-		const provider = getTokensRedisProvider(redis)
+  test('delete token from the database', async (assert) => {
+    const token = string.generateRandom(40)
+    const redis = app.container.use('Adonis/Addons/Redis')
+    const provider = getTokensRedisProvider(redis)
 
-		const tokenId = await provider.write({
-			name: 'Auth token',
-			tokenHash: token,
-			userId: '1',
-			type: 'api_token',
-			expiresAt: DateTime.local().plus({ seconds: 1 }),
-		})
+    const tokenId = await provider.write({
+      name: 'Auth token',
+      tokenHash: token,
+      userId: '1',
+      type: 'api_token',
+      expiresAt: DateTime.local().plus({ seconds: 1 }),
+    })
 
-		await provider.destroy(tokenId, 'api_token')
-		const tokenRow = await redis.get(tokenId)
-		assert.isNull(tokenRow)
-	})
+    await provider.destroy(tokenId, 'api_token')
+    const tokenRow = await redis.get(tokenId)
+    assert.isNull(tokenRow)
+  })
 })

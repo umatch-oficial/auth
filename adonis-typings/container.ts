@@ -8,8 +8,8 @@
  */
 
 declare module '@ioc:Adonis/Core/Application' {
-	import { AuthManagerContract } from '@ioc:Adonis/Addons/Auth'
-	export interface ContainerBindings {
-		'Adonis/Addons/Auth': AuthManagerContract
-	}
+  import { AuthManagerContract } from '@ioc:Adonis/Addons/Auth'
+  export interface ContainerBindings {
+    'Adonis/Addons/Auth': AuthManagerContract
+  }
 }
