@@ -15,6 +15,7 @@
 |
 */
 tokenProvider: {
+  type: 'api',
   driver: 'redis',
   redisConnection: 'local',
   foreignKey: 'user_id',
