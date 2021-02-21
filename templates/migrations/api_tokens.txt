@@ -9,7 +9,7 @@ export default class {{ tokensSchemaName }} extends BaseSchema {
       table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
       table.string('name').notNullable()
       table.string('type').notNullable()
-      table.string('token', 64).notNullable()
+      table.string('token', 64).notNullable().unique()
 
       /**
        * "useTz: true" utilizes timezone option in PostgreSQL and MSSQL
