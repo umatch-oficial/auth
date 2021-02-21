@@ -8,9 +8,8 @@
  */
 
 import { join } from 'path'
-import pluralize from 'pluralize'
-import { lodash } from '@poppinss/utils'
 import * as sinkStatic from '@adonisjs/sink'
+import { string } from '@poppinss/utils/build/helpers'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 type InstructionsState = {
@@ -404,8 +403,8 @@ export default async function instructions(
   if (state.provider === 'lucid') {
     const modelName = await getModelName(sink)
     state.modelName = modelName.replace(/(\.ts|\.js)$/, '')
-    state.usersTableName = pluralize(lodash.snakeCase(state.modelName))
-    state.modelReference = lodash.camelCase(state.modelName)
+    state.usersTableName = string.pluralize(string.snakeCase(state.modelName))
+    state.modelReference = string.camelCase(state.modelName)
     state.modelNamespace = `${app.namespacesMap.get('models') || 'App/Models'}/${state.modelName}`
   } else {
     state.usersTableName = await getTableName(sink)
@@ -427,7 +426,7 @@ export default async function instructions(
   /**
    * Pascal case
    */
-  const camelCaseSchemaName = lodash.camelCase(`${state.usersTableName}_schema`)
+  const camelCaseSchemaName = string.camelCase(`${state.usersTableName}_schema`)
   state.usersSchemaName = `${camelCaseSchemaName
     .charAt(0)
     .toUpperCase()}${camelCaseSchemaName.slice(1)}`
