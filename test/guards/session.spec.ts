@@ -402,6 +402,80 @@ test.group('Session Driver | authenticate', (group) => {
 
     await supertest(server).get('/')
   })
+
+  test('keep different guard session separate', async (assert) => {
+    assert.plan(3)
+
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+
+    app.container
+      .use('Adonis/Core/Event')
+      .once('adonis:session:authenticate', ({ name, user, viaRemember }) => {
+        assert.equal(name, 'session')
+        assert.instanceOf(user, User)
+        assert.isFalse(viaRemember)
+      })
+
+    const server = createServer(async (req, res) => {
+      const ctx = app.container.use('Adonis/Core/HttpContext').create('/', {}, req, res)
+      await ctx.session.initiate(false)
+      const lucidProvider = getLucidProvider(app, { model: async () => User })
+
+      /**
+       * Driver for user
+       */
+      const sessionDriver = getSessionDriver(
+        app,
+        lucidProvider,
+        getLucidProviderConfig({ model: async () => User }),
+        ctx,
+        'user'
+      )
+
+      /**
+       * Driver for org
+       */
+      const otherSessionDriver = getSessionDriver(
+        app,
+        lucidProvider,
+        getLucidProviderConfig({ model: async () => User }),
+        ctx,
+        'org'
+      )
+
+      if (req.url === '/login') {
+        await sessionDriver.attempt('virk@adonisjs.com', 'secret')
+        await ctx.session.commit()
+        ctx.response.finish()
+      } else {
+        try {
+          await otherSessionDriver.authenticate()
+        } catch (error) {}
+
+        ctx.response.send({
+          user: otherSessionDriver.user,
+          isAuthenticated: otherSessionDriver.isAuthenticated,
+          viaRemember: otherSessionDriver.viaRemember,
+        })
+        await ctx.session.commit()
+        ctx.response.finish()
+      }
+    })
+
+    const { header } = await supertest(server).get('/login')
+    const cookies = cookieParser(header['set-cookie'])
+    const reqCookies = cookies
+      .filter((cookie) => cookie.maxAge > 0)
+      .map((cookie) => `${cookie.name}=${cookie.value};`)
+
+    const { body } = await supertest(server).get('/').set('cookie', reqCookies)
+
+    assert.isUndefined(body.user)
+    assert.isFalse(body.isAuthenticated)
+    assert.isFalse(body.viaRemember)
+  })
 })
 
 test.group('Session Driver | logout', (group) => {

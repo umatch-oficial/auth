@@ -25,9 +25,9 @@ export class ProviderToken implements ProviderTokenContract {
   public meta?: any
 
   constructor(
-    public name: string,
-    public tokenHash: string,
-    public userId: string | number,
-    public type: string
+    public name: string, // Name associated with the token
+    public tokenHash: string, // The hash to persist
+    public userId: string | number, // The user for which the token is generated
+    public type: string // The type of the token.
   ) {}
 }

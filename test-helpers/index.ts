@@ -291,7 +291,8 @@ export function getSessionDriver(
   app: ApplicationContract,
   provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
   providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
-  ctx: HttpContextContract
+  ctx: HttpContextContract,
+  name?: string
 ) {
   const config = {
     driver: 'session' as const,
@@ -299,7 +300,13 @@ export function getSessionDriver(
     provider: providerConfig,
   }
 
-  return new SessionGuard('session', config, app.container.use('Adonis/Core/Event'), provider, ctx)
+  return new SessionGuard(
+    name || 'session',
+    config,
+    app.container.use('Adonis/Core/Event'),
+    provider,
+    ctx
+  )
 }
 
 /**

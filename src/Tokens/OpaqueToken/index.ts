@@ -43,7 +43,11 @@ export class OpaqueToken implements OpaqueTokenContract<any> {
    */
   public tokenHash: string
 
-  constructor(public name: string, public token: string, public user: any) {}
+  constructor(
+    public name: string, // Name associated with the token
+    public token: string, // The raw token value. Only available for the first time
+    public user: any // The user for which the token is generated
+  ) {}
 
   /**
    * Shareable version of the token
