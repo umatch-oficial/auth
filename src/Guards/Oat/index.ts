@@ -396,6 +396,13 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
     try {
       await this.authenticate()
     } catch (error) {
+      /**
+       * Throw error when it is not an instance of the authentication
+       */
+      if (error instanceof AuthenticationException === false) {
+        throw error
+      }
+
       this.ctx.logger.trace(error, 'Authentication failure')
     }
 
