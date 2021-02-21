@@ -395,7 +395,10 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
   public async check(): Promise<boolean> {
     try {
       await this.authenticate()
-    } catch {}
+    } catch (error) {
+      this.ctx.logger.trace(error, 'Authentication failure')
+    }
+
     return this.isAuthenticated
   }
 

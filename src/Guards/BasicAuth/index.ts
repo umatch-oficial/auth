@@ -186,7 +186,10 @@ export class BasicAuthGuard extends BaseGuard<any> implements BasicAuthGuardCont
   public async check(): Promise<boolean> {
     try {
       await this.authenticate()
-    } catch {}
+    } catch (error) {
+      this.ctx.logger.trace(error, 'Authentication failure')
+    }
+
     return this.isAuthenticated
   }
 

@@ -343,7 +343,10 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
   public async check(): Promise<boolean> {
     try {
       await this.authenticate()
-    } catch {}
+    } catch (error) {
+      this.ctx.logger.trace(error, 'Authentication failure')
+    }
+
     return this.isAuthenticated
   }
 
