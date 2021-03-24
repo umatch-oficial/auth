@@ -116,7 +116,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
   /**
    * Define after hooks. Check interface for exact type information
    */
-  public after(event: string, callback: (...args: any[]) => Promise<void>): this {
+  public after(event: 'findUser', callback: (...args: any[]) => Promise<void>): this {
     this.hooks.add('after', event, callback)
     return this
   }

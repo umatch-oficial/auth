@@ -58,10 +58,57 @@ test.group('Redis Token Provider', (group) => {
     assert.isBelow(expiry, 2 * 24 * 3600 + 1)
   })
 
+  test('save token to the database using a custom connection', async (assert) => {
+    const token = string.generateRandom(40)
+    const redis = app.container.use('Adonis/Addons/Redis')
+    const provider = getTokensRedisProvider(redis)
+    provider.setConnection(redis.connection('localDb1'))
+
+    const tokenId = await provider.write({
+      name: 'Auth token',
+      tokenHash: token,
+      userId: '1',
+      type: 'api_token',
+      expiresAt: DateTime.local().plus({ days: 2 }),
+    })
+
+    assert.exists(tokenId)
+    const tokenRow = JSON.parse((await redis.connection('localDb1').get(`api_token:${tokenId}`))!)
+    assert.deepEqual(tokenRow, {
+      user_id: '1',
+      name: 'Auth token',
+      token,
+    })
+
+    let expiry = await redis.connection('localDb1').ttl(tokenId)
+    assert.isBelow(expiry, 2 * 24 * 3600 + 1)
+  })
+
   test('read token from the database', async (assert) => {
     const token = string.generateRandom(40)
     const redis = app.container.use('Adonis/Addons/Redis')
     const provider = getTokensRedisProvider(redis)
+
+    const tokenId = await provider.write({
+      name: 'Auth token',
+      tokenHash: token,
+      userId: '1',
+      type: 'api_token',
+      expiresAt: DateTime.local().plus({ days: 2 }),
+    })
+
+    assert.exists(tokenId)
+    const tokenRow = await provider.read(tokenId, token, 'api_token')
+    assert.equal(tokenRow!.name, 'Auth token')
+    assert.equal(tokenRow!.tokenHash, token)
+    assert.equal(tokenRow!.type, 'api_token')
+  })
+
+  test('read token from a custom database connection', async (assert) => {
+    const token = string.generateRandom(40)
+    const redis = app.container.use('Adonis/Addons/Redis')
+    const provider = getTokensRedisProvider(redis)
+    provider.setConnection(redis.connection('localDb1'))
 
     const tokenId = await provider.write({
       name: 'Auth token',
@@ -161,6 +208,25 @@ test.group('Redis Token Provider', (group) => {
 
     await provider.destroy(tokenId, 'api_token')
     const tokenRow = await redis.get(tokenId)
+    assert.isNull(tokenRow)
+  })
+
+  test('delete token using a custom connection', async (assert) => {
+    const token = string.generateRandom(40)
+    const redis = app.container.use('Adonis/Addons/Redis')
+    const provider = getTokensRedisProvider(redis)
+    provider.setConnection(redis.connection('localDb1'))
+
+    const tokenId = await provider.write({
+      name: 'Auth token',
+      tokenHash: token,
+      userId: '1',
+      type: 'api_token',
+      expiresAt: DateTime.local().plus({ seconds: 1 }),
+    })
+
+    await provider.destroy(tokenId, 'api_token')
+    const tokenRow = await redis.connection('localDb1').get(tokenId)
     assert.isNull(tokenRow)
   })
 })

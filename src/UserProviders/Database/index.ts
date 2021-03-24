@@ -54,6 +54,7 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
     if (!this.connection) {
       return this.db.connection(this.config.connection)
     }
+
     return typeof this.connection === 'string'
       ? this.db.connection(this.connection)
       : this.connection
@@ -119,7 +120,7 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
   /**
    * Define before hooks. Check interface for exact type information
    */
-  public before(event: string, callback: (query: any) => Promise<void>): this {
+  public before(event: 'findUser', callback: (query: any) => Promise<void>): this {
     this.hooks.add('before', event, callback)
     return this
   }
@@ -127,7 +128,7 @@ export class DatabaseProvider implements DatabaseProviderContract<DatabaseProvid
   /**
    * Define after hooks. Check interface for exact type information
    */
-  public after(event: string, callback: (...args: any[]) => Promise<void>): this {
+  public after(event: 'findUser', callback: (...args: any[]) => Promise<void>): this {
     this.hooks.add('after', event, callback)
     return this
   }

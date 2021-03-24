@@ -9,7 +9,7 @@
 
 import { DateTime } from 'luxon'
 import { safeEqual } from '@poppinss/utils/build/helpers'
-import { DatabaseContract } from '@ioc:Adonis/Lucid/Database'
+import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 import {
   TokenProviderContract,
   ProviderTokenContract,
@@ -25,12 +25,21 @@ export class TokenDatabaseProvider implements TokenProviderContract {
   constructor(private config: DatabaseTokenProviderConfig, private db: DatabaseContract) {}
 
   /**
+   * Custom connection or query client
+   */
+  private connection?: string | QueryClientContract
+
+  /**
    * Returns the query client for database queries
    */
   private getQueryClient() {
-    return this.config.connection
-      ? this.db.connection(this.config.connection)
-      : this.db.connection()
+    if (!this.connection) {
+      return this.db.connection(this.config.connection)
+    }
+
+    return typeof this.connection === 'string'
+      ? this.db.connection(this.connection)
+      : this.connection
   }
 
   /**
@@ -46,6 +55,14 @@ export class TokenDatabaseProvider implements TokenProviderContract {
       .from(this.config.table)
       .where('id', tokenId)
       .where('type', tokenType)
+  }
+
+  /**
+   * Define custom connection
+   */
+  public setConnection(connection: string | QueryClientContract): this {
+    this.connection = connection
+    return this
   }
 
   /**

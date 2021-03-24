@@ -133,7 +133,10 @@ export async function setupApplication(
     `const redisConfig = {
 			connection: 'local',
 			connections: {
-				local: {}
+				local: {},
+        localDb1: {
+          db: '2'
+        }
 			}
 		}
 		export default redisConfig`

@@ -41,9 +41,26 @@ export class TokenRedisProvider implements TokenProviderContract {
   constructor(private config: RedisTokenProviderConfig, private redis: RedisManagerContract) {}
 
   /**
+   * Custom connection or query client
+   */
+  private connection?: string | RedisConnectionContract | RedisClusterConnectionContract
+
+  /**
    * Returns the singleton instance of the redis connection
    */
   private getRedisConnection(): RedisConnectionContract | RedisClusterConnectionContract {
+    /**
+     * Use custom connection if defined
+     */
+    if (this.connection) {
+      return typeof this.connection === 'string'
+        ? this.redis.connection(this.connection)
+        : this.connection
+    }
+
+    /**
+     * Config must have a connection defined
+     */
     if (!this.config.redisConnection) {
       throw new Exception(
         'Missing "redisConnection" property for auth redis provider inside "config/auth" file',
@@ -78,6 +95,16 @@ export class TokenRedisProvider implements TokenProviderContract {
     } catch {
       return null
     }
+  }
+
+  /**
+   * Define custom connection
+   */
+  public setConnection(
+    connection: string | RedisConnectionContract | RedisClusterConnectionContract
+  ): this {
+    this.connection = connection
+    return this
   }
 
   /**

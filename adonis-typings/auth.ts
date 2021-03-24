@@ -138,6 +138,11 @@ declare module '@ioc:Adonis/Addons/Auth' {
    */
   export interface TokenProviderContract {
     /**
+     * Define a custom connection for the driver in use
+     */
+    setConnection(connection: any): this
+
+    /**
      * Saves the token to some persistance storage and returns an lookup
      * id. We introduced the concept of lookup ids, since lookups by
      * cryptographic tokens can have performance impacts on certain
@@ -616,6 +621,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
     Name extends keyof GuardsList
   > extends GuardContract<Provider, Name> {
     token?: ProviderTokenContract
+    tokenProvider: TokenProviderContract
 
     /**
      * Attempt to verify user credentials and perform login

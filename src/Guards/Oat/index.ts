@@ -41,7 +41,7 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
     private emitter: EmitterContract,
     provider: UserProviderContract<any>,
     private ctx: HttpContextContract,
-    private tokenProvider: TokenProviderContract
+    public tokenProvider: TokenProviderContract
   ) {
     super(name, config, provider)
   }
