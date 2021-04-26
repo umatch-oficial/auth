@@ -179,7 +179,9 @@ test.group('Auth Manager', (group) => {
       },
     } as any)
 
-    manager.extend('provider', 'mongodb', (_, config) => {
+    manager.extend('provider', 'mongodb', (auth, mapping, config) => {
+      assert.deepEqual(auth, manager)
+      assert.equal(mapping, 'admin')
       return new MongoDBProvider(config)
     })
 
@@ -220,11 +222,12 @@ test.group('Auth Manager', (group) => {
       },
     } as any)
 
-    manager.extend('provider', 'mongodb', (_, config) => {
+    manager.extend('provider', 'mongodb', (_, __, config) => {
       return new MongoDBProvider(config)
     })
 
-    manager.extend('guard', 'google', (_, mapping, config, provider) => {
+    manager.extend('guard', 'google', (auth, mapping, config, provider) => {
+      assert.deepEqual(auth, manager)
       return new CustomGuard(mapping, config, provider) as any
     })
 

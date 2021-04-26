@@ -47,7 +47,7 @@ export class AuthManager implements AuthManagerContract {
    */
   public defaultGuard = this.config.guard
 
-  constructor(private application: ApplicationContract, private config: AuthConfig) {
+  constructor(public application: ApplicationContract, private config: AuthConfig) {
     const validator = new ManagerConfigValidator(config, 'auth', 'config/auth')
     validator.validateDefault('guard')
     validator.validateList('list', 'guard')
@@ -87,13 +87,13 @@ export class AuthManager implements AuthManagerContract {
   /**
    * Returns an instance of the extended provider
    */
-  private makeExtendedProvider(config: any) {
+  private makeExtendedProvider(mapping: string, config: any) {
     const providerCallback = this.extendedProviders.get(config.driver)
     if (!providerCallback) {
       throw new Exception(`Invalid provider "${config.driver}"`)
     }
 
-    return providerCallback(this.application, config)
+    return providerCallback(this, mapping, config)
   }
 
   /**
@@ -170,13 +170,13 @@ export class AuthManager implements AuthManagerContract {
       throw new Exception(`Invalid guard driver "${config.driver}" property`)
     }
 
-    return guardCallback(this.application, mapping, config, provider, ctx)
+    return guardCallback(this, mapping, config, provider, ctx)
   }
 
   /**
    * Makes instance of a provider based upon the driver value
    */
-  public makeUserProviderInstance(providerConfig: any) {
+  public makeUserProviderInstance(mapping: string, providerConfig: any) {
     if (!providerConfig || !providerConfig.driver) {
       throw new Exception('Invalid auth config, missing "provider" or "provider.driver" property')
     }
@@ -187,7 +187,7 @@ export class AuthManager implements AuthManagerContract {
       case 'database':
         return this.makeDatabaseProvider(providerConfig)
       default:
-        return this.makeExtendedProvider(providerConfig)
+        return this.makeExtendedProvider(mapping, providerConfig)
     }
   }
 
@@ -249,7 +249,7 @@ export class AuthManager implements AuthManagerContract {
       )
     }
 
-    const provider = this.makeUserProviderInstance(mappingConfig.provider)
+    const provider = this.makeUserProviderInstance(mapping, mappingConfig.provider)
     return this.makeGuardInstance(mapping, mappingConfig, provider, ctx)
   }
 

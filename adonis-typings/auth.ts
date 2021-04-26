@@ -759,7 +759,8 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * Shape of the callback accepted to add new user providers
    */
   export type ExtendProviderCallback = (
-    application: ApplicationContract,
+    auth: AuthManagerContract,
+    mapping: string,
     config: any
   ) => UserProviderContract<any>
 
@@ -767,7 +768,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * Shape of the callback accepted to add new guards
    */
   export type ExtendGuardCallback = (
-    application: ApplicationContract,
+    auth: AuthManagerContract,
     mapping: string,
     config: any,
     provider: UserProviderContract<any>,
@@ -779,6 +780,8 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * make instances of them
    */
   export interface AuthManagerContract {
+    application: ApplicationContract
+
     /**
      * The default guard
      */
