@@ -51,7 +51,7 @@ test.group('Auth', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'session',
-      list: {
+      guards: {
         api: {
           driver: 'oat',
           tokenProvider: {
@@ -90,7 +90,7 @@ test.group('Auth', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'custom',
-      list: {
+      guards: {
         custom: {
           driver: 'custom',
           provider: getLucidProviderConfig({ model: async () => User }),
@@ -217,7 +217,7 @@ test.group('Auth', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'session',
-      list: {
+      guards: {
         session: {
           driver: 'session',
           provider: getLucidProviderConfig({ model: async () => User }),
@@ -254,7 +254,7 @@ test.group('Auth', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'session',
-      list: {
+      guards: {
         session: {
           driver: 'session',
           provider: getLucidProviderConfig({ model: async () => User }),
@@ -303,7 +303,7 @@ test.group('Auth', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'api',
-      list: {
+      guards: {
         api: {
           driver: 'oat',
           tokenProvider: {
@@ -340,7 +340,7 @@ test.group('Auth', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'api',
-      list: {
+      guards: {
         api: {
           driver: 'oat',
           tokenProvider: {
@@ -377,7 +377,7 @@ test.group('Auth', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'api',
-      list: {
+      guards: {
         api: {
           driver: 'oat',
           tokenProvider: {
@@ -413,7 +413,7 @@ test.group('Auth', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'api',
-      list: {
+      guards: {
         api: {
           driver: 'oat',
           tokenProvider: {

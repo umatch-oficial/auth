@@ -727,7 +727,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
    */
   export type AuthConfig = {
     guard: keyof GuardsList
-    list: {
+    guards: {
       [P in keyof GuardsList]: GuardsList[P]['config']
     }
   }

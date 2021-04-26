@@ -3,7 +3,7 @@ import { AuthConfig, AuthContract } from '@ioc:Adonis/Addons/Auth'
 
 export const config: AuthConfig = {
   guard: 'session',
-  list: {
+  guards: {
     session: {
       driver: 'session',
       provider: {

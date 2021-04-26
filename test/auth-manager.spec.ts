@@ -51,7 +51,7 @@ test.group('Auth Manager', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'session',
-      list: {
+      guards: {
         api: {
           driver: 'oat',
           tokenProvider: {
@@ -87,7 +87,7 @@ test.group('Auth Manager', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'session',
-      list: {
+      guards: {
         api: {
           driver: 'oat',
           tokenProvider: {
@@ -123,7 +123,7 @@ test.group('Auth Manager', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'session',
-      list: {
+      guards: {
         api: {
           driver: 'oat',
           tokenProvider: {
@@ -168,7 +168,7 @@ test.group('Auth Manager', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'session',
-      list: {
+      guards: {
         session: {},
         admin: {
           driver: 'session',
@@ -211,7 +211,7 @@ test.group('Auth Manager', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'session',
-      list: {
+      guards: {
         session: {},
         admin: {
           driver: 'google',
@@ -241,7 +241,7 @@ test.group('Auth Manager', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'api',
-      list: {
+      guards: {
         api: {
           driver: 'oat',
           tokenProvider: {
@@ -277,7 +277,7 @@ test.group('Auth Manager', (group) => {
 
     const manager = new AuthManager(app, {
       guard: 'api',
-      list: {
+      guards: {
         api: {
           driver: 'oat',
           tokenProvider: {

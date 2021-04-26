@@ -119,7 +119,7 @@ export async function setupApplication(
     'config/auth.ts',
     `const authConfig = {
 			guard: 'web',
-			list: {
+			guards: {
 				web: {
 				},
 			}

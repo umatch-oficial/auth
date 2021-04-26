@@ -50,7 +50,7 @@ export class AuthManager implements AuthManagerContract {
   constructor(public application: ApplicationContract, private config: AuthConfig) {
     const validator = new ManagerConfigValidator(config, 'auth', 'config/auth')
     validator.validateDefault('guard')
-    validator.validateList('list', 'guard')
+    validator.validateList('guards', 'guard')
   }
 
   /**
@@ -241,7 +241,7 @@ export class AuthManager implements AuthManagerContract {
    * Make an instance of a given mapping for the current HTTP request.
    */
   public makeMapping(ctx: HttpContextContract, mapping: keyof GuardsList) {
-    const mappingConfig = this.config.list[mapping]
+    const mappingConfig = this.config.guards[mapping]
 
     if (mappingConfig === undefined) {
       throw new Exception(
