@@ -34,8 +34,8 @@ type InstructionsState = {
   }
 }
 
-const USER_MIGRATION_TIME_PREFIX = '1587988332388'
-const TOKENS_MIGRATION_TIME_PREFIX = '1592489784670'
+// const USER_MIGRATION_TIME_PREFIX = '1587988332388'
+// const TOKENS_MIGRATION_TIME_PREFIX = '1592489784670'
 
 /**
  * Base path to contract stub partials
@@ -140,10 +140,7 @@ function makeUsersMigration(
   state: InstructionsState
 ) {
   const migrationsDirectory = app.directoriesMap.get('migrations') || 'database'
-  const migrationPath = join(
-    migrationsDirectory,
-    `${USER_MIGRATION_TIME_PREFIX}_${state.usersTableName}.ts`
-  )
+  const migrationPath = join(migrationsDirectory, `${Date.now()}_${state.usersTableName}.ts`)
 
   const template = new sink.files.MustacheFile(
     projectRoot,
@@ -169,10 +166,7 @@ function makeTokensMigration(
   state: InstructionsState
 ) {
   const migrationsDirectory = app.directoriesMap.get('migrations') || 'database'
-  const migrationPath = join(
-    migrationsDirectory,
-    `${TOKENS_MIGRATION_TIME_PREFIX}_${state.tokensTableName}.ts`
-  )
+  const migrationPath = join(migrationsDirectory, `${Date.now()}_${state.tokensTableName}.ts`)
 
   const template = new sink.files.MustacheFile(
     projectRoot,
