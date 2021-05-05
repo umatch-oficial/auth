@@ -410,6 +410,13 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
   }
 
   /**
+   * Alias for the logout method
+   */
+  public async revoke() {
+    return this.logout()
+  }
+
+  /**
    * Logout by removing the token from the storage
    */
   public async logout() {

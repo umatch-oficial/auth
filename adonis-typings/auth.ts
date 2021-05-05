@@ -649,6 +649,11 @@ declare module '@ioc:Adonis/Addons/Auth' {
     ): Promise<OpaqueTokenContract<GetProviderRealUser<Provider>>>
 
     /**
+     * Alias for logout
+     */
+    revoke(): Promise<void>
+
+    /**
      * Login a user using their id
      */
     loginViaId(
