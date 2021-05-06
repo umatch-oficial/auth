@@ -46,10 +46,10 @@
   },
   "devDependencies": {
     "@adonisjs/core": "^5.1.6",
-    "@adonisjs/lucid": "^14.0.0",
+    "@adonisjs/lucid": "^14.0.1",
     "@adonisjs/mrm-preset": "^3.0.0",
     "@adonisjs/redis": "^7.0.2",
-    "@adonisjs/repl": "^3.1.1",
+    "@adonisjs/repl": "^3.1.2",
     "@adonisjs/require-ts": "^2.0.4",
     "@adonisjs/session": "^6.0.3",
     "@adonisjs/sink": "^5.1.3",
