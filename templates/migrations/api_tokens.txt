@@ -12,7 +12,7 @@ export default class {{ tokensSchemaName }} extends BaseSchema {
       table.string('token', 64).notNullable().unique()
 
       /**
-       * "useTz: true" utilizes timezone option in PostgreSQL and MSSQL
+       * Uses timestampz for PostgreSQL and DATETIME2 for MSSQL
        */
       table.timestamp('expires_at', { useTz: true }).nullable()
       table.timestamp('created_at', { useTz: true }).notNullable()
