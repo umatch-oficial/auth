@@ -21,7 +21,8 @@ import type {
  */
 @inject([null, null, 'Adonis/Core/Hash'])
 export class LucidUser<User extends LucidProviderModel>
-  implements ProviderUserContract<InstanceType<User>> {
+  implements ProviderUserContract<InstanceType<User>>
+{
   constructor(
     public user: InstanceType<User> | null,
     private config: LucidProviderConfig<User>,

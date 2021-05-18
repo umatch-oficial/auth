@@ -265,10 +265,7 @@ export function getLucidProvider<User extends LucidProviderModel>(
 ) {
   const defaults = getLucidProviderConfig(config)
   const normalizedConfig = Object.assign(defaults, config) as LucidProviderConfig<User>
-  return (new LucidProvider(
-    application,
-    normalizedConfig
-  ) as unknown) as LucidProviderContract<User>
+  return new LucidProvider(application, normalizedConfig) as unknown as LucidProviderContract<User>
 }
 
 /**
@@ -280,11 +277,11 @@ export function getDatabaseProvider(
 ) {
   const defaults = getDatabaseProviderConfig()
   const normalizedConfig = Object.assign(defaults, config) as DatabaseProviderConfig
-  return (new DatabaseProvider(
+  return new DatabaseProvider(
     application,
     normalizedConfig,
     application.container.use('Adonis/Lucid/Database')
-  ) as unknown) as DatabaseProviderContract<any>
+  ) as unknown as DatabaseProviderContract<any>
 }
 
 /**
