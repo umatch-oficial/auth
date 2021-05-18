@@ -39,8 +39,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/adonisjs/auth"
+    "url": "git+https://github.com/adonisjs/auth.git"
   },
+  "homepage": "https://github.com/adonisjs/auth#readme",
   "bugs": {
     "url": "https://github.com/adonisjs/auth/issues"
   },
