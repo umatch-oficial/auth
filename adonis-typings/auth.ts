@@ -13,8 +13,8 @@ declare module '@ioc:Adonis/Addons/Auth' {
   import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
   import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
   import { ApplicationContract } from '@ioc:Adonis/Core/Application'
-  import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/DatabaseQueryBuilder'
-  import { LucidModel, LucidRow, ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Model'
+  import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/Database'
+  import { LucidModel, LucidRow, ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Orm'
 
   /*
   |--------------------------------------------------------------------------

@@ -10,8 +10,11 @@
 import { Hooks } from '@poppinss/hooks'
 import { Exception, esmResolver } from '@poppinss/utils'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
-import { DatabaseContract, QueryClientContract } from '@ioc:Adonis/Lucid/Database'
-import { DatabaseQueryBuilderContract } from '@ioc:Adonis/Lucid/DatabaseQueryBuilder'
+import {
+  DatabaseContract,
+  QueryClientContract,
+  DatabaseQueryBuilderContract,
+} from '@ioc:Adonis/Lucid/Database'
 
 import {
   DatabaseProviderRow,

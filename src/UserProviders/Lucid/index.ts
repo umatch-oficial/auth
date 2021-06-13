@@ -10,7 +10,7 @@
 import { Hooks } from '@poppinss/hooks'
 import { esmResolver } from '@poppinss/utils'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
-import { ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Model'
+import { ModelQueryBuilderContract } from '@ioc:Adonis/Lucid/Orm'
 import { QueryClientContract } from '@ioc:Adonis/Lucid/Database'
 import {
   LucidProviderModel,
