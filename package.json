@@ -1,6 +1,6 @@
 {
   "name": "@adonisjs/auth",
-  "version": "8.0.8",
+  "version": "8.0.9",
   "description": "Offical authentication provider for Adonis framework",
   "types": "build/adonis-typings/index.d.ts",
   "main": "build/providers/AuthProvider.js",
