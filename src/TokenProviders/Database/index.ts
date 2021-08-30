@@ -117,7 +117,7 @@ export class TokenDatabaseProvider implements TokenProviderContract {
      */
     if (
       normalizedExpiryDate &&
-      normalizedExpiryDate.diff(DateTime.local(), 'millisecond').milliseconds <= 0
+      normalizedExpiryDate.diff(DateTime.local(), 'milliseconds').milliseconds <= 0
     ) {
       return null
     }
