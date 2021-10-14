@@ -15,6 +15,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
  */
 export class InvalidCredentialsException extends Exception {
   public guard: string
+  public responseText = this.message
 
   /**
    * Unable to find user
@@ -41,7 +42,7 @@ export class InvalidCredentialsException extends Exception {
     ctx.response.status(this.status).send({
       errors: [
         {
-          message: 'Invalid user credentials',
+          message: this.responseText,
         },
       ],
     })
@@ -52,11 +53,16 @@ export class InvalidCredentialsException extends Exception {
    */
   protected respondWithRedirect(ctx: HttpContextContract) {
     if (!ctx.session) {
-      return ctx.response.status(this.status).send('Invalid credentials')
+      return ctx.response.status(this.status).send(this.responseText)
     }
 
     ctx.session.flashExcept(['_csrf'])
     ctx.session.flash('auth', {
+      error: this.responseText,
+
+      /**
+       * Will be removed in the future
+       */
       errors: {
         uid: this.code === 'E_INVALID_AUTH_UID' ? ['Invalid login id'] : null,
         password: this.code === 'E_INVALID_AUTH_PASSWORD' ? ['Invalid password'] : null,
@@ -73,7 +79,7 @@ export class InvalidCredentialsException extends Exception {
       errors: [
         {
           code: this.code,
-          title: 'Invalid user credentials',
+          title: this.responseText,
           source: null,
         },
       ],
@@ -85,6 +91,13 @@ export class InvalidCredentialsException extends Exception {
    * upon the type of request
    */
   public async handle(_: InvalidCredentialsException, ctx: HttpContextContract) {
+    /**
+     * Use translation when using i18n
+     */
+    if ('i18n' in ctx) {
+      this.responseText = ctx.i18n.formatMessage(`auth.${this.code}`, {}, this.message)
+    }
+
     if (ctx.request.ajax()) {
       this.respondWithJson(ctx)
       return

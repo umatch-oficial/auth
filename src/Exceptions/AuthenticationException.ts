@@ -17,6 +17,7 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 export class AuthenticationException extends Exception {
   public guard: string
   public redirectTo: string = '/login'
+  public responseText = this.message
 
   /**
    * Raise exception with message and redirect url
@@ -41,7 +42,7 @@ export class AuthenticationException extends Exception {
     ctx.response
       .status(this.status)
       .header('WWW-Authenticate', `Basic realm="${realm}", charset="UTF-8"`)
-      .send('Access denied')
+      .send(this.responseText)
   }
 
   /**
@@ -51,7 +52,7 @@ export class AuthenticationException extends Exception {
     ctx.response.status(this.status).send({
       errors: [
         {
-          message: this.message,
+          message: this.responseText,
         },
       ],
     })
@@ -66,7 +67,7 @@ export class AuthenticationException extends Exception {
     }
 
     ctx.session.flashExcept(['_csrf'])
-    ctx.session.flash('auth', { error: this.message })
+    ctx.session.flash('auth', { error: this.responseText })
     ctx.response.redirect(this.redirectTo, true)
   }
 
@@ -78,7 +79,7 @@ export class AuthenticationException extends Exception {
       errors: [
         {
           code: this.code,
-          title: this.message,
+          title: this.responseText,
           source: null,
         },
       ],
@@ -115,6 +116,13 @@ export class AuthenticationException extends Exception {
      * We need access to the guard config and driver to make appropriate response
      */
     const config = this.guard ? ctx.auth.use(this.guard as keyof GuardsList).config : null
+
+    /**
+     * Use translation when using i18n
+     */
+    if ('i18n' in ctx) {
+      this.responseText = ctx.i18n.formatMessage(`auth.${this.code}`, {}, this.message)
+    }
 
     /**
      * Show username, password prompt when using basic auth driver
