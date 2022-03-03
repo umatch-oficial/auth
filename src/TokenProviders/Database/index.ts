@@ -147,8 +147,9 @@ export class TokenDatabaseProvider implements TokenProviderContract {
       ...token.meta,
     }
 
-    const [persistedToken] = await client.table(this.config.table).insert(payload).returning('id')
-    return String(persistedToken)
+    const [row] = await client.table(this.config.table).insert(payload).returning('id')
+
+    return String(typeof row === 'number' ? row : row.id)
   }
 
   /**

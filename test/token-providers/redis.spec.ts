@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-import test from 'japa'
+import { test } from '@japa/runner'
 import 'reflect-metadata'
 import { DateTime } from 'luxon'
 import { string } from '@poppinss/utils/build/helpers'
@@ -19,21 +19,22 @@ let app: ApplicationContract
 const sleep = (time: number) => new Promise((resolve) => setTimeout(resolve, time))
 
 test.group('Redis Token Provider', (group) => {
-  group.before(async () => {
+  group.setup(async () => {
     app = await setupApplication()
     await setup(app)
   })
 
-  group.after(async () => {
+  group.teardown(async () => {
     await cleanup(app)
     await app.container.use('Adonis/Addons/Redis').flushdb()
+    await app.container.use('Adonis/Addons/Redis').quit()
   })
 
-  group.afterEach(async () => {
+  group.each.teardown(async () => {
     await reset(app)
   })
 
-  test('save token to the database', async (assert) => {
+  test('save token to the database', async ({ assert }) => {
     const token = string.generateRandom(40)
     const redis = app.container.use('Adonis/Addons/Redis')
     const provider = getTokensRedisProvider(redis)
@@ -58,7 +59,7 @@ test.group('Redis Token Provider', (group) => {
     assert.isBelow(expiry, 2 * 24 * 3600 + 1)
   })
 
-  test('save token to the database using a custom connection', async (assert) => {
+  test('save token to the database using a custom connection', async ({ assert }) => {
     const token = string.generateRandom(40)
     const redis = app.container.use('Adonis/Addons/Redis')
     const provider = getTokensRedisProvider(redis)
@@ -82,9 +83,11 @@ test.group('Redis Token Provider', (group) => {
 
     let expiry = await redis.connection('localDb1').ttl(tokenId)
     assert.isBelow(expiry, 2 * 24 * 3600 + 1)
+
+    await redis.quitAll()
   })
 
-  test('read token from the database', async (assert) => {
+  test('read token from the database', async ({ assert }) => {
     const token = string.generateRandom(40)
     const redis = app.container.use('Adonis/Addons/Redis')
     const provider = getTokensRedisProvider(redis)
@@ -104,7 +107,7 @@ test.group('Redis Token Provider', (group) => {
     assert.equal(tokenRow!.type, 'api_token')
   })
 
-  test('read token from a custom database connection', async (assert) => {
+  test('read token from a custom database connection', async ({ assert }) => {
     const token = string.generateRandom(40)
     const redis = app.container.use('Adonis/Addons/Redis')
     const provider = getTokensRedisProvider(redis)
@@ -123,9 +126,11 @@ test.group('Redis Token Provider', (group) => {
     assert.equal(tokenRow!.name, 'Auth token')
     assert.equal(tokenRow!.tokenHash, token)
     assert.equal(tokenRow!.type, 'api_token')
+
+    await redis.quitAll()
   })
 
-  test('return null when there is a token hash mis-match', async (assert) => {
+  test('return null when there is a token hash mis-match', async ({ assert }) => {
     const token = string.generateRandom(40)
     const redis = app.container.use('Adonis/Addons/Redis')
     const provider = getTokensRedisProvider(redis)
@@ -141,7 +146,7 @@ test.group('Redis Token Provider', (group) => {
     assert.isNull(await provider.read(tokenId, 'foo', 'api_token'))
   })
 
-  test('return null when token has been expired', async (assert) => {
+  test('return null when token has been expired', async ({ assert }) => {
     const token = string.generateRandom(40)
     const redis = app.container.use('Adonis/Addons/Redis')
     const provider = getTokensRedisProvider(redis)
@@ -158,7 +163,7 @@ test.group('Redis Token Provider', (group) => {
     assert.isNull(await provider.read(tokenId, token, 'api_token'))
   }).timeout(3000)
 
-  test('work fine when token has no expiry', async (assert) => {
+  test('work fine when token has no expiry', async ({ assert }) => {
     const token = string.generateRandom(40)
     const redis = app.container.use('Adonis/Addons/Redis')
     const provider = getTokensRedisProvider(redis)
@@ -177,7 +182,7 @@ test.group('Redis Token Provider', (group) => {
     assert.equal(expiry, -1)
   }).timeout(3000)
 
-  test('return null when token is missing', async (assert) => {
+  test('return null when token is missing', async ({ assert }) => {
     const token = string.generateRandom(40)
     const redis = app.container.use('Adonis/Addons/Redis')
     const provider = getTokensRedisProvider(redis)
@@ -193,7 +198,7 @@ test.group('Redis Token Provider', (group) => {
     assert.isNull(await provider.read(tokenId + 1, token, 'api_token'))
   })
 
-  test('delete token from the database', async (assert) => {
+  test('delete token from the database', async ({ assert }) => {
     const token = string.generateRandom(40)
     const redis = app.container.use('Adonis/Addons/Redis')
     const provider = getTokensRedisProvider(redis)
@@ -211,7 +216,7 @@ test.group('Redis Token Provider', (group) => {
     assert.isNull(tokenRow)
   })
 
-  test('delete token using a custom connection', async (assert) => {
+  test('delete token using a custom connection', async ({ assert }) => {
     const token = string.generateRandom(40)
     const redis = app.container.use('Adonis/Addons/Redis')
     const provider = getTokensRedisProvider(redis)
@@ -228,5 +233,7 @@ test.group('Redis Token Provider', (group) => {
     await provider.destroy(tokenId, 'api_token')
     const tokenRow = await redis.connection('localDb1').get(tokenId)
     assert.isNull(tokenRow)
+
+    await redis.quitAll()
   })
 })
