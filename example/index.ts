@@ -35,6 +35,19 @@ export const config: AuthConfig = {
         uids: ['email'],
       },
     },
+    apiDb: {
+      driver: 'oat',
+      tokenProvider: {
+        driver: 'database',
+        table: 'api_tokens',
+      },
+      provider: {
+        driver: 'database',
+        usersTable: 'users',
+        identifierKey: 'id',
+        uids: ['email'],
+      },
+    },
     sessionDb: {
       driver: 'session',
       provider: {

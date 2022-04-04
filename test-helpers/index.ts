@@ -12,6 +12,7 @@ import { join, sep, posix } from 'path'
 import { MarkOptional } from 'ts-essentials'
 import { Filesystem } from '@poppinss/dev-utils'
 import { LucidModel } from '@ioc:Adonis/Lucid/Orm'
+import { Application } from '@adonisjs/core/build/standalone'
 import { RedisManagerContract } from '@ioc:Adonis/Addons/Redis'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
@@ -35,7 +36,8 @@ import {
   DatabaseTokenProviderConfig,
 } from '@ioc:Adonis/Addons/Auth'
 
-import { Application } from '@adonisjs/core/build/standalone'
+import { OATClient } from '../src/Clients/Oat'
+import { SessionClient } from '../src/Clients/Session'
 
 export const fs = new Filesystem(join(__dirname, '__app'))
 
@@ -44,115 +46,130 @@ export const fs = new Filesystem(join(__dirname, '__app'))
  */
 export async function setupApplication(
   additionalProviders?: string[],
-  environment: 'web' | 'repl' | 'test' = 'test'
+  environment: 'web' | 'repl' | 'test' = 'test',
+  sessionDriver = 'cookie'
 ) {
   await fs.add('.env', '')
   await fs.add(
     'config/app.ts',
     `
-		export const appKey = 'averylong32charsrandomsecretkey',
-		export const http = {
-			cookie: {},
-			trustProxy: () => true,
-		}
-	`
+    export const appKey = 'averylong32charsrandomsecretkey',
+    export const http = {
+      cookie: {},
+      trustProxy: () => true,
+    }
+  `
   )
 
   await fs.add(
     'config/hash.ts',
     `
-		const hashConfig = {
-			default: 'bcrypt' as const,
-			list: {
-				bcrypt: {
-					driver: 'bcrypt',
-					rounds: 10,
-				},
-			},
-		}
+    const hashConfig = {
+      default: 'bcrypt' as const,
+      list: {
+        bcrypt: {
+          driver: 'bcrypt',
+          rounds: 10,
+        },
+      },
+    }
 
-		export default hashConfig
-	`
+    export default hashConfig
+  `
   )
 
   await fs.add(
     'config/session.ts',
     `
-		const sessionConfig = {
-			driver: 'cookie',
-			cookieName: 'adonis-session',
-			clearWithBrowser: false,
-			age: '2h',
-			cookie: {
-				path: '/',
-			},
-		}
+    const sessionConfig = {
+      driver: ${sessionDriver ? `'${sessionDriver}'` : 'cookie'},
+      cookieName: 'adonis-session',
+      clearWithBrowser: false,
+      age: '2h',
+      cookie: {
+        path: '/',
+      },
+    }
 
-		export default sessionConfig
-	`
+    export default sessionConfig
+  `
   )
 
   await fs.add(
     'config/database.ts',
     `const databaseConfig = {
-			connection: 'primary',
-			connections: {
-				primary: {
-					client: 'sqlite3',
-					connection: {
-						filename: '${join(fs.basePath, 'primary.sqlite3').split(sep).join(posix.sep)}',
-					},
-				},
-				secondary: {
-					client: 'sqlite3',
-					connection: {
-						filename: '${join(fs.basePath, 'secondary.sqlite3').split(sep).join(posix.sep)}',
-					},
-				},
-			}
-		}
+      connection: 'primary',
+      connections: {
+        primary: {
+          client: 'sqlite3',
+          connection: {
+            filename: '${join(fs.basePath, 'primary.sqlite3').split(sep).join(posix.sep)}',
+          },
+        },
+        secondary: {
+          client: 'sqlite3',
+          connection: {
+            filename: '${join(fs.basePath, 'secondary.sqlite3').split(sep).join(posix.sep)}',
+          },
+        },
+      }
+    }
 
-		export default databaseConfig`
+    export default databaseConfig`
   )
 
   await fs.add(
     'config/auth.ts',
     `const authConfig = {
-			guard: 'web',
-			guards: {
-				web: {
-				},
-			}
-		}
+      guard: 'web',
+      guards: {
+        web: {
+          driver: 'session',
+          provider: {
+            driver: 'database',
+            usersTable: 'users',
+            identifierKey: 'id'
+          },
+        },
+        apiDb: {
+          driver: 'oat',
+          provider: {
+            driver: 'database',
+            usersTable: 'users',
+            identifierKey: 'id'
+          },
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens'
+          }
+        }
+      }
+    }
 
-		export default authConfig`
+    export default authConfig`
   )
 
   await fs.add(
     'config/redis.ts',
     `const redisConfig = {
-			connection: 'local',
-			connections: {
-				local: {},
+      connection: 'local',
+      connections: {
+        local: {},
         localDb1: {
           db: '2'
         }
-			}
-		}
-		export default redisConfig`
+      }
+    }
+    export default redisConfig`
   )
 
   const app = new Application(fs.basePath, environment, {
     aliases: {
       App: './app',
     },
-    providers: [
-      '@adonisjs/core',
-      '@adonisjs/repl',
-      '@adonisjs/session',
-      '@adonisjs/lucid',
-      '@adonisjs/redis',
-    ].concat(additionalProviders || []),
+    providers: ['@adonisjs/core', '@adonisjs/repl', '@adonisjs/lucid', '@adonisjs/redis']
+      .concat(additionalProviders || [])
+      .concat(['@adonisjs/session']),
   })
 
   await app.setup()
@@ -310,6 +327,45 @@ export function getSessionDriver(
 }
 
 /**
+ * Returns an instance of the session client.
+ */
+export function getSessionClient(
+  provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
+  providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
+  name?: string
+) {
+  const config = {
+    driver: 'session' as const,
+    loginRoute: '/login',
+    provider: providerConfig,
+  }
+
+  return new SessionClient(name || 'session', config, provider)
+}
+
+/**
+ * Returns an instance of the OAT client.
+ */
+export function getOatClient(
+  provider: DatabaseProviderContract<any> | LucidProviderContract<any>,
+  providerConfig: DatabaseProviderConfig | LucidProviderConfig<any>,
+  tokensProvider: TokenProviderContract,
+  tokenProviderConfig?: Partial<DatabaseTokenProviderConfig>
+) {
+  const config = {
+    driver: 'oat' as const,
+    tokenProvider: {
+      driver: 'database' as const,
+      table: 'api_tokens',
+      ...tokenProviderConfig,
+    },
+    provider: providerConfig,
+  }
+
+  return new OATClient('api', config, provider, tokensProvider)
+}
+
+/**
  * Returns an instance of the api tokens guard.
  */
 export function getApiTokensGuard(
@@ -360,11 +416,15 @@ export function getBasicAuthGuard(
 /**
  * Returns the database token provider
  */
-export function getTokensDbProvider(db: DatabaseContract) {
+export function getTokensDbProvider(
+  db: DatabaseContract,
+  config?: Partial<DatabaseTokenProviderConfig>
+) {
   return new TokenDatabaseProvider(
     {
       table: 'api_tokens',
       driver: 'database',
+      ...config,
     },
     db
   )

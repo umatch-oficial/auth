@@ -21,10 +21,12 @@ import {
   UserProviderContract,
   DatabaseProviderConfig,
   ExtendProviderCallback,
+  ExtendClientCallback,
 } from '@ioc:Adonis/Addons/Auth'
 
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+
 import { Auth } from '../Auth'
 
 /**
@@ -32,6 +34,11 @@ import { Auth } from '../Auth'
  * be used to add custom guards and providers
  */
 export class AuthManager implements AuthManagerContract {
+  /**
+   * Extended set of testing clients
+   */
+  private extendedClients: Map<string, ExtendClientCallback> = new Map()
+
   /**
    * Extended set of providers
    */
@@ -174,9 +181,73 @@ export class AuthManager implements AuthManagerContract {
   }
 
   /**
+   * Returns an instance of the session client
+   */
+  private makeSessionClient(
+    mapping: string,
+    config: SessionGuardConfig<any>,
+    provider: UserProviderContract<any>
+  ) {
+    const { SessionClient } = require('../Clients/Session')
+    return new SessionClient(mapping, config, provider)
+  }
+
+  /**
+   * Returns an instance of the session client
+   */
+  private makeOatClient(
+    mapping: string,
+    config: OATGuardConfig<any>,
+    provider: UserProviderContract<any>
+  ) {
+    const { OATClient } = require('../Clients/Oat')
+    const tokenProvider = this.makeTokenProviderInstance(config.tokenProvider)
+    return new OATClient(mapping, config, provider, tokenProvider)
+  }
+
+  /**
+   * Returns an instance of the extended client
+   */
+  private makeExtendedClient(mapping: string, config: any, provider: UserProviderContract<any>) {
+    const clientCallback = this.extendedClients.get(config.driver)
+    if (!clientCallback) {
+      throw new Exception(`Invalid guard driver "${config.driver}" property`)
+    }
+
+    return clientCallback(this, mapping, config, provider)
+  }
+
+  /**
+   * Makes client instance for the defined driver inside the
+   * mapping config.
+   */
+  private makeClientInstance(
+    mapping: string,
+    mappingConfig: any,
+    provider: UserProviderContract<any>
+  ) {
+    if (!mappingConfig || !mappingConfig.driver) {
+      throw new Exception('Invalid auth config, missing "driver" property')
+    }
+
+    switch (mappingConfig.driver) {
+      case 'session':
+        return this.makeSessionClient(mapping, mappingConfig, provider)
+      case 'oat':
+        return this.makeOatClient(mapping, mappingConfig, provider)
+      case 'basic':
+        throw new Exception(
+          'There is no testing client for basic auth. Use "request.basicAuth" method instead'
+        )
+      default:
+        return this.makeExtendedClient(mapping, mappingConfig, provider)
+    }
+  }
+
+  /**
    * Makes instance of a provider based upon the driver value
    */
-  public makeUserProviderInstance(mapping: string, providerConfig: any) {
+  private makeUserProviderInstance(mapping: string, providerConfig: any) {
     if (!providerConfig || !providerConfig.driver) {
       throw new Exception('Invalid auth config, missing "provider" or "provider.driver" property')
     }
@@ -194,7 +265,7 @@ export class AuthManager implements AuthManagerContract {
   /**
    * Makes instance of a provider based upon the driver value
    */
-  public makeTokenProviderInstance(providerConfig: any) {
+  private makeTokenProviderInstance(providerConfig: any) {
     if (!providerConfig || !providerConfig.driver) {
       throw new Exception(
         'Invalid auth config, missing "tokenProvider" or "tokenProvider.driver" property'
@@ -215,7 +286,7 @@ export class AuthManager implements AuthManagerContract {
    * Makes guard instance for the defined driver inside the
    * mapping config.
    */
-  public makeGuardInstance(
+  private makeGuardInstance(
     mapping: string,
     mappingConfig: any,
     provider: UserProviderContract<any>,
@@ -254,6 +325,22 @@ export class AuthManager implements AuthManagerContract {
   }
 
   /**
+   * Returns an instance of the testing
+   */
+  public client(mapping: keyof GuardsList) {
+    const mappingConfig = this.config.guards[mapping]
+
+    if (mappingConfig === undefined) {
+      throw new Exception(
+        `Invalid guard "${mapping}". Make sure the guard is defined inside the config/auth file`
+      )
+    }
+
+    const provider = this.makeUserProviderInstance(mapping, mappingConfig.provider)
+    return this.makeClientInstance(mapping, mappingConfig, provider)
+  }
+
+  /**
    * Returns an instance of the auth class for the current request
    */
   public getAuthForRequest(ctx: HttpContextContract) {
@@ -265,17 +352,25 @@ export class AuthManager implements AuthManagerContract {
    */
   public extend(type: 'provider', name: string, callback: ExtendProviderCallback): void
   public extend(type: 'guard', name: string, callback: ExtendGuardCallback): void
+  public extend(type: 'client', name: string, callback: ExtendClientCallback): void
   public extend(
-    type: 'provider' | 'guard',
+    type: 'provider' | 'guard' | 'client',
     name: string,
-    callback: ExtendProviderCallback | ExtendGuardCallback
+    callback: ExtendProviderCallback | ExtendGuardCallback | ExtendClientCallback
   ) {
     if (type === 'provider') {
       this.extendedProviders.set(name, callback as ExtendProviderCallback)
+      return
+    }
+
+    if (type === 'client') {
+      this.extendedClients.set(name, callback as ExtendClientCallback)
+      return
     }
 
     if (type === 'guard') {
       this.extendedGuards.set(name, callback as ExtendGuardCallback)
+      return
     }
   }
 }

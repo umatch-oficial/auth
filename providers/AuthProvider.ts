@@ -30,9 +30,9 @@ export default class AuthProvider {
   }
 
   /**
-   * Hook into boot to register auth macro
+   * Sharing the auth object with HTTP context
    */
-  public async boot() {
+  protected registerAuthWithHttpContext() {
     this.application.container.withBindings(
       ['Adonis/Core/HttpContext', 'Adonis/Addons/Auth'],
       (HttpContext, Auth) => {
@@ -45,7 +45,12 @@ export default class AuthProvider {
         )
       }
     )
+  }
 
+  /**
+   * Sharing auth with all the templates
+   */
+  protected shareAuthWithViews() {
     this.application.container.withBindings(
       ['Adonis/Core/Server', 'Adonis/Core/View'],
       (Server) => {
@@ -54,5 +59,27 @@ export default class AuthProvider {
         })
       }
     )
+  }
+
+  /**
+   * Register test bindings
+   */
+  protected registerTestBindings() {
+    this.application.container.withBindings(
+      ['Japa/Preset/ApiRequest', 'Japa/Preset/ApiClient', 'Adonis/Addons/Auth'],
+      (ApiRequest, ApiClient, Auth) => {
+        const { defineTestsBindings } = require('../src/Bindings/Tests')
+        return defineTestsBindings(ApiRequest, ApiClient, Auth)
+      }
+    )
+  }
+
+  /**
+   * Hook into boot to register auth macro
+   */
+  public async boot() {
+    this.registerAuthWithHttpContext()
+    this.shareAuthWithViews()
+    this.registerTestBindings()
   }
 }

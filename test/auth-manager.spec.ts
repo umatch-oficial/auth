@@ -8,7 +8,6 @@
  */
 
 import { test } from '@japa/runner'
-import 'reflect-metadata'
 import { UserProviderContract } from '@ioc:Adonis/Addons/Auth'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
@@ -60,6 +59,14 @@ test.group('Auth Manager', (group) => {
           },
           provider: getLucidProviderConfig({ model: async () => User }),
         },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getDatabaseProviderConfig(),
+        },
         basic: {
           driver: 'basic',
           provider: getLucidProviderConfig({ model: async () => User }),
@@ -96,6 +103,14 @@ test.group('Auth Manager', (group) => {
           },
           provider: getLucidProviderConfig({ model: async () => User }),
         },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getDatabaseProviderConfig(),
+        },
         basic: {
           driver: 'basic',
           provider: getLucidProviderConfig({ model: async () => User }),
@@ -131,6 +146,14 @@ test.group('Auth Manager', (group) => {
             table: 'api_tokens',
           },
           provider: getLucidProviderConfig({ model: async () => User }),
+        },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getDatabaseProviderConfig(),
         },
         basic: {
           driver: 'basic',
@@ -250,6 +273,14 @@ test.group('Auth Manager', (group) => {
           },
           provider: getLucidProviderConfig({ model: async () => User }),
         },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getDatabaseProviderConfig(),
+        },
         basic: {
           driver: 'basic',
           provider: getLucidProviderConfig({ model: async () => User }),
@@ -285,6 +316,14 @@ test.group('Auth Manager', (group) => {
             table: 'api_tokens',
           },
           provider: getLucidProviderConfig({ model: async () => User }),
+        },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getDatabaseProviderConfig(),
         },
         basic: {
           driver: 'basic',

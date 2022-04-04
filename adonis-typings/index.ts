@@ -11,3 +11,4 @@
 /// <reference path="./context.ts" />
 /// <reference path="./events.ts" />
 /// <reference path="./container.ts" />
+/// <reference path="./tests.ts" />

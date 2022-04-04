@@ -325,6 +325,26 @@ declare module '@ioc:Adonis/Addons/Auth' {
       | Promise<{ default: DatabaseProviderUserBuilder }>
   }
 
+  /**
+   * Request data a guard client can set when making the
+   * testing request
+   */
+  export type ClientRequestData = {
+    session?: Record<string, any>
+    headers?: Record<string, any>
+    cookies?: Record<string, any>
+  }
+
+  /**
+   * The authentication clients should follow this interface
+   */
+  export interface GuardClientContract<Provider extends keyof ProvidersList> {
+    /**
+     * Login a user
+     */
+    login(user: GetProviderRealUser<Provider>, ...args: any[]): Promise<ClientRequestData>
+  }
+
   /*
   |--------------------------------------------------------------------------
   | Guards
@@ -482,6 +502,12 @@ declare module '@ioc:Adonis/Addons/Auth' {
   }
 
   /**
+   * Session client to login users during tests
+   */
+  export interface SessionClientContract<Provider extends keyof ProvidersList>
+    extends GuardClientContract<Provider> {}
+
+  /**
    * Shape of session driver config.
    */
   export type SessionGuardConfig<Provider extends keyof ProvidersList> = {
@@ -511,6 +537,12 @@ declare module '@ioc:Adonis/Addons/Auth' {
     Provider extends keyof ProvidersList,
     Name extends keyof GuardsList
   > extends Omit<GuardContract<Provider, Name>, 'attempt' | 'login' | 'loginViaId' | 'logout'> {}
+
+  /**
+   * Basic auth client to login users during tests
+   */
+  export interface BasicAuthClientContract<Provider extends keyof ProvidersList>
+    extends GuardClientContract<Provider> {}
 
   /**
    * Shape of basic auth guard config.
@@ -663,6 +695,17 @@ declare module '@ioc:Adonis/Addons/Auth' {
   }
 
   /**
+   * Oat guard to login users during tests
+   */
+  export interface OATClientContract<Provider extends keyof ProvidersList>
+    extends GuardClientContract<Provider> {
+    login(
+      user: GetProviderRealUser<Provider>,
+      options?: OATLoginOptions
+    ): Promise<ClientRequestData>
+  }
+
+  /**
    * Shape of OAT guard config.
    */
   export type OATGuardConfig<Provider extends keyof ProvidersList> = {
@@ -715,6 +758,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
    * session: {
    *   config: SessionGuardConfig<'lucid'>,
    *   implementation: SessionGuardContract<'lucid'>,
+   *   client: SessionClientContract<'lucid'>,
    * }
    *
    */
@@ -781,6 +825,17 @@ declare module '@ioc:Adonis/Addons/Auth' {
   ) => GuardContract<keyof ProvidersList, keyof GuardsList>
 
   /**
+   * Shape of the callback accepted to add custom testing
+   * clients
+   */
+  export type ExtendClientCallback = (
+    auth: AuthManagerContract,
+    mapping: string,
+    config: any,
+    provider: UserProviderContract<any>
+  ) => GuardClientContract<keyof ProvidersList>
+
+  /**
    * Shape of the auth manager to register custom drivers and providers and
    * make instances of them
    */
@@ -810,10 +865,17 @@ declare module '@ioc:Adonis/Addons/Auth' {
     ): GuardsList[K]['implementation']
 
     /**
-     * Extend by adding custom providers and guards
+     * Returns an instance of the auth client for a given
+     * mapping
+     */
+    client(mapping: string): GuardClientContract<keyof ProvidersList>
+
+    /**
+     * Extend by adding custom providers, guards and client
      */
     extend(type: 'provider', provider: string, callback: ExtendProviderCallback): void
     extend(type: 'guard', guard: string, callback: ExtendGuardCallback): void
+    extend(type: 'client', guard: string, callback: ExtendClientCallback): void
   }
 
   const AuthManager: AuthManagerContract

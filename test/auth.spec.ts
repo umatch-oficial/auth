@@ -8,7 +8,6 @@
  */
 
 import { test } from '@japa/runner'
-import 'reflect-metadata'
 import { ApplicationContract } from '@ioc:Adonis/Core/Application'
 
 import { AuthManager } from '../src/AuthManager'
@@ -59,6 +58,14 @@ test.group('Auth', (group) => {
             table: 'api_tokens',
           },
           provider: getLucidProviderConfig({ model: async () => User }),
+        },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getDatabaseProviderConfig(),
         },
         basic: {
           driver: 'basic',
@@ -234,6 +241,14 @@ test.group('Auth', (group) => {
           },
           provider: getLucidProviderConfig({ model: async () => User }),
         },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getDatabaseProviderConfig(),
+        },
         sessionDb: {
           driver: 'session',
           provider: getDatabaseProviderConfig(),
@@ -266,6 +281,14 @@ test.group('Auth', (group) => {
             table: 'api_tokens',
           },
           provider: getLucidProviderConfig({ model: async () => User }),
+        },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getDatabaseProviderConfig(),
         },
         basic: {
           driver: 'basic',
@@ -312,6 +335,14 @@ test.group('Auth', (group) => {
           },
           provider: getLucidProviderConfig({ model: async () => User }),
         },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getDatabaseProviderConfig(),
+        },
         basic: {
           driver: 'basic',
           provider: getLucidProviderConfig({ model: async () => User }),
@@ -348,6 +379,14 @@ test.group('Auth', (group) => {
             redisConnection: 'local',
           },
           provider: getLucidProviderConfig({ model: async () => User }),
+        },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'redis',
+            redisConnection: 'local',
+          },
+          provider: getDatabaseProviderConfig(),
         },
         basic: {
           driver: 'basic',
@@ -386,6 +425,14 @@ test.group('Auth', (group) => {
           },
           provider: getLucidProviderConfig({ model: async () => User }),
         },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+          },
+          provider: getDatabaseProviderConfig(),
+        },
         basic: {
           driver: 'basic',
           provider: getLucidProviderConfig({ model: async () => User }),
@@ -422,6 +469,15 @@ test.group('Auth', (group) => {
             foreignKey: 'account_id',
           },
           provider: getLucidProviderConfig({ model: async () => User }),
+        },
+        apiDb: {
+          driver: 'oat',
+          tokenProvider: {
+            driver: 'database',
+            table: 'api_tokens',
+            foreignKey: 'account_id',
+          },
+          provider: getDatabaseProviderConfig(),
         },
         basic: {
           driver: 'basic',
