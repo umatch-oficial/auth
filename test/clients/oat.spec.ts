@@ -95,4 +95,32 @@ test.group('OAT Client | login', (group) => {
 
     assert.equal(token!.userId, user.id)
   })
+
+  test('delete token on logout', async ({ assert }) => {
+    const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
+    const password = await app.container.use('Adonis/Core/Hash').make('secret')
+    const user = await User.create({ username: 'virk', email: 'virk@adonisjs.com', password })
+    const lucidProvider = getLucidProvider(app, { model: async () => User })
+    const tokensProvider = getTokensDbProvider(app.container.use('Adonis/Lucid/Database'))
+
+    const client = getOatClient(
+      lucidProvider,
+      getLucidProviderConfig({ model: async () => User }),
+      tokensProvider
+    )
+
+    const { headers } = await client.login(user)
+    assert.properties(headers, ['Authorization'])
+
+    await client.logout()
+
+    const [id, value] = headers!.Authorization.replace('Bearer ', '').split('.')
+    const token = await tokensProvider.read(
+      base64.urlDecode(id, undefined, true)!,
+      createHash('sha256').update(value).digest('hex'),
+      'opaque_token'
+    )
+
+    assert.isNull(token)
+  })
 })

@@ -77,4 +77,11 @@ export class SessionClient implements GuardClientContract<any> {
       },
     }
   }
+
+  /**
+   * No need to logout when using session client.
+   * Session data is persisted within memory and will
+   * be cleared after each test
+   */
+  public async logout() {}
 }

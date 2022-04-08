@@ -71,10 +71,14 @@ export function defineTestsBindings(
       request.headers(requestData.headers)
     }
     if (requestData.session) {
-      request.withSession(requestData.session)
+      request.session(requestData.session)
     }
     if (requestData.cookies) {
       request.cookies(requestData.cookies)
+    }
+
+    return async () => {
+      await authData.client.logout(...authData.args)
     }
   })
 }

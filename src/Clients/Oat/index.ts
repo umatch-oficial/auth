@@ -37,6 +37,11 @@ export class OATClient implements OATClientContract<any> {
   ) {}
 
   /**
+   * Token generated during the login call
+   */
+  private tokenId?: string
+
+  /**
    * Length of the raw token. The hash length will vary
    */
   private tokenLength = 60
@@ -134,12 +139,21 @@ export class OATClient implements OATClientContract<any> {
     const providerToken = new ProviderToken(name, token.hash, id, this.tokenType)
     providerToken.expiresAt = token.expiresAt
     providerToken.meta = meta
-    const tokenId = await this.tokenProvider.write(providerToken)
+    this.tokenId = await this.tokenProvider.write(providerToken)
 
     return {
       headers: {
-        Authorization: `Bearer ${base64.urlEncode(tokenId)}.${token.token}`,
+        Authorization: `Bearer ${base64.urlEncode(this.tokenId)}.${token.token}`,
       },
+    }
+  }
+
+  /**
+   * Logout user
+   */
+  public async logout() {
+    if (this.tokenId) {
+      await this.tokenProvider.destroy(this.tokenId, this.tokenType)
     }
   }
 }

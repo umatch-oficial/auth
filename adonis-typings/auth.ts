@@ -343,6 +343,11 @@ declare module '@ioc:Adonis/Addons/Auth' {
      * Login a user
      */
     login(user: GetProviderRealUser<Provider>, ...args: any[]): Promise<ClientRequestData>
+
+    /**
+     * Logout user
+     */
+    logout(user: GetProviderRealUser<Provider>): Promise<void>
   }
 
   /*
