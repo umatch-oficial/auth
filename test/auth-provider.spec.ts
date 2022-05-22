@@ -28,6 +28,7 @@ test.group('Auth Provider', (group) => {
   })
 
   group.each.teardown(() => {
+    app.container.resolveBinding('Japa/Preset/ApiClient').clearRequestHandlers()
     app.container.resolveBinding('Japa/Preset/ApiClient').clearSetupHooks()
     app.container.resolveBinding('Japa/Preset/ApiClient').clearTeardownHooks()
   })
