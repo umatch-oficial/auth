@@ -10,4 +10,5 @@
     web: {
       implementation: SessionGuardContract<'user', 'web'>
       config: SessionGuardConfig<'user'>
+      client: SessionClientContract<'user'>
     }

@@ -10,4 +10,5 @@
     basic: {
       implementation: BasicAuthGuardContract<'user', 'basic'>
       config: BasicAuthGuardConfig<'user'>
+      client: BasicAuthClientContract<'user'>
     }

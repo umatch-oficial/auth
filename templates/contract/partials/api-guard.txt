@@ -10,4 +10,5 @@
     api: {
       implementation: OATGuardContract<'user', 'api'>
       config: OATGuardConfig<'user'>
+      client: OATClientContract<'user'>
     }
