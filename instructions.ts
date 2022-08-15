@@ -398,7 +398,7 @@ export default async function instructions(
     const modelName = await getModelName(sink)
     state.modelName = modelName.replace(/(\.ts|\.js)$/, '')
     state.usersTableName = string.pluralize(string.snakeCase(state.modelName))
-    state.modelReference = string.camelCase(state.modelName)
+    state.modelReference = string.pascalCase(string.singularize(state.modelName))
     state.modelNamespace = `${app.namespacesMap.get('models') || 'App/Models'}/${state.modelName}`
   } else {
     state.usersTableName = await getTableName(sink)
