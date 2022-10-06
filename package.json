@@ -48,7 +48,6 @@
   "devDependencies": {
     "@adonisjs/core": "^5.8.2",
     "@adonisjs/i18n": "^1.5.5",
-    "@adonisjs/lucid": "^18.0.0",
     "@adonisjs/mrm-preset": "^5.0.3",
     "@adonisjs/redis": "^7.3.0",
     "@adonisjs/repl": "^3.1.10",
@@ -104,26 +103,27 @@
   "dependencies": {
     "@poppinss/hooks": "^5.0.3",
     "@poppinss/utils": "^4.0.4",
+    "@umatch/lucid": "^18.1.1",
     "luxon": "^2.4.0"
   },
   "peerDependencies": {
     "@adonisjs/core": "^5.7.1",
     "@adonisjs/i18n": "^1.5.0",
-    "@adonisjs/lucid": "^18.0.0",
     "@adonisjs/redis": "^7.2.0",
-    "@adonisjs/session": "^6.2.0"
+    "@adonisjs/session": "^6.2.0",
+    "@umatch/lucid": "^18.1.1"
   },
   "peerDependenciesMeta": {
     "@adonisjs/i18n": {
-      "optional": true
-    },
-    "@adonisjs/lucid": {
       "optional": true
     },
     "@adonisjs/session": {
       "optional": true
     },
     "@adonisjs/redis": {
+      "optional": true
+    },
+    "@umatch/lucid": {
       "optional": true
     }
   },

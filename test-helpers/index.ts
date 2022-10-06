@@ -167,7 +167,7 @@ export async function setupApplication(
     aliases: {
       App: './app',
     },
-    providers: ['@adonisjs/core', '@adonisjs/repl', '@adonisjs/lucid', '@adonisjs/redis']
+    providers: ['@adonisjs/core', '@adonisjs/repl', '@adonisjs/redis', '@umatch/lucid']
       .concat(additionalProviders || [])
       .concat(['@adonisjs/session']),
   })
