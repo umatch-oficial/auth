@@ -109,7 +109,7 @@ export class AuthenticationException extends Exception {
 
   /**
    * Self handle exception and attempt to make the best response based
-   * upon the type of request
+   * on the type of request
    */
   public async handle(_: AuthenticationException, ctx: HttpContextContract) {
     /**

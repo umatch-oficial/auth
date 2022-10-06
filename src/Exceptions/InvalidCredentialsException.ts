@@ -30,7 +30,7 @@ export class InvalidCredentialsException extends Exception {
    * Invalid user password
    */
   public static invalidPassword(guard: string) {
-    const error = new this('Password mis-match', 400, 'E_INVALID_AUTH_PASSWORD')
+    const error = new this('Password mismatch', 400, 'E_INVALID_AUTH_PASSWORD')
     error.guard = guard
     return error
   }
@@ -88,7 +88,7 @@ export class InvalidCredentialsException extends Exception {
 
   /**
    * Self handle exception and attempt to make the best response based
-   * upon the type of request
+   * on the type of request
    */
   public async handle(_: InvalidCredentialsException, ctx: HttpContextContract) {
     /**

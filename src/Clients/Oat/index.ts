@@ -25,7 +25,7 @@ import { ProviderToken } from '../../Tokens/ProviderToken'
 import { TokenProviderContract } from '@ioc:Adonis/Addons/Auth'
 
 /**
- * OAT client to login a user during tests using the
+ * OAT client to log in a user during tests using the
  * opaque tokens guard
  */
 export class OATClient implements OATClientContract<any> {
@@ -47,7 +47,7 @@ export class OATClient implements OATClientContract<any> {
   private tokenLength = 60
 
   /**
-   * Token type for the persistance store
+   * Token type for the persistence store
    */
   private tokenType = this.config.tokenProvider.type || 'opaque_token'
 
@@ -66,7 +66,7 @@ export class OATClient implements OATClientContract<any> {
      */
     const id = providerUser.getId()
     if (!id) {
-      throw new Exception(`Cannot login user. Value of "${identifierKey}" is not defined`)
+      throw new Exception(`Cannot log in user. Value of "${identifierKey}" is not defined`)
     }
 
     return providerUser
@@ -92,9 +92,9 @@ export class OATClient implements OATClientContract<any> {
   }
 
   /**
-   * Generates a new token + hash for the persistance
+   * Generates a new token + hash for the persistence
    */
-  private generateTokenForPersistance(expiresIn?: string | number) {
+  private generateTokenForPersistence(expiresIn?: string | number) {
     const token = string.generateRandom(this.tokenLength)
 
     return {
@@ -130,10 +130,10 @@ export class OATClient implements OATClientContract<any> {
      * safely assume it is defined
      */
     const id = providerUser.getId()!
-    const token = this.generateTokenForPersistance(expiresIn)
+    const token = this.generateTokenForPersistence(expiresIn)
 
     /**
-     * Persist token to the database. Make sure that we are always
+     * Persist token to the database. Make sure we are always
      * passing the hash to the storage driver
      */
     const providerToken = new ProviderToken(name, token.hash, id, this.tokenType)

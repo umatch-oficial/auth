@@ -26,7 +26,7 @@ import { AuthenticationException } from '../../Exceptions/AuthenticationExceptio
 
 /**
  * Session guard enables user login using sessions. Also it allows for
- * setting remember me tokens for life long login
+ * setting remember me tokens for lifelong login
  */
 export class SessionGuard extends BaseGuard<any> implements SessionGuardContract<any, any> {
   constructor(
@@ -118,7 +118,7 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
    * Returns data packet for the login event. Arguments are
    *
    * - The mapping identifier
-   * - Logged in user
+   * - Logged-in user
    * - HTTP context
    * - Remember me token (optional)
    */
@@ -135,7 +135,7 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
    * Returns data packet for the authenticate event. Arguments are
    *
    * - The mapping identifier
-   * - Logged in user
+   * - Logged-in user
    * - HTTP context
    * - A boolean to tell if logged in viaRemember or not
    */
@@ -292,7 +292,7 @@ export class SessionGuard extends BaseGuard<any> implements SessionGuardContract
     const sessionId = this.getRequestSessionId()
 
     /**
-     * If session id exists, then attempt to login the user using the
+     * If session id exists, then attempt to log in the user using the
      * session and return early
      */
     if (sessionId) {

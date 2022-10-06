@@ -16,7 +16,7 @@ import {
 import { Exception } from '@poppinss/utils'
 
 /**
- * Session client to login a user during tests using the
+ * Session client to log in a user during tests using the
  * sessions guard
  */
 export class SessionClient implements GuardClientContract<any> {
@@ -48,7 +48,7 @@ export class SessionClient implements GuardClientContract<any> {
      */
     const id = providerUser.getId()
     if (!id) {
-      throw new Exception(`Cannot login user. Value of "${identifierKey}" is not defined`)
+      throw new Exception(`Cannot log in user. Value of "${identifierKey}" is not defined`)
     }
 
     return providerUser

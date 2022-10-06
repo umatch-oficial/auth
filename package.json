@@ -1,7 +1,7 @@
 {
-  "name": "@adonisjs/auth",
+  "name": "@umatch/auth",
   "version": "8.2.2",
-  "description": "Official authentication provider for Adonis framework",
+  "description": "Fork of @adonisjs/auth replacing @adonisjs/lucid with @umatch/lucid",
   "types": "build/adonis-typings/index.d.ts",
   "main": "build/providers/AuthProvider.js",
   "files": [

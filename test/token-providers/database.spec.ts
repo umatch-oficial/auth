@@ -48,7 +48,7 @@ test.group('Database Token Provider', (group) => {
     assert.exists(tokenId)
   })
 
-  test('use custom connection for persistance', async ({ assert }) => {
+  test('use custom connection for persistence', async ({ assert }) => {
     const token = string.generateRandom(40)
     const db = app.container.use('Adonis/Lucid/Database')
     const provider = getTokensDbProvider(db)

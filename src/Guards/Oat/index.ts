@@ -60,13 +60,13 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
   private tokenLength = 60
 
   /**
-   * Token type for the persistance store
+   * Token type for the persistence store
    */
   private tokenType = this.config.tokenProvider.type || 'opaque_token'
 
   /**
-   * Whether or not the authentication has been attempted
-   * for the current request
+   * Whether the authentication has been attempted for the
+   * current request
    */
   public authenticationAttempted = false
 
@@ -76,8 +76,8 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
   public isLoggedOut = false
 
   /**
-   * A boolean to know if user is retrieved by authenticating
-   * the current request or not
+   * A boolean to know whether the user is retrieved by
+   * authenticating the current request
    */
   public isAuthenticated = false
 
@@ -127,9 +127,9 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
   }
 
   /**
-   * Generates a new token + hash for the persistance
+   * Generates a new token + hash for the persistence
    */
-  private generateTokenForPersistance(expiresIn?: string | number) {
+  private generateTokenForPersistence(expiresIn?: string | number) {
     const token = string.generateRandom(this.tokenLength)
 
     return {
@@ -143,7 +143,7 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
    * Returns data packet for the login event. Arguments are
    *
    * - The mapping identifier
-   * - Logged in user
+   * - Logged-in user
    * - HTTP context
    * - API token
    */
@@ -160,7 +160,7 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
    * Returns data packet for the authenticate event. Arguments are
    *
    * - The mapping identifier
-   * - Logged in user
+   * - Logged-in user
    * - HTTP context
    * - A boolean to tell if logged in viaRemember or not
    */
@@ -317,10 +317,10 @@ export class OATGuard extends BaseGuard<any> implements OATGuardContract<any, an
      * safely assume it is defined
      */
     const id = providerUser.getId()!
-    const token = this.generateTokenForPersistance(expiresIn)
+    const token = this.generateTokenForPersistence(expiresIn)
 
     /**
-     * Persist token to the database. Make sure that we are always
+     * Persist token to the database. Make sure we are always
      * passing the hash to the storage driver
      */
     const providerToken = new ProviderToken(name, token.hash, id, this.tokenType)

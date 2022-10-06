@@ -245,7 +245,7 @@ export class AuthManager implements AuthManagerContract {
   }
 
   /**
-   * Makes instance of a provider based upon the driver value
+   * Makes instance of a provider based on the driver value
    */
   private makeUserProviderInstance(mapping: string, providerConfig: any) {
     if (!providerConfig || !providerConfig.driver) {
@@ -263,7 +263,7 @@ export class AuthManager implements AuthManagerContract {
   }
 
   /**
-   * Makes instance of a provider based upon the driver value
+   * Makes instance of a provider based on the driver value
    */
   private makeTokenProviderInstance(providerConfig: any) {
     if (!providerConfig || !providerConfig.driver) {

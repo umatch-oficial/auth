@@ -60,7 +60,7 @@ export class BasicAuthGuard extends BaseGuard<any> implements BasicAuthGuardCont
    * Returns data packet for the authenticate event. Arguments are
    *
    * - The mapping identifier
-   * - Logged in user
+   * - Logged-in user
    * - HTTP context
    */
   private getAuthenticateEventData(user: any): BasicAuthAuthenticateEventData<any> {

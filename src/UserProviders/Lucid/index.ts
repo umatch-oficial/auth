@@ -41,7 +41,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
   ) {}
 
   /**
-   * The models options for constructing a query
+   * The model options for constructing a query
    */
   private getModelOptions() {
     if (typeof this.connection === 'string') {
@@ -163,7 +163,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
   }
 
   /**
-   * Updates the user remember me token. The guard must called `setRememberMeToken`
+   * Updates the user remember me token. The guard must call `setRememberMeToken`
    * before invoking this method.
    */
   public async updateRememberMeToken(
@@ -174,7 +174,7 @@ export class LucidProvider implements LucidProviderContract<LucidProviderModel> 
      */
     if (!providerUser.user!.$dirty.rememberMeToken) {
       throw new Error(
-        'The guard must called "setRememberMeToken" before calling "updateRememberMeToken" on the Lucid provider'
+        'The guard must call "setRememberMeToken" before calling "updateRememberMeToken" on the Lucid provider'
       )
     }
 

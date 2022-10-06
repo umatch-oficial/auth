@@ -17,7 +17,7 @@ import type {
 } from '@ioc:Adonis/Addons/Auth'
 
 /**
- * Lucid works works a bridge between the provider and the guard
+ * Lucid works a bridge between the provider and the guard
  */
 @inject([null, null, 'Adonis/Core/Hash'])
 export class LucidUser<User extends LucidProviderModel>

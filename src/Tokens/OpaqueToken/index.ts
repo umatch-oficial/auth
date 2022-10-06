@@ -33,7 +33,7 @@ export class OpaqueToken implements OpaqueTokenContract<any> {
   public expiresIn?: number
 
   /**
-   * Any meta data attached to the token
+   * Any metadata attached to the token
    */
   public meta: any
 

@@ -253,7 +253,7 @@ test.group('OAT Guard | attempt', (group) => {
     assert.equal(tokens[0].name, 'Android token')
   })
 
-  test('define meta data to be persisted inside the database', async ({ assert }) => {
+  test('define metadata to be persisted inside the database', async ({ assert }) => {
     const User = getUserModel(app.container.use('Adonis/Lucid/Orm').BaseModel)
     const user = await User.create({
       username: 'virk',

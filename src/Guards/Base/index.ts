@@ -30,7 +30,7 @@ export abstract class BaseGuard<Guard extends keyof GuardsList> {
   }
 
   /**
-   * Whether or not the authentication has been attempted
+   * Whether the authentication has been attempted
    * for the current request
    */
   public authenticationAttempted = false
@@ -41,14 +41,14 @@ export abstract class BaseGuard<Guard extends keyof GuardsList> {
   public isLoggedOut = false
 
   /**
-   * A boolean to know if user is retrieved by authenticating
-   * the current request or not
+   * A boolean to know whether the user is retrieved by
+   * authenticating the current request
    */
   public isAuthenticated = false
 
   /**
-   * A boolean to know if user is loggedin via remember me token
-   * or not.
+   * A boolean to know whether the user is logged in via remember
+   * me token.
    */
   public viaRemember = false
 
@@ -127,7 +127,7 @@ export abstract class BaseGuard<Guard extends keyof GuardsList> {
      */
     const id = providerUser.getId()
     if (!id) {
-      throw new Exception(`Cannot login user. Value of "${identifierKey}" is not defined`)
+      throw new Exception(`Cannot log in user. Value of "${identifierKey}" is not defined`)
     }
 
     return providerUser

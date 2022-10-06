@@ -143,7 +143,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
     setConnection(connection: any): this
 
     /**
-     * Saves the token to some persistance storage and returns an lookup
+     * Saves the token to some persistence storage and returns an lookup
      * id. We introduced the concept of lookup ids, since lookups by
      * cryptographic tokens can have performance impacts on certain
      * databases.
@@ -367,7 +367,7 @@ declare module '@ioc:Adonis/Addons/Auth' {
     config: GuardsList[Guard]['config']
 
     /**
-     * Reference to the logged in user.
+     * Reference to the logged-in user.
      */
     user?: GetProviderRealUser<Provider>
 
@@ -377,25 +377,25 @@ declare module '@ioc:Adonis/Addons/Auth' {
     isLoggedOut: boolean
 
     /**
-     * A boolean to know if user is a guest or not. It is
-     * always opposite of [[isLoggedIn]]
+     * A boolean to know whether the user is a guest.
+     * It is always opposite of [[isLoggedIn]]
      */
     isGuest: boolean
 
     /**
-     * A boolean to know if user is logged in or not
+     * A boolean to know whether the user is logged in
      */
     isLoggedIn: boolean
 
     /**
-     * A boolean to know if user is retrieved by authenticating
-     * the current request or not.
+     * A boolean to know whether the user is retrieved by
+     * authenticating the current request.
      */
     isAuthenticated: boolean
 
     /**
-     * Whether or not the authentication has been attempted
-     * for the current request
+     * Whether the authentication has been attempted for the
+     * current request
      */
     authenticationAttempted: boolean
 
@@ -481,7 +481,8 @@ declare module '@ioc:Adonis/Addons/Auth' {
     Name extends keyof GuardsList
   > extends GuardContract<Provider, Name> {
     /**
-     * A boolean to know if user is loggedin via remember me token or not.
+     * A boolean to know whether the user is logged in via
+     * remember me token.
      */
     viaRemember: boolean
 

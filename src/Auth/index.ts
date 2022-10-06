@@ -16,7 +16,7 @@ import { AuthContract, AuthManagerContract } from '@ioc:Adonis/Addons/Auth'
  */
 export class Auth implements AuthContract {
   /**
-   * We keep a per request singleton instances for each instantiated mapping
+   * We keep a per-request singleton instances for each instantiated mapping
    */
   private mappingsCache: Map<string, any> = new Map()
 
@@ -50,7 +50,7 @@ export class Auth implements AuthContract {
   }
 
   /**
-   * Reference to the logged in user
+   * Reference to the logged-in user
    */
   public get user() {
     return this.use().user
@@ -71,31 +71,31 @@ export class Auth implements AuthContract {
   }
 
   /**
-   * A boolean to know if user is a guest or not. It is
-   * always opposite of [[isLoggedIn]]
+   * A boolean to know whether the user is a guest.
+   * It is always opposite of [[isLoggedIn]]
    */
   public get isGuest() {
     return this.use().isGuest
   }
 
   /**
-   * A boolean to know if user is logged in or not
+   * A boolean to know whether the user is logged in
    */
   public get isLoggedIn() {
     return this.use().isLoggedIn
   }
 
   /**
-   * A boolean to know if user is retrieved by authenticating
-   * the current request or not.
+   * A boolean to know whether the user is retrieved by
+   * authenticating the current request.
    */
   public get isAuthenticated() {
     return this.use().isAuthenticated
   }
 
   /**
-   * Whether or not the authentication has been attempted
-   * for the current request
+   * Whether the authentication has been attempted for the
+   * current request
    */
   public get authenticationAttempted() {
     return this.use().authenticationAttempted
@@ -145,7 +145,7 @@ export class Auth implements AuthContract {
   }
 
   /**
-   * Attempts to authenticate the user for the current HTTP request and supresses
+   * Attempts to authenticate the user for the current HTTP request and suppresses
    * exceptions raised by the [[authenticate]] method and returns a boolean
    */
   public async check() {
